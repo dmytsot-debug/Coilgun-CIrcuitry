@@ -1,0 +1,22 @@
+# KiCad backups and caches
+*-backups/
+*.kicad_prl
+*-cache.lib
+*-rescue.lib
+*-rescue.dcm
+*.bak
+*.autosave
+_autosave-*
+fp-info-cache
+~*.lck
+\#auto_saved_files#
+
+# Fabrication outputs (regenerate from source)
+fab/
+gerbers/
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
