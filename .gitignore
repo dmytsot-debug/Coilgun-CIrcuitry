@@ -20,3 +20,6 @@ gerbers/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# figure build scratch
+docs/schematic/shots/

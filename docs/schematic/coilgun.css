@@ -1,0 +1,34 @@
+.cg-stage{position:relative;touch-action:pan-y;cursor:default}
+.cg-stage:focus{outline:none}
+.cg-stage:focus-visible{outline:1px solid var(--anatomy-muted);outline-offset:6px}
+.cg-stage>svg,.cg-stage>canvas{display:block;width:100%;height:auto}
+.cg-stage>.cg-layer{position:absolute;inset:0;height:100% !important;pointer-events:none}
+.cg-stage>.cg-front .it{pointer-events:visiblePainted}
+.iso:not([data-theme="light"]) .cg-gl{mix-blend-mode:screen}
+.cg-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.cg-stage[data-grab]{cursor:grabbing}
+.it[data-name^="charger.knob"],.it[data-name^="key."],.it[data-name="gate.button"]{cursor:pointer}
+
+/* the acrylic barrel: see the slug through it */
+.cg-glass>.iso-solid>.iso-fill,.cg-glass>.iso-solid>.iso-shade,.cg-glass>.iso-solid>.iso-top{fill-opacity:.42}
+.cg-glass>.iso-solid>.iso-edge{stroke-opacity:.9}
+
+.cg-bore{fill:var(--anatomy-shade-0)}
+
+/* lamps */
+.cg-led circle{opacity:.18;transition:opacity .25s var(--anatomy-ease)}
+.cg-led[data-on] circle{opacity:1;fill:var(--anatomy-lit)}
+
+/* conducting parts */
+.it[data-part="scr"][data-on]>.iso-solid>.iso-edge,.it[data-part="diode"][data-on]>.iso-solid>.iso-edge{stroke:var(--anatomy-lit)}
+.it[data-part="scr"][data-on]>.iso-solid>.iso-top,.it[data-part="diode"][data-on]>.iso-solid>.iso-top{fill:var(--anatomy-lit-top)}
+.it[data-hot] .tb-body,.it[data-hot] .tb-shine,.it[data-hot] .tb-shade{fill:var(--anatomy-lit)}
+.it[data-hot] .iso-edge{stroke:var(--anatomy-lit)}
+.it[data-live] .tb-shine{fill:var(--anatomy-lit-top)}
+.it[data-live] .iso-edge{stroke:var(--anatomy-hi)}
+
+/* the coil's field without WebGL: a soft fallback halo drawn in the front layer */
+.cg-field{fill:var(--cg-field);opacity:0;transition:opacity .12s linear;pointer-events:none}
+.cg-stage[data-gl] .cg-field{display:none}
+.cg-stage{--cg-field:#5a7cff}
+.iso[data-theme="light"] .cg-stage{--cg-field:#3b5bdb}

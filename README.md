@@ -17,6 +17,7 @@ Early design phase. Nothing is built or ordered yet. First prototype is a single
 - `kicad/` KiCad projects (schematics and PCB layouts)
 - `simulation/` ngspice simulations and results
 - `docs/` design notes, calculations, and write-ups
+  - `docs/schematic/` interactive isometric schematic of the five circuit blocks (open `coilgun-schematic.html`); the circuit model behind it is `docs/schematic/model.mjs`
 
 ## Safety
 
