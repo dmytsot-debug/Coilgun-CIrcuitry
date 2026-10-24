@@ -5,7 +5,8 @@ capacitor bank, SCR switch with its isolated trigger board, coil with flyback di
 the optical gate plus microcontroller that later stages need. Energy flows left to right.
 
 Open `coilgun-schematic.html` (dark) or `coilgun-schematic-light.html` (light) in a browser.
-Both are standalone single files.
+Both are standalone single files. `3d/coilgun-3d.html` is the rotatable coloured 3D version of
+the same bench, with hover labels and a full parameter panel; see `3d/README.md`.
 
 ## Controls
 

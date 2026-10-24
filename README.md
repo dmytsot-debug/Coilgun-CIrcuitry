@@ -18,6 +18,7 @@ Early design phase. Nothing is built or ordered yet. First prototype is a single
 - `simulation/` ngspice simulations and results
 - `docs/` design notes, calculations, and write-ups
   - `docs/schematic/` interactive isometric schematic of the five circuit blocks (open `coilgun-schematic.html`); the circuit model behind it is `docs/schematic/model.mjs`
+  - `docs/schematic/3d/` rotatable coloured 3D bench with hover labels, a parameter panel and slow-motion shot playback (open `coilgun-3d.html`)
 
 ## Safety
 
