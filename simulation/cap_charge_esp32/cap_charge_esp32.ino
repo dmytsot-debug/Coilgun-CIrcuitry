@@ -9,7 +9,7 @@
  *                                                    |
  *                                                   GND
  *   10k pot: ends to 3V3/GND, wiper -> D4 (GPIO4)  (sets virtual capacitance)
- *   OLED: SDA -> GPIO21, SCL -> GPIO22, VCC -> 3V3, GND -> GND
+ *   OLED: SDA -> D21, SCL -> D22, VCC -> 3V3, GND -> GND
  *
  * USE_REAL_CAP 0: no capacitor on the board. The ESP32 measures the real
  *   diode/switch/resistor network and integrates a virtual capacitor in firmware.
