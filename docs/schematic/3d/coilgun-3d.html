@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Coilgun circuit bench · 3D</title><style>/* Coilgun 3D bench. Layout: a stage on the left, a scrolling control panel on the right; stacked on phones. */
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Coilgun build guide · 3D</title><style>/* Coilgun 3D bench. Layout: a stage on the left, a scrolling control panel on the right; stacked on phones. */
 :root {
   --bg: #f1f2f4; --fg: #1d2026; --muted: #5d636d; --panel: #ffffff; --line: #d6d9df; --grid: #e2e5ea;
   --accent: #c0392b; --accent-2: #2d6cdf; --warn: #b4540a; --warn-bg: #fff2e3;
@@ -72,39 +72,52 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(-
   .cg3-corner.bl { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .cg3-tip, .cg3-tag { transition: none; } }
+
+.cg3-note { margin: -2px 0 4px; color: var(--muted); font-size: 11.5px; }
+.cg3-steps { margin: 0 0 4px; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.cg3-steps li { margin: 1px 0; }
+.cg3-panel button[aria-pressed="true"] { border-color: var(--accent-2); color: var(--accent-2); }
 </style></head><body>
 <div class="cg3-app">
-  <div class="cg3-stage" tabindex="0" role="slider" aria-label="Coilgun bench, 3D. Drag to orbit, scroll to zoom. Up and down arrows set the voltage, space fires, K turns the key, P pauses, L shows labels, R resets the view." aria-valuemin="50" aria-valuemax="450" aria-valuenow="400">
+  <div class="cg3-stage" tabindex="0" role="slider" aria-label="Coilgun build, 3D, as described in the build guide. Drag to orbit, scroll to zoom. S supply output, K disconnect switch, space fires, D discharge stick, U week 6 upgrades, arrows set the supply voltage, P pauses, L labels, R resets the view." aria-valuemin="5" aria-valuemax="55" aria-valuenow="55">
     <canvas class="cg3-canvas"></canvas>
     <div class="cg3-tags" aria-hidden="true"></div>
     <div class="cg3-tip" hidden></div>
     <span class="cg3-corner tl">Fig 2</span>
-    <span class="cg3-corner tr">Coilgun circuit bench · 3D</span>
-    <span class="cg3-corner bl">Drag to orbit · hover for labels · ↑ ↓ voltage · space fires · K key</span>
-    <span class="cg3-corner br" data-readout>off · bank 0 V</span>
+    <span class="cg3-corner tr">Coilgun build guide · 3D</span>
+    <span class="cg3-corner bl">Drag to orbit · hover for labels</span>
+    <span class="cg3-corner br" data-readout>supply off · 0 V</span>
     <span class="cg3-sr" role="status" aria-live="polite" data-status></span>
   </div>
   <aside class="cg3-panel">
     <div class="cg3-panel-head"><h1>Controls</h1><button id="toggle-panel" title="Collapse the panel" aria-label="Collapse the panel">☰</button></div>
-    <details open><summary>Playback</summary>
+    <details open><summary>Firing sequence (the guide's order)</summary>
       <div class="cg3-sec">
-        <div class="cg3-buttons"><button data-action="key">Key on</button><button data-action="fire" class="primary">Fire</button><button data-action="pause">Pause</button><button data-action="reset">Reset</button></div>
-        <label class="cg3-field"><span>Shot speed</span><select id="speed"></select></label>
+        <ol class="cg3-steps"><li>Supply output on</li><li>Close the disconnect: the bank charges</li><li>Open the disconnect</li><li>Fire with the push switch</li><li>Clip on the discharge stick, meter under 5 V</li></ol>
+        <div class="cg3-buttons"><button data-action="supply">Supply output: off</button><button data-action="knife">Disconnect: open</button><button data-action="fire" class="primary">Fire (push switch)</button><button data-action="stick">Clip on discharge stick</button></div>
+        <div class="cg3-buttons"><button data-action="pause">Pause</button><button data-action="reset">Reset</button></div>
+        <label class="cg3-field"><span>Pulse speed</span><select id="speed"></select></label>
         <label class="cg3-field" style="grid-template-columns:1fr"><span>Scrub the shot (pauses it)</span><input id="scrub" class="cg3-scrub" type="range" min="0" max="1000" value="0"></label>
         <canvas class="cg3-scope" aria-label="Oscilloscope: coil current, bank voltage and slug position over the shot"></canvas>
-        <p class="cg3-keys"><kbd>space</kbd> fire · <kbd>K</kbd> key · <kbd>P</kbd> pause · <kbd>↑</kbd><kbd>↓</kbd> voltage · <kbd>L</kbd> labels · <kbd>R</kbd> reset view</p>
+        <p class="cg3-keys"><kbd>S</kbd> supply · <kbd>K</kbd> disconnect · <kbd>space</kbd> fire · <kbd>D</kbd> discharge stick · <kbd>U</kbd> upgrades · <kbd>↑</kbd><kbd>↓</kbd> voltage · <kbd>P</kbd> pause · <kbd>L</kbd> labels · <kbd>R</kbd> view</p>
+      </div>
+    </details>
+    <details open><summary>Week 6+ upgrades</summary>
+      <div class="cg3-sec">
+        <label class="cg3-check"><input id="upgrades" type="checkbox"> Show the SCR and trigger board in place of the push switch, plus two optical gates and the microcontroller (chronograph)</label>
       </div>
     </details>
     <div data-controls></div>
     <details open><summary>View</summary>
       <div class="cg3-sec">
-        <div class="cg3-views"><button data-view="overview">Overview</button><button data-view="charger">Charger</button><button data-view="bank">Bank</button><button data-view="switch">Switch</button><button data-view="coil">Coil</button><button data-view="muzzle">Muzzle</button><button data-view="top">Top</button><button data-action="resetview">Reset</button></div>
+        <div class="cg3-views"><button data-view="overview">Overview</button><button data-view="charging">Charging</button><button data-view="bank">Bank</button><button data-view="switch">Switch</button><button data-view="coil">Coil</button><button data-view="catch">Catch box</button><button data-view="top">Top</button><button data-action="resetview">Reset</button></div>
         <label class="cg3-check"><input id="follow" type="checkbox"> Follow the slug during a shot</label>
         <label class="cg3-check"><input id="autorotate" type="checkbox"> Auto-rotate</label>
-        <label class="cg3-check"><input id="labels" type="checkbox"> Label every block</label>
+        <label class="cg3-check"><input id="labels" type="checkbox"> Label every group (the guide's tabs)</label>
         <label class="cg3-check"><input id="shadows" type="checkbox" checked> Shadows</label>
         <label class="cg3-check"><input id="theme" type="checkbox"> Light theme</label>
         <label class="cg3-field" style="grid-template-columns:1fr"><span>Exploded view</span><input id="explode" type="range" min="0" max="100" value="0" class="cg3-scrub"></label>
+        <div class="cg3-buttons"><button data-action="guide">Reset to the guide's values</button></div>
       </div>
     </details>
   </aside>
@@ -1547,6 +1560,7 @@ const DEFAULTS = {
   coilAt: 0.095, // coil centre from breech face, m
   slugLen: 0.03, // projectile length, m
   k: 0.00013, // force constant: F = k·i²·g(x), N/A² at the steepest point
+  slugStart: 0, // slug's rear face from the breech face at the shot, m
 };
 
 const capacitance = (p) => p.caps * p.capEach;
@@ -1592,7 +1606,7 @@ function pull(x, p) {
 function shot(p, v0, { dt = 5e-6, until = 10 * p.L / p.R } = {}) {
   const C = capacitance(p);
   const t = [], i = [], vc = [], x = [], vel = [];
-  let I = 0, V = v0, X = p.slugLen / 2, U = 0, time = 0;
+  let I = 0, V = v0, X = (p.slugStart ?? 0) + p.slugLen / 2, U = 0, time = 0;
   let phase = "scr"; // "scr" → "diode" → "off"
   let peakI = 0, peakAt = 0, diodeAt = null, offAt = null, exitAt = null, exitV = null;
   const every = Math.max(1, Math.round(1e-5 / dt));
@@ -1678,14 +1692,15 @@ const fmt = {
 };
 
 return { DEFAULTS, capacitance, energy, chargeTime, bleedTau, bleedTimeTo, bleedWatts, pulseHalfPeriod, peakCurrentIdeal, charge, bleed, pull, shot, sampleAt, derived, fmt };})();
-// The 3D bench. Coordinates are the isometric figure's world units (1 unit ≈ 2.5 mm):
-// x along the bench, y toward the viewer, z up. W() maps them into Three.js (y up).
-// Everything that can be hovered carries userData.label; everything that moves is
-// returned in `live` so the UI can drive it from the model.
+// The 3D bench, built from the Coilgun build guide (the Claude Doc), part for part and name for name.
+// Units are millimetres. Coordinates: x along the bench (breech at the left, muzzle at the right),
+// y toward the viewer, z up from the bench top. W() maps them into Three.js (y up).
+// Everything hoverable carries userData.label = { name, value, role } in the guide's words.
+// Parts the guide marks as "later" (week 6+) are tagged userData.later and hidden until the
+// upgrade toggle is on; the push switch is tagged userData.early and hidden when it is on.
 
-function buildScene(THREE, OrbitControls, MODEL, canvas, opts = {}) {
+function buildScene(THREE, OrbitControls, MODEL, canvas) {
   const W = (x, y, z) => new THREE.Vector3(x, z, y);
-  const DEG = Math.PI / 180;
 
   // ---------------------------------------------------------------- renderer, camera, lights
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -1695,132 +1710,142 @@ function buildScene(THREE, OrbitControls, MODEL, canvas, opts = {}) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(36, 1.6, 1, 2000);
-  camera.position.copy(W(10, 340, 190));
+  const camera = new THREE.PerspectiveCamera(34, 1.6, 2, 8000);
   const controls = new OrbitControls(camera, canvas);
-  controls.target.copy(W(20, 0, 8));
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.maxPolarAngle = Math.PI * 0.49;
-  controls.minDistance = 30;
-  controls.maxDistance = 700;
-  controls.update();
+  controls.minDistance = 60;
+  controls.maxDistance = 2600;
 
   const hemi = new THREE.HemisphereLight(0xdfe8ff, 0x3a3630, 0.9);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff2e0, 2.2);
-  sun.position.copy(W(-60, 90, 190));
+  sun.position.copy(W(-300, 380, 900));
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -220; sun.shadow.camera.right = 220; sun.shadow.camera.top = 160; sun.shadow.camera.bottom = -160;
-  sun.shadow.camera.near = 20; sun.shadow.camera.far = 500;
-  sun.shadow.bias = -0.0006;
-  sun.shadow.normalBias = 0.6;
-  scene.add(sun);
+  Object.assign(sun.shadow.camera, { left: -700, right: 700, top: 500, bottom: -500, near: 100, far: 2200 });
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 1.2;
+  sun.target.position.copy(W(100, -20, 0));
+  scene.add(sun, sun.target);
   const fill = new THREE.DirectionalLight(0xbfd4ff, 0.6);
-  fill.position.copy(W(180, -120, 90));
+  fill.position.copy(W(900, -600, 400));
   scene.add(fill);
 
   // ---------------------------------------------------------------- materials
-  const std = (color, { metalness = 0, roughness = 0.6, emissive = 0x000000, ...rest } = {}) => new THREE.MeshStandardMaterial({ color, metalness, roughness, emissive, ...rest });
+  const std = (color, { metalness = 0, roughness = 0.6, ...rest } = {}) => new THREE.MeshStandardMaterial({ color, metalness, roughness, ...rest });
   const M = {
-    alu: std(0xb9bec6, { metalness: 0.75, roughness: 0.38 }),
-    aluDark: std(0x8e949c, { metalness: 0.7, roughness: 0.45 }),
-    rubber: std(0x202226, { roughness: 0.95 }),
-    abs: std(0x2b2e34, { roughness: 0.55 }),
-    absLight: std(0x4a4f58, { roughness: 0.5 }),
-    knob: std(0x16171a, { roughness: 0.4 }),
-    dial: std(0xf2efe6, { roughness: 0.6 }),
-    needle: std(0xc0392b, { roughness: 0.4 }),
+    benchWood: std(0x8a6a48, { roughness: 0.8 }),
+    plywood: std(0xd2b48a, { roughness: 0.85 }),
+    plywoodEdge: std(0xb89566, { roughness: 0.85 }),
+    steel: std(0x9aa0a8, { metalness: 0.95, roughness: 0.28 }),
+    zinc: std(0xb8bcc2, { metalness: 0.85, roughness: 0.35 }),
     brass: std(0xc9a44a, { metalness: 0.9, roughness: 0.32 }),
     copper: std(0xb87333, { metalness: 0.92, roughness: 0.3 }),
     enamel: std(0xc8742c, { metalness: 0.75, roughness: 0.42 }),
-    canBody: std(0x15171c, { roughness: 0.5 }),
-    canTop: std(0xd8cfbf, { metalness: 0.5, roughness: 0.4 }),
-    canSleeve: std(0x2a4a8a, { roughness: 0.55 }),
-    ceramic: std(0xe9e3d5, { roughness: 0.85 }),
+    alu: std(0xbfc4cb, { metalness: 0.8, roughness: 0.35 }),
+    blackPlastic: std(0x18191c, { roughness: 0.5 }),
+    greyPlastic: std(0x4a4f58, { roughness: 0.55 }),
+    lightPlastic: std(0xd9d6cf, { roughness: 0.6 }),
+    supplyCase: std(0x2c3036, { roughness: 0.45, metalness: 0.2 }),
+    supplyPanel: std(0x1b1d21, { roughness: 0.5 }),
+    pla: std(0x3d7be0, { roughness: 0.55 }),
+    capSleeve: std(0x14306b, { roughness: 0.5 }),
+    capTop: std(0xd8d2c4, { metalness: 0.5, roughness: 0.4 }),
+    capStripe: std(0xe8e4d8, { roughness: 0.6 }),
+    slate: std(0x2e3338, { roughness: 0.8 }),
+    ceramic: std(0xece7da, { roughness: 0.85 }),
+    diodeBody: std(0x1a1a1c, { roughness: 0.4 }),
+    band: std(0xf2f0e8, { roughness: 0.5 }),
+    green: std(0x2f9e4f, { roughness: 0.4 }),
+    red: std(0xc0392b, { roughness: 0.45 }),
+    tapeBlue: std(0x2d6cdf, { roughness: 0.7 }),
+    tapeYellow: std(0xe0b32e, { roughness: 0.7 }),
+    tapeWhite: std(0xefeee9, { roughness: 0.8 }),
+    acrylic: new THREE.MeshPhysicalMaterial({ color: 0xd6e6ef, transparent: true, opacity: 0.32, roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.06, side: THREE.DoubleSide, depthWrite: false }),
+    cardboard: std(0xb08a5a, { roughness: 0.95 }),
+    towel1: std(0x6f8fa8, { roughness: 1 }),
+    towel2: std(0xa8746f, { roughness: 1 }),
+    towel3: std(0xc9c0a8, { roughness: 1 }),
+    cableRed: std(0xc0392b, { roughness: 0.75 }),
+    cableBlack: std(0x1d1e21, { roughness: 0.75 }),
+    cableBlue: std(0x2d6cdf, { roughness: 0.75 }),
+    tinned: std(0xc7cbd0, { metalness: 0.85, roughness: 0.35 }),
     pcb: std(0x1f6b3a, { roughness: 0.6 }),
-    pcbDark: std(0x174d2b, { roughness: 0.6 }),
+    pcbBlue: std(0x1e4fa3, { roughness: 0.6 }),
     chip: std(0x111214, { roughness: 0.5 }),
-    pad: std(0xd0c09a, { metalness: 0.8, roughness: 0.4 }),
-    button: std(0xc0392b, { roughness: 0.45 }),
-    heatsink: std(0x6f7781, { metalness: 0.65, roughness: 0.5 }),
-    scr: std(0x0f1012, { roughness: 0.45 }),
-    steel: std(0x9aa0a8, { metalness: 0.95, roughness: 0.28 }),
-    foam: std(0x7a8577, { roughness: 1 }),
-    phenolic: std(0x241a14, { roughness: 0.7 }),
-    acrylic: new THREE.MeshPhysicalMaterial({ color: 0xcfe0ea, transparent: true, opacity: 0.3, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide, depthWrite: false }),
-    glassRim: std(0xa9c4d2, { roughness: 0.2, transparent: true, opacity: 0.6 }),
-    cableRed: std(0xc0392b, { roughness: 0.8 }),
-    cableBlack: std(0x1b1c1f, { roughness: 0.8 }),
-    cableGrey: std(0x8a8f98, { roughness: 0.8 }),
-    cableYellow: std(0xd9b24a, { roughness: 0.8 }),
-    cableBlue: std(0x2d6cdf, { roughness: 0.8 }),
-    led: std(0x5a1a1a, { roughness: 0.3, emissive: 0x000000 }),
-    ledGreen: std(0x1a4a1a, { roughness: 0.3 }),
-    irLens: std(0x3a2a44, { roughness: 0.2, transparent: true, opacity: 0.9 }),
-    diode: std(0x1a1a1c, { roughness: 0.4 }),
-    terminal: std(0xb8b29a, { metalness: 0.85, roughness: 0.4 }),
-    tray: std(0x3b3f46, { roughness: 0.7 }),
-    label: std(0xe6e1d6, { roughness: 0.8 }),
+    nylon: std(0xeeeae0, { roughness: 0.7 }),
+    rubber: std(0x202226, { roughness: 0.95 }),
+    battery: std(0x2b2b2b, { roughness: 0.5 }),
+    batteryTop: std(0xd0a33a, { metalness: 0.6, roughness: 0.4 }),
+    glassLens: new THREE.MeshPhysicalMaterial({ color: 0xe8f0f4, transparent: true, opacity: 0.35, roughness: 0.05 }),
+    meterCase: std(0xe6b422, { roughness: 0.6 }),
+    meterFace: std(0x222428, { roughness: 0.5 }),
+    led: std(0x4a1a1a, { roughness: 0.3 }),
+    irLens: std(0x3a2a44, { roughness: 0.2 }),
   };
 
-  // ---------------------------------------------------------------- groups and pickables
-  const groups = {};
+  // ---------------------------------------------------------------- groups (the guide's tabs)
   const GROUP_INFO = {
-    bench: { title: "Bench", explode: [0, 0, 0] },
-    charger: { title: "1 · Charging circuit", explode: [-34, -10, 26] },
-    bank: { title: "2 · Capacitor bank", explode: [-12, -14, 36] },
-    switch: { title: "3 · SCR switch and trigger", explode: [8, -8, 30] },
-    coil: { title: "4 · Coil, barrel and flyback", explode: [24, 14, 34] },
-    sensing: { title: "5 · Sensing and timing", explode: [40, -8, 26] },
-    cables: { title: "Wiring", explode: [0, 0, 0] },
+    bench: { title: "Bench and base plate", explode: [0, 0, 0] },
+    charging: { title: "1 · Charging", explode: [90, -60, 70] },
+    bank: { title: "2 · Capacitor bank", explode: [30, 20, 110] },
+    switch: { title: "3 · Switch", explode: [-60, 50, 80] },
+    coil: { title: "4 · Coil, barrel, slug", explode: [-20, -70, 90] },
+    sensing: { title: "5 · Sensing (later)", explode: [40, -80, 130] },
+    pcb: { title: "PCB boards (KiCad)", explode: [-90, 40, 90] },
+    tools: { title: "Tools and safety", explode: [0, 70, 40] },
+    wiring: { title: "Pulse wiring", explode: [0, 0, 0] },
   };
+  const groups = {};
   for (const id of Object.keys(GROUP_INFO)) {
     const g = new THREE.Group();
     g.name = id;
-    g.userData.home = new THREE.Vector3();
+    g.userData.explode = new THREE.Vector3(GROUP_INFO[id].explode[0], GROUP_INFO[id].explode[2], GROUP_INFO[id].explode[1]);
     scene.add(g);
     groups[id] = g;
   }
   const pickables = [];
-  const live = { emissive: {}, cables: [] };
+  const live = { emissive: {}, cables: [], later: [], early: [] };
+  let tag = null; // "later" | "early" | null: applied to everything added while set
+  const tagged = (fn, t) => { const before = tag; tag = t; try { return fn(); } finally { tag = before; } };
 
-  function add(group, mesh, label, { shadow = true, pick = true } = {}) {
-    mesh.castShadow = shadow;
-    mesh.receiveShadow = shadow;
+  function add(group, obj, label, { shadow = true, pick = true, parent } = {}) {
+    obj.traverse((o) => { if (o.isMesh) { o.castShadow = shadow; o.receiveShadow = shadow; } });
     if (label) {
-      mesh.userData.label = typeof label === "string" ? { name: label } : label;
-      mesh.userData.group = group;
-      if (pick) pickables.push(mesh);
+      const lab = typeof label === "string" ? { name: label } : label;
+      obj.traverse((o) => { if (o.isMesh) { o.userData.label = lab; o.userData.group = group; if (pick) pickables.push(o); } });
     }
-    groups[group].add(mesh);
-    return mesh;
+    if (tag === "later") { obj.userData.later = true; live.later.push(obj); }
+    if (tag === "early") { obj.userData.early = true; live.early.push(obj); }
+    (parent ?? groups[group]).add(obj);
+    return obj;
   }
+  const mesh = (geo, mat) => new THREE.Mesh(geo, mat);
   const box = (group, [x0, y0, z0], [x1, y1, z1], mat, label, opts) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, z1 - z0, y1 - y0), mat);
+    const m = mesh(new THREE.BoxGeometry(x1 - x0, z1 - z0, y1 - y0), mat);
     m.position.copy(W((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
     return add(group, m, label, opts);
   };
-  const cylZ = (group, x, y, z0, z1, r, mat, label, { segs = 32, r0 } = {}) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r0 ?? r, z1 - z0, segs), mat);
+  const cylZ = (group, x, y, z0, z1, r, mat, label, { segs = 32, r0, opts } = {}) => {
+    const m = mesh(new THREE.CylinderGeometry(r, r0 ?? r, z1 - z0, segs), mat);
     m.position.copy(W(x, y, (z0 + z1) / 2));
-    return add(group, m, label);
+    return add(group, m, label, opts);
   };
-  const cylX = (group, x0, x1, y, z, r, mat, label, { segs = 32, r1 } = {}) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1 ?? r, r, x1 - x0, segs), mat);
+  const cylX = (group, x0, x1, y, z, r, mat, label, { segs = 32, r1, opts } = {}) => {
+    const m = mesh(new THREE.CylinderGeometry(r1 ?? r, r, x1 - x0, segs), mat);
     m.rotation.z = -Math.PI / 2;
     m.position.copy(W((x0 + x1) / 2, y, z));
-    return add(group, m, label);
+    return add(group, m, label, opts);
   };
-  const cylY = (group, x, y0, y1, z, r, mat, label, { segs = 32 } = {}) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, y1 - y0, segs), mat);
+  const cylY = (group, x, y0, y1, z, r, mat, label, { segs = 32, opts } = {}) => {
+    const m = mesh(new THREE.CylinderGeometry(r, r, y1 - y0, segs), mat);
     m.rotation.x = Math.PI / 2;
     m.position.copy(W(x, (y0 + y1) / 2, z));
-    return add(group, m, label);
+    return add(group, m, label, opts);
   };
-  // an annulus with thickness along x (a ring, a tube, a coil cheek)
-  const ringX = (group, x0, x1, y, z, rIn, rOut, mat, label, { segs = 48, shadow = true } = {}) => {
+  const ringX = (group, x0, x1, y, z, rIn, rOut, mat, label, { segs = 64, shadow = true } = {}) => {
     const shape = new THREE.Shape();
     shape.absarc(0, 0, rOut, 0, Math.PI * 2, false);
     const hole = new THREE.Path();
@@ -1828,24 +1853,22 @@ function buildScene(THREE, OrbitControls, MODEL, canvas, opts = {}) {
     shape.holes.push(hole);
     const geo = new THREE.ExtrudeGeometry(shape, { depth: x1 - x0, bevelEnabled: false, curveSegments: segs });
     geo.rotateY(Math.PI / 2);
-    const m = new THREE.Mesh(geo, mat);
+    const m = mesh(geo, mat);
     m.position.copy(W(x0, y, z));
     return add(group, m, label, { shadow });
   };
   const sphere = (group, [x, y, z], r, mat, label) => {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), mat);
+    const m = mesh(new THREE.SphereGeometry(r, 20, 14), mat);
     m.position.copy(W(x, y, z));
     return add(group, m, label);
   };
-  // a cable: straight legs with rounded corners, as a tube
   function routeCurve(points, bend) {
-    const pts = points.map((p) => W(...p));
+    const pts = points.map((p) => (p.isVector3 ? p : W(...p)));
     const path = new THREE.CurvePath();
     let prev = pts[0];
     for (let i = 1; i < pts.length - 1; i++) {
       const a = pts[i - 1], b = pts[i], c = pts[i + 1];
-      const la = b.distanceTo(a), lc = b.distanceTo(c);
-      const r = Math.min(bend, la * 0.48, lc * 0.48);
+      const r = Math.min(bend, b.distanceTo(a) * 0.48, b.distanceTo(c) * 0.48);
       const p1 = b.clone().add(a.clone().sub(b).setLength(r));
       const p2 = b.clone().add(c.clone().sub(b).setLength(r));
       if (p1.distanceTo(prev) > 1e-4) path.add(new THREE.LineCurve3(prev, p1));
@@ -1856,333 +1879,364 @@ function buildScene(THREE, OrbitControls, MODEL, canvas, opts = {}) {
     if (last.distanceTo(prev) > 1e-4) path.add(new THREE.LineCurve3(prev, last));
     return path;
   }
-  function cable(name, points, r, mat, label, { bend = 3, hot = false, ends = [true, true] } = {}) {
-    const curve = routeCurve(points, Math.max(bend, r * 2.8));
-    const segs = Math.max(24, Math.round(curve.getLength() / 1.2));
-    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, segs, r, 14, false), mat.clone());
-    m.name = name;
-    add("cables", m, label);
+  function cable(group, points, r, mat, label, { bend = 4, hot = false, lugs = [true, true] } = {}) {
+    const curve = routeCurve(points, Math.max(bend, r * 2.5));
+    const m = mesh(new THREE.TubeGeometry(curve, Math.max(24, Math.round(curve.getLength() / 2)), r, 12, false), mat.clone());
+    add(group, m, label);
     live.cables.push(m);
     if (hot) (live.emissive[hot] ??= []).push(m);
-    // ferrules or solder dots at the ends
-    ends.forEach((on, i) => {
+    lugs.forEach((on, i) => {
       if (!on) return;
       const p = i ? points[points.length - 1] : points[0];
-      sphere("cables", p, r * 1.25, M.terminal, null);
+      add(group, mesh(new THREE.CylinderGeometry(r * 1.6, r * 1.6, 1.2, 16), M.tinned), null).position.copy(p.isVector3 ? p : W(p[0], p[1], p[2]));
     });
     return m;
   }
-
-  // ---------------------------------------------------------------- layout (same numbers as the isometric figure)
-  const PLATE = { x0: -150, x1: 186, y0: -62, y1: 62, h: 10 };
-  const BARREL = { x0: 50, x1: 150, y: 32, z: 26, r: 6, bore: 5.2 };
-  const COIL = { s0: 83, s1: 107, rOut: 11 };
-  const GATE_X = 140;
-  const CATCH = { x0: 158, x1: 182, y0: 18, y1: 46, z1: 38 };
-  const SLUG = { r: 4.8, len: 12, breech: BARREL.x0 + 6 };
-  const SCALE = (BARREL.x1 - BARREL.x0) / MODEL.DEFAULTS.barrelLen; // world units per metre
+  // a lit text panel drawn on a canvas (supply display, multimeter display)
+  function panel(group, w, h, px, label) {
+    const cv = document.createElement("canvas");
+    cv.width = px;
+    cv.height = Math.round((px * h) / w);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const m = mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    add(group, m, label, { shadow: false });
+    return { mesh: m, ctx: cv.getContext("2d"), cv, tex, last: "" };
+  }
   const L = (name, value, role) => ({ name, value, role });
 
-  // ---------------------------------------------------------------- bench
-  box("bench", [PLATE.x0, PLATE.y0, -PLATE.h], [PLATE.x1, PLATE.y1, 0], M.alu, L("Bench plate", "6 mm aluminium", "Everything bolts to it; it is also the safety ground."));
-  for (const [x, y] of [[PLATE.x0 + 22, PLATE.y0 + 22], [PLATE.x1 - 22, PLATE.y0 + 22], [PLATE.x0 + 22, PLATE.y1 - 22], [PLATE.x1 - 22, PLATE.y1 - 22], [18, PLATE.y0 + 22], [18, PLATE.y1 - 22]]) {
-    cylZ("bench", x, y, -PLATE.h - 5, -PLATE.h, 6, M.rubber, null);
-  }
-  box("bench", [PLATE.x0 + 14, PLATE.y1 - 12, 0], [PLATE.x1 - 14, PLATE.y1 - 6, 0.6], M.absLight, L("Ruler strip", "mm scale", "Engraved scale along the front edge."));
-  // HV area mat: a thin rubber inlay under the high-voltage blocks
-  box("bench", [-92, -56, 0], [152, 40, 0.5], std(0x343a44, { roughness: 0.92 }), L("High-voltage area", "> 50 V", "Everything inside this mat is a shock hazard while the bank holds charge."));
-  // label plate
-  box("bench", [-40, 30, 0], [-8, 43, 0.8], M.label, L("Label plate", "", "Nameplate for the bench."));
-  // discharge stick in clips, with its ground lead
-  const STICK = { x0: -78, x1: -22, y: 55, z: 3.2 };
-  for (const x of [STICK.x0 + 8, STICK.x0 + 26]) box("bench", [x - 1.2, STICK.y - 2.6, 0], [x + 1.2, STICK.y + 2.6, 2.2], M.absLight, null);
-  cylX("bench", STICK.x0, STICK.x0 + 30, STICK.y, STICK.z, 1.3, M.phenolic, L("Discharge stick", "1 kΩ 25 W in a fibreglass rod", "Bleeds a bank that the bleeder has not finished yet. Touch nothing before the meter reads under 50 V."));
-  cylX("bench", STICK.x0 + 30, STICK.x0 + 34, STICK.y, STICK.z, 1.0, M.steel, null);
-  cylX("bench", STICK.x0 + 34, STICK.x0 + 46.6, STICK.y, STICK.z, 2.0, M.ceramic, L("Discharge resistor", "1 kΩ 25 W", "Limits the discharge current so the probe does not weld."));
-  cylX("bench", STICK.x0 + 46.6, STICK.x0 + 56, STICK.y, STICK.z, 0.9, M.steel, null, { r1: 0.2 });
-  cylZ("bench", -88, 52, 0, 4, 1.6, M.brass, L("Ground post", "", "Return for the discharge stick."));
-  cable("stick.gnd", [[STICK.x0, STICK.y, STICK.z], [STICK.x0 - 4, STICK.y, STICK.z], [-84, 52, 4.6], [-88, 52, 7], [-88, 52, 4]], 0.5, M.cableGrey, L("Discharge lead", "", "Grounds the stick's return."), { bend: 2.6 });
-  // spare slugs tray
-  box("bench", [118, 44, 0], [141, 56, 1.4], M.tray, L("Spare slugs", "8 g steel each", "Soft iron or mild steel, never a magnet: the field must pull it, then let it go."));
-  for (const x of [124.5, 134.5]) cylY("bench", x, 46.2, 53.8, 1.4 + SLUG.r, SLUG.r, M.steel, null);
-  // catch box past the muzzle
-  box("coil", [CATCH.x0, CATCH.y0, 0], [CATCH.x1, CATCH.y1, CATCH.z1], M.foam, L("Catch box", "dense foam", "Stops the slug. A real range needs a steel backstop behind it."));
-  box("coil", [CATCH.x0 - 1.5, CATCH.y0 - 1.5, 0], [CATCH.x1 + 1.5, CATCH.y1 + 1.5, 3], M.abs, null);
+  // ---------------------------------------------------------------- layout (mm, from the guide)
+  const PZ = 6; // base plate top: 300 × 150 mm plywood, 6 mm thick
+  const PLATE = { x0: -150, x1: 150, y0: -75, y1: 75 };
+  const TUBE = { x0: -150, x1: 150, y: -40, z: PZ + 25 + 8, r: 8, bore: 6 }; // 16 mm OD, 12 mm ID, 25 mm above the plate
+  const COIL = { x0: -110, x1: -70, rOut: 8 + 4 * 1.6, cheekR: 20, cheekT: 4 }; // 40 mm long, 4 cm from the breech, 4 layers
+  const SLUG = { r: 5, len: 30, z: TUBE.z - (TUBE.bore - 5) };
+  const BREECH = TUBE.x0;
+  const TB = { x0: 82, x1: 98, y0: 9, y1: 57, xL: 86, xR: 94, ys: [15, 27, 39, 51], top: PZ + 14 };
+  const scr = (side, pos) => [side === "L" ? TB.xL : TB.xR, TB.ys[pos - 1], TB.top + 1.5];
+  const CAPS = [{ id: "C1", x: 60.5, y: 33 }, { id: "C2", x: 119.5, y: 33 }];
+  const CAP = { r: 17.5, z0: PZ + 3, h: 60 };
+  const KNIFE = { x0: 88, x1: 143, y0: 55, y1: 73, hingeX: 136, jawX: 95, y: 64, top: PZ + 8 };
+  const BDIODE = { x: 144, y: -2 };
+  const CTB = { x0: -105, x1: -75, y0: -15, y1: -1, A: [-98, -8], B: [-82, -8], top: PZ + 12 };
+  const PSW = { x0: -112, x1: -72, y0: 30, y1: 60, top: PZ + 28 };
+  const E_IN = [-72, 52, PZ + 12];
+  const E_OUT = [-72, 38, PZ + 12];
+  const SUPPLY = { x0: 60, x1: 170, y0: -320, y1: -120, h: 120 };
+  const CATCH = { x0: 450, x1: 630, y0: -150, y1: 70, h: 170 };
+  const GATES = [0, 50];
+  const SCALE = 1000; // world mm per model metre
 
-  // ---------------------------------------------------------------- block 1: charger
-  const CH = { x0: -142, x1: -104, y0: -44, y1: -12, z1: 24 };
-  box("charger", [CH.x0, CH.y0, 0], [CH.x1, CH.y1, CH.z1], M.abs, L("Boost charger", "1 A limit, 50–450 V out", "Steps the low-voltage input up to the bank rating; the current limit makes charging controlled."));
-  for (let i = 0; i < 7; i++) box("charger", [CH.x0 + 3 + i * 4.4, CH.y0 + 2, CH.z1], [CH.x0 + 4.4 + i * 4.4, CH.y0 + 7.5, CH.z1 + 3], M.heatsink, null);
-  for (const x of [-130, -124, -118]) box("charger", [x - 1.1, CH.y1 - 0.4, 10.5], [x + 1.1, CH.y1 + 0.1, 19.5], M.chip, null);
-  // knob on the front face
-  const KNOB = { c: [-112, CH.y1, 10], r: 4.2, len: 3.2 };
-  cylY("charger", KNOB.c[0], KNOB.c[1], KNOB.c[1] + 0.8, KNOB.c[2], KNOB.r + 1.2, M.absLight, null);
-  const knob = cylY("charger", KNOB.c[0], KNOB.c[1] + 0.8, KNOB.c[1] + 0.8 + KNOB.len, KNOB.c[2], KNOB.r, M.knob, L("Voltage set knob", "50–450 V", "Sets the charger's output. Drag it, or use ↑ ↓."), { segs: 40 });
-  const knobIndex = box("charger", [KNOB.c[0] - 0.35, KNOB.c[1] + 0.8 + KNOB.len - 0.2, KNOB.c[2] + 0.6], [KNOB.c[0] + 0.35, KNOB.c[1] + 0.8 + KNOB.len + 0.15, KNOB.c[2] + KNOB.r - 0.6], M.dial, null);
-  // the knob and its index turn together about the knob axis
-  const knobPivot = new THREE.Group();
-  knobPivot.position.copy(W(KNOB.c[0], KNOB.c[1], KNOB.c[2]));
-  groups.charger.add(knobPivot);
-  for (const m of [knob, knobIndex]) { groups.charger.remove(m); m.position.sub(knobPivot.position); knobPivot.add(m); }
-  live.knobPivot = knobPivot;
-  // jack and LED
-  cylY("charger", -134, CH.y1, CH.y1 + 2.4, 8, 2.4, M.chip, L("DC input jack", "12–24 V in", "The battery or bench supply plugs in here."));
-  const chargeLed = sphere("charger", [CH.x1 + 0.4, -20, 20], 0.9, M.led.clone(), L("Charge lamp", "", "On while the charger is pushing current into the bank."));
-  live.emissive.charge = [chargeLed];
-  // voltmeter on top
-  const METER = { c: [-123, -28], r: 7.5, z: CH.z1, h: 5 };
-  cylZ("charger", METER.c[0], METER.c[1], METER.z, METER.z + METER.h, METER.r, M.absLight, L("Bank voltmeter", "0–500 V", "Reads the bank, not the set point. The bleed is done when it is under 50 V."), { segs: 48 });
-  cylZ("charger", METER.c[0], METER.c[1], METER.z + METER.h, METER.z + METER.h + 0.2, METER.r - 1.2, M.dial, null, { segs: 48 });
-  for (let i = 0; i <= 10; i++) {
-    const a = -135 * DEG + (270 * DEG * i) / 10;
-    const rr = METER.r - 2.4;
-    const t = box("charger", [-0.25, -0.9, 0], [0.25, 0.9, 0.25], M.chip, null);
-    t.position.copy(W(METER.c[0] + Math.sin(a) * rr, METER.c[1] - Math.cos(a) * rr, METER.z + METER.h + 0.2));
-    t.rotation.y = -a;
-  }
-  const needlePivot = new THREE.Group();
-  needlePivot.position.copy(W(METER.c[0], METER.c[1], METER.z + METER.h + 0.3));
-  groups.charger.add(needlePivot);
-  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, METER.r - 2), M.needle);
-  needle.position.z = -(METER.r - 2) / 2 + 1.2;
-  needlePivot.add(needle);
-  needlePivot.add(new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.5, 16), M.chip));
-  live.needlePivot = needlePivot;
-  // terminals
-  const CH_OUT = { pos: [-107, -40, CH.z1], neg: [-107, -27, CH.z1] };
-  cylZ("charger", ...CH_OUT.pos.slice(0, 2), CH.z1, CH.z1 + 3, 1.3, M.brass, L("Charger + output", "", "Through the limit resistor to the + bus."));
-  cylZ("charger", ...CH_OUT.neg.slice(0, 2), CH.z1, CH.z1 + 3, 1.3, M.brass, L("Charger − output", "", "Straight to the − bus."));
-  const CH_EN = [-139, -16, CH.z1], CH_EN2 = [-135, -16, CH.z1];
-  for (const c of [CH_EN, CH_EN2]) cylZ("charger", c[0], c[1], CH.z1, CH.z1 + 2.4, 1.1, M.brass, L("Enable terminals", "", "The key switch closes these; open means the charger is off."));
-  cylZ("bench", -146, -26, 0, 3.6, 2.2, M.chip, L("Input socket", "12–24 V", "Bench supply or battery lands here."));
-  // limit resistor behind the bank
-  const RLIM = { x0: -98, x1: -86, y: -52, z: 3.4, r: 2.4 };
-  for (const x of [RLIM.x0 + 1.5, RLIM.x1 - 1.5]) box("charger", [x - 0.8, RLIM.y - 2.8, 0], [x + 0.8, RLIM.y + 2.8, 1.4], M.absLight, null);
-  cylX("charger", RLIM.x0, RLIM.x1, RLIM.y, RLIM.z, RLIM.r, M.ceramic, L("Charge limit resistor", "47 Ω 25 W", "Backs up the module's own current limit so an inrush cannot cook the output stage."));
+  // ---------------------------------------------------------------- bench and base plate
+  box("bench", [-420, -340, -40], [720, 260, 0], M.benchWood, L("Workbench", "", "Everything sits on the bench; the bench power supply sits beside the base plate, never on it."));
+  for (const [x, y] of [[-390, -310], [690, -310], [-390, 230], [690, 230]]) box("bench", [x - 30, y - 30, -420], [x + 30, y + 30, -40], M.benchWood, null);
+  box("bench", [PLATE.x0, PLATE.y0, 0], [PLATE.x1, PLATE.y1, PZ], M.plywood, L("Base plate", "300 × 150 mm plywood, 6 mm", "Everything on the plate bolts to it. Plywood is fine and cheaper: nothing on the plate is hot or high voltage."));
+  for (const [x, y] of [[-144, -69], [144, -69], [-144, 69], [144, 69]]) cylZ("bench", x, y, PZ, PZ + 0.8, 2.6, M.zinc, null, { segs: 6 });
 
-  // ---------------------------------------------------------------- block 2: capacitor bank
-  const BANK = { x0: -84, x1: -14, y: -30, canR: 7, canH: 24, xs: [-72, -56, -40, -24] };
-  box("bank", [BANK.x0, BANK.y - 16, 0], [BANK.x1, BANK.y + 16, 2], M.absLight, L("Bank tray", "", "Holds the cans and the clamp rails."));
-  const CAN_TOP = 2 + BANK.canH;
-  const TERM_DY = 3.5;
+  // ---------------------------------------------------------------- 1 · Charging
+  box("charging", [SUPPLY.x0, SUPPLY.y0, 0], [SUPPLY.x1, SUPPLY.y1, SUPPLY.h], M.supplyCase, L("Bench power supply", "Jesverty SPS-12003N, 0–120 V, 0–3 A", "Set to 55 V and a 1 A current limit. The current knob controls how fast the bank fills. Never above 55 V with 63 V capacitors."));
+  box("charging", [SUPPLY.x0 + 4, SUPPLY.y1 - 1, 6], [SUPPLY.x1 - 4, SUPPLY.y1 + 0.5, SUPPLY.h - 6], M.supplyPanel, null);
+  const supplyDisplay = panel("charging", 92, 40, 512, L("Supply display", "volts and amps", "Shows the bank's voltage only while the supply is connected. Reads the charging current: 1 A while filling, then the bleeder's 55 mA."));
+  supplyDisplay.mesh.position.copy(W((SUPPLY.x0 + SUPPLY.x1) / 2, SUPPLY.y1 + 0.7, 88));
+  live.supplyDisplay = supplyDisplay;
+  const knobV = cylY("charging", SUPPLY.x0 + 24, SUPPLY.y1, SUPPLY.y1 + 10, 44, 8, M.blackPlastic, L("Voltage knob (taped at 55 V)", "", "Set with nothing connected, then taped so nobody can turn it past 55 V."), { segs: 28 });
+  box("charging", [SUPPLY.x0 + 14, SUPPLY.y1 + 9.6, 42], [SUPPLY.x0 + 34, SUPPLY.y1 + 10.6, 46], M.tapeWhite, null);
+  cylY("charging", SUPPLY.x0 + 52, SUPPLY.y1, SUPPLY.y1 + 10, 44, 8, M.blackPlastic, L("Current-limit knob", "1.0 A", "Fully down, short the leads, turn up until the display reads 1.0 A, remove the short."), { segs: 28 });
+  const outBtn = box("charging", [SUPPLY.x0 + 64, SUPPLY.y1, 16], [SUPPLY.x0 + 84, SUPPLY.y1 + 5, 26], M.green.clone(), L("Supply output button", "", "Turns the supply's output on and off (S)."));
+  live.outBtn = outBtn;
+  cylY("charging", 150, SUPPLY.y1, SUPPLY.y1 + 12, 25, 4, M.red, L("Supply + terminal (red)", "", "Red is +, black is −, everywhere on the bench."), { segs: 20 });
+  cylY("charging", 133, SUPPLY.y1, SUPPLY.y1 + 12, 25, 4, M.blackPlastic, L("Supply − terminal (black)", "", "Red is +, black is −, everywhere on the bench."), { segs: 20 });
+  const supplyLeadRed = L("Supply + lead", "18 AWG red", "Supply + to the blocking diode. Banana plug at the supply, ring lug at the diode.");
+  const supplyLeadBlack = L("Supply − lead", "18 AWG black", "Supply − straight to the bank's − bus on the terminal block.");
+  cable("charging", [[150, SUPPLY.y1 + 12, 25], [150, -106, 25], [150, -97, 1.4], [146, -84, 1.4], [146, -77, PZ + 1.3], [146, -14, PZ + 1.3], [139, -6, PZ + 1.3], [138, -2, PZ + 5]], 1.2, M.cableRed, supplyLeadRed, { bend: 6 });
+  cable("charging", [[133, SUPPLY.y1 + 12, 25], [133, -106, 25], [133, -97, 1.4], [133, -80, 1.4], [133, -77, PZ + 1.3], [133, -12, PZ + 1.3], [TB.xR, -12, PZ + 1.3], [TB.xR, 8, PZ + 3], scr("R", 1)], 1.2, M.cableBlack, supplyLeadBlack, { bend: 6 });
+  // blocking diode: stud on an insulating block, band (cathode) toward the bank
+  const bdLabel = L("Blocking diode", "200 V or more, 50 A or more", "A one-way valve in the + lead: current flows from the supply to the bank, never back. Band toward the capacitors.");
+  box("charging", [BDIODE.x - 7, BDIODE.y - 7, PZ], [BDIODE.x + 7, BDIODE.y + 7, PZ + 4], M.blackPlastic, bdLabel);
+  cylZ("charging", BDIODE.x, BDIODE.y, PZ + 4, PZ + 8, 6, M.zinc, bdLabel, { segs: 6 });
+  cylZ("charging", BDIODE.x, BDIODE.y, PZ + 8, PZ + 20, 4.5, M.diodeBody, bdLabel, { segs: 24 });
+  cylZ("charging", BDIODE.x, BDIODE.y, PZ + 16, PZ + 18, 4.55, M.band, bdLabel, { segs: 24 });
+  box("charging", [BDIODE.x - 1.5, BDIODE.y - 3, PZ + 20], [BDIODE.x + 1.5, BDIODE.y + 3, PZ + 24], M.brass, bdLabel);
+  // knife switch: the disconnect
+  const knifeLabel = L("Disconnect switch (knife switch)", "in the + lead, diode → bank", "Opened with the bank full and no current flowing, so the supply is off the bank before you fire. Never used to fire. K opens and closes it.");
+  box("charging", [KNIFE.x0, KNIFE.y0, PZ], [KNIFE.x1, KNIFE.y1, KNIFE.top], M.slate, knifeLabel);
+  for (const x of [KNIFE.hingeX, KNIFE.jawX]) {
+    box("charging", [x - 4, KNIFE.y - 6, KNIFE.top], [x + 4, KNIFE.y - 4.6, KNIFE.top + 12], M.copper, knifeLabel);
+    box("charging", [x - 4, KNIFE.y + 4.6, KNIFE.top], [x + 4, KNIFE.y + 6, KNIFE.top + 12], M.copper, knifeLabel);
+    box("charging", [x - 4, KNIFE.y - 6, KNIFE.top], [x + 4, KNIFE.y + 6, KNIFE.top + 1.5], M.copper, knifeLabel);
+  }
+  const knifePivot = new THREE.Group();
+  knifePivot.position.copy(W(KNIFE.hingeX, KNIFE.y, KNIFE.top + 8));
+  groups.charging.add(knifePivot);
+  const blade = mesh(new THREE.BoxGeometry(48, 9, 2.6), M.copper);
+  blade.position.set(-24, 0, 0);
+  const handle = mesh(new THREE.CylinderGeometry(3.4, 3.4, 22, 20), M.blackPlastic);
+  handle.position.set(-50, 6, 0);
+  add("charging", blade, knifeLabel, { parent: knifePivot });
+  add("charging", handle, knifeLabel, { parent: knifePivot });
+  live.knifePivot = knifePivot;
+  cable("charging", [[BDIODE.x, BDIODE.y + 2, PZ + 23], [BDIODE.x + 1, 10, PZ + 26], [145.5, 46, PZ + 14], [141, KNIFE.y, PZ + 10]], 1.2, M.cableRed, L("Diode to disconnect switch", "18 AWG red", ""), { bend: 6 });
+  cable("charging", [[KNIFE.jawX - 4, KNIFE.y - 4, PZ + 9], [TB.xR + 2, 56, PZ + 12], scr("R", 4)], 1.2, M.cableRed, L("Disconnect switch to bank +", "18 AWG red", "Charge current enters the + bus here."), { bend: 3 });
+
+  // ---------------------------------------------------------------- 2 · Capacitor bank
   live.cans = [];
-  for (const x of BANK.xs) {
-    const can = cylZ("bank", x, BANK.y, 2, CAN_TOP, BANK.canR, M.canSleeve, L("Electrolytic capacitor", "820 µF 450 V", "Four in parallel add up; in series they would need balancing resistors."), { segs: 48 });
-    live.cans.push(can);
-    cylZ("bank", x, BANK.y, CAN_TOP - 0.01, CAN_TOP + 0.6, BANK.canR - 0.2, M.canTop, null, { segs: 48 });
-    cylZ("bank", x, BANK.y, 2, 4.2, BANK.canR + 0.05, M.canBody, null, { segs: 48 });
-    for (const dy of [-TERM_DY, TERM_DY]) cylZ("bank", x, BANK.y + dy, CAN_TOP + 0.6, CAN_TOP + 1.6, 1.1, M.brass, null, { segs: 16 });
+  for (const c of CAPS) {
+    const capLabel = L(`Capacitor ${c.id}`, "10 000 µF, 63 V electrolytic", "Two in parallel make 20 000 µF: 30 J at 55 V. The stripe terminal is negative and goes to the − bus. Both face the same way.");
+    cylZ("bank", c.x, c.y, PZ, CAP.z0, CAP.r + 2.5, M.pla, L("Cradle", "3D-printed", "Holds the can upright. Loose cans walk under the pulse's magnetic kick."), { segs: 40 });
+    live.cans.push(cylZ("bank", c.x, c.y, CAP.z0, CAP.z0 + CAP.h, CAP.r, M.capSleeve, capLabel, { segs: 48 }));
+    cylZ("bank", c.x, c.y, CAP.z0 + CAP.h, CAP.z0 + CAP.h + 1.2, CAP.r - 0.5, M.capTop, capLabel, { segs: 48 });
+    const toward = c.x < TB.xL ? 1 : -1; // stripe faces the terminal block
+    const stripe = box("bank", [-2.2, -0.4, CAP.z0 + 4], [2.2, 0.4, CAP.z0 + CAP.h - 4], M.capStripe, capLabel);
+    stripe.position.copy(W(c.x + toward * CAP.r * 0.72, c.y - CAP.r * 0.7, CAP.z0 + CAP.h / 2));
+    stripe.rotation.y = toward > 0 ? Math.PI / 4 : -Math.PI / 4;
+    for (const [dy, mat] of [[7, M.brass], [-7, M.brass]]) cylZ("bank", c.x, c.y + dy, CAP.z0 + CAP.h + 1.2, CAP.z0 + CAP.h + 4, 2.8, mat, capLabel, { segs: 6 });
   }
-  for (const dy of [-BANK.canR - 2.6, BANK.canR + 2.6]) {
-    box("bank", [BANK.x0 + 2, BANK.y + dy - 1.4, 10], [BANK.x1 - 2, BANK.y + dy + 1.4, 13], M.alu, L("Clamp rail", "", "Keeps the cans from walking under the pulse's magnetic kick."));
-    for (const x of [BANK.x0 + 4.5, BANK.x1 - 4.5]) cylZ("bank", x, BANK.y + dy, 2, 10, 1.4, M.steel, null, { segs: 16 });
+  const tbLabel = L("Terminal block", "4-way barrier strip, 30 A", "Screws 1–2 are the − bus, 3–4 the + bus. Everything positive meets on +, everything negative on −.");
+  box("bank", [TB.x0, TB.y0, PZ], [TB.x1, TB.y1, TB.top], M.blackPlastic, tbLabel);
+  for (const y of [TB.y0 + 0.5, ...TB.ys.slice(0, 3).map((v) => v + 6), TB.y1 - 1.5]) box("bank", [TB.x0, y - 0.5, TB.top], [TB.x1, y + 0.5, TB.top + 4], M.blackPlastic, tbLabel);
+  for (const y of TB.ys) for (const x of [TB.xL, TB.xR]) cylZ("bank", x, y, TB.top, TB.top + 1.6, 2.6, M.zinc, tbLabel, { segs: 16 });
+  box("bank", [TB.xR - 3, TB.ys[0] - 3, TB.top + 1.6], [TB.xR + 3, TB.ys[1] + 3, TB.top + 2.2], M.brass, L("− bus jumper", "", "Joins screws 1 and 2."));
+  box("bank", [TB.xR - 3, TB.ys[2] - 3, TB.top + 1.6], [TB.xR + 3, TB.ys[3] + 3, TB.top + 2.2], M.brass, L("+ bus jumper", "", "Joins screws 3 and 4."));
+  const jumperLabel = (id, s) => L(`${id} ${s} jumper`, "10 AWG, under 10 cm", "Short jumpers from each capacitor to the bus. The pulse hates long wire.");
+  for (const c of CAPS) {
+    const side = c.x < TB.xL ? "L" : "R";
+    const xs = side === "L" ? TB.xL - 6 : TB.xR + 6;
+    const tz = CAP.z0 + CAP.h + 4;
+    cable("bank", [[c.x, c.y + 7, tz], [c.x, c.y + 7, tz + 6], [xs, TB.ys[2], tz + 6], [xs, TB.ys[2], TB.top + 2], scr(side, 3)], 2.2, M.cableRed, jumperLabel(c.id, "+"), { bend: 5 });
+    cable("bank", [[c.x, c.y - 7, tz], [c.x, c.y - 7, tz + 10], [xs, TB.ys[1], tz + 10], [xs, TB.ys[1], TB.top + 2], scr(side, 2)], 2.2, M.cableBlack, jumperLabel(c.id, "−"), { bend: 5 });
   }
-  const BUS = { z: CAN_TOP + 1.6, h: 1.2, x0: BANK.xs[0] - 5, x1: BANK.xs[3] + 7 };
-  const busDy = (id) => (id === "pos" ? -TERM_DY : TERM_DY);
-  const busTop = BUS.z + BUS.h;
-  const busAt = (id, x) => [x, BANK.y + busDy(id), busTop];
-  box("bank", [BUS.x0, BANK.y + busDy("pos") - 1.1, BUS.z], [BUS.x1, BANK.y + busDy("pos") + 1.1, busTop], M.copper, L("+ bus bar", "copper", "Collects the four + terminals. Low inductance matters here: the pulse is kiloamps."));
-  box("bank", [BUS.x0, BANK.y + busDy("neg") - 1.1, BUS.z], [BUS.x1, BANK.y + busDy("neg") + 1.1, busTop], M.copper, L("− bus bar", "copper", "Collects the four − terminals."));
-  const BLEED = { x0: -60, x1: -36, y: -8, z: 3.8, r: 2.8 };
-  for (const x of [BLEED.x0 + 2, BLEED.x1 - 2]) box("bank", [x - 0.9, BLEED.y - 3.2, 0], [x + 0.9, BLEED.y + 3.2, 1.5], M.absLight, null);
-  live.bleeder = cylX("bank", BLEED.x0, BLEED.x1, BLEED.y, BLEED.z, BLEED.r, M.ceramic.clone(), L("Bleeder resistor", "10 kΩ 10 W", "Across the bank permanently: drains it whenever the system is off."));
+  const bleedLabel = L("Bleeder resistor", "1 kΩ, 10 W wirewound", "Permanently across the bank, screws 1 and 4. Drains it whenever the supply is off: 55 V to under 5 V in about 50 s.");
+  const bleedZ = TB.top + 9;
+  live.bleeder = box("bank", [TB.xL - 4.5, TB.ys[0] + 3, bleedZ - 4.5], [TB.xL + 4.5, TB.ys[3] - 3, bleedZ + 4.5], M.ceramic.clone(), bleedLabel);
+  for (const y of [TB.ys[0], TB.ys[3]]) cable("bank", [[TB.xL, y + (y < 30 ? 3 : -3), bleedZ], [TB.xL, y, bleedZ], [TB.xL, y, TB.top + 1.6]], 0.5, M.tinned, bleedLabel, { bend: 1.5, lugs: [false, false] });
 
-  // ---------------------------------------------------------------- block 3: SCR and gate board
-  const HS = { x0: 0, x1: 40, y0: -46, y1: -14, z1: 5 };
-  box("switch", [HS.x0, HS.y0, 0], [HS.x1, HS.y1, HS.z1], M.heatsink, L("Heatsink", "anodised aluminium", "The SCR's cathode is its stud, so the heatsink sits at cathode potential."));
-  for (let i = 0; i < 8; i++) box("switch", [HS.x0 + 1.5 + i * 5.1, HS.y0 + 1.5, HS.z1], [HS.x0 + 2.9 + i * 5.1, HS.y0 + 15, HS.z1 + 13], M.heatsink, null);
-  const SCR = { c: [20, -22], z: HS.z1 };
-  const scrHex = cylZ("switch", SCR.c[0], SCR.c[1], SCR.z, SCR.z + 3, 5.2, M.steel, L("SCR (thyristor)", "1200 V, 2 kA surge", "Cheap and tough, but once triggered it stays on until the current reaches zero."), { segs: 6 });
-  const scrBody = cylZ("switch", SCR.c[0], SCR.c[1], SCR.z + 3, SCR.z + 8.6, 4.4, M.scr.clone(), L("SCR (thyristor)", "1200 V, 2 kA surge", "Cheap and tough, but once triggered it stays on until the current reaches zero."), { segs: 40 });
-  cylZ("switch", SCR.c[0], SCR.c[1], SCR.z + 8.6, SCR.z + 9.4, 2.2, M.scr, null, { segs: 32, r0: 3.4 });
-  live.emissive.scr = [scrBody];
-  const SCR_ANODE = [SCR.c[0], SCR.c[1], SCR.z + 9.2];
-  cylZ("switch", SCR.c[0], SCR.c[1], SCR.z + 9.2, SCR.z + 14, 1.3, M.brass, L("SCR anode post", "", "From the + bus."), { segs: 16 });
-  const SCR_GATE = [SCR.c[0] + 5.6, SCR.c[1] + 3.4, SCR.z + 3];
-  cylZ("switch", SCR_GATE[0], SCR_GATE[1], SCR.z, SCR.z + 3, 0.7, M.brass, L("Gate tab", "", "A few milliamps here fire the SCR."), { segs: 12 });
-  const SCR_K = [6, -17, HS.z1];
-  cylZ("switch", SCR_K[0], SCR_K[1], HS.z1, HS.z1 + 2.2, 1.6, M.brass, L("Cathode lug", "", "Heatsink potential, out to the coil."), { segs: 16 });
-  box("switch", [28, -20.5, HS.z1], [36, -16, HS.z1 + 6], M.canSleeve, L("Snubber", "RC across the SCR", "Slows the voltage rise so the SCR cannot self-trigger."));
-  const GB = { x0: 2, x1: 40, y0: -4, y1: 16, z: 4, t: 1 };
-  const gateTop = GB.z + GB.t;
-  for (const [x, y] of [[GB.x0 + 2.5, GB.y0 + 2.5], [GB.x1 - 2.5, GB.y0 + 2.5], [GB.x0 + 2.5, GB.y1 - 2.5], [GB.x1 - 2.5, GB.y1 - 2.5]]) cylZ("switch", x, y, 0, GB.z, 1, M.brass, null, { segs: 12 });
-  box("switch", [GB.x0, GB.y0, GB.z], [GB.x1, GB.y1, gateTop], M.pcb, L("Gate trigger board", "isolated", "Button or MCU on the low-voltage side, optocoupler across the slot, gate drive on the high-voltage side."));
-  box("switch", [GB.x0 + 2, 7.2, gateTop - 0.5], [GB.x1 - 4, 8.8, gateTop + 0.05], M.pcbDark, L("Isolation slot", "", "Nothing conductive crosses it except the optocoupler's light."));
-  const chip = (group, x, y, len, wid, tall, label) => box(group, [x, y, gateTop], [x + len, y + wid, gateTop + tall], M.chip, label);
-  chip("switch", 8, 9, 7.6, 3, 1.3, L("Optocoupler", "", "Carries the fire command across the isolation slot as light."));
-  chip("switch", 20, 10.5, 5, 2.4, 1.1, L("Gate driver", "", "Turns the opto's output into a clean gate pulse."));
-  cylX("switch", 26, 31, 2, gateTop + 1.1, 1.1, M.ceramic, L("Gate resistor", "", "Sets the gate current."), { segs: 16 });
-  cylZ("switch", 33, 12, gateTop, gateTop + 3.2, 1.4, M.canSleeve, L("Gate supply cap", "", "Holds the drive supply up through the pulse."), { segs: 16 });
-  const gateLed = sphere("switch", [36, 3, gateTop + 0.5], 0.8, M.led.clone(), L("Trigger lamp", "", "Blinks on each fire command."));
-  live.emissive.gate = [gateLed];
-  const BTN = { c: [10, 1.5], r: 2.6 };
-  cylZ("switch", BTN.c[0], BTN.c[1], gateTop, gateTop + 1.2, BTN.r + 1, M.absLight, null, { segs: 32 });
-  live.button = cylZ("switch", BTN.c[0], BTN.c[1], gateTop + 1.2, gateTop + 3.8, BTN.r, M.button, L("Fire button", "", "Click it, or press space."), { segs: 32 });
-  live.button.userData.rest = live.button.position.clone();
-  const GATE_OUT = [GB.x0 + 3, GB.y0 + 1.4, gateTop];
-  box("switch", [GATE_OUT[0] - 1.4, GATE_OUT[1] - 1.1, gateTop], [GATE_OUT[0] + 1.4, GATE_OUT[1] + 1.1, gateTop + 2.2], M.chip, null);
-  const GATE_IN = [GB.x1 - 2.2, 5, gateTop];
-  box("switch", [GATE_IN[0] - 1.2, GATE_IN[1] - 2.4, gateTop], [GATE_IN[0] + 1.2, GATE_IN[1] + 2.4, gateTop + 2.2], M.chip, L("Fire input header", "", "From the microcontroller, for later stages."));
+  // ---------------------------------------------------------------- 3 · Switch
+  const pswLabel = L("Push switch", "Baomain double safety switch", "Press the green button (normally open) firmly and quickly: it connects the bank to the coil. Bolted at the far end from the capacitors.");
+  tagged(() => {
+    box("switch", [PSW.x0, PSW.y0, PZ], [PSW.x1, PSW.y1, PSW.top], M.lightPlastic, pswLabel);
+    live.fireBtn = cylZ("switch", -100, 45, PSW.top, PSW.top + 6, 6.5, M.green.clone(), L("Fire button (green)", "", "Space fires. A slow, hesitant press makes a longer spark."), { segs: 28 });
+    live.fireBtn.userData.rest = live.fireBtn.position.clone();
+    cylZ("switch", -100, 45, PSW.top, PSW.top + 1.4, 9, M.greyPlastic, pswLabel, { segs: 28 });
+    cylZ("switch", -84, 45, PSW.top, PSW.top + 6, 6.5, M.red, L("Stop button (red)", "", "Not used here; only the green, normally-open pair is wired."), { segs: 28 });
+    for (const e of [E_IN, E_OUT]) cylX("switch", PSW.x1, PSW.x1 + 3, e[1], e[2], 2.6, M.brass, pswLabel, { segs: 12 });
+  }, "early");
+  // flyback diode on its bracket beside the coil's terminal block
+  const fdLabel = L("Flyback diode", "200 V or more, 50 A or more", "Straight across the coil. Blocks during the shot; when the bank runs out it carries the coil's leftover current so the spike never reaches the capacitors or the switch. Band toward plus.");
+  box("switch", [-130, -14, PZ], [-112, -2, PZ + 3], M.alu, L("Diode bracket", "aluminium", "Holds and cools the flyback diode."));
+  cylZ("switch", -121, -8, PZ + 3, PZ + 7, 6, M.zinc, fdLabel, { segs: 6 });
+  live.flyback = cylZ("switch", -121, -8, PZ + 7, PZ + 19, 4.5, M.diodeBody.clone(), fdLabel, { segs: 24 });
+  cylZ("switch", -121, -8, PZ + 15, PZ + 17, 4.55, M.band, fdLabel, { segs: 24 });
+  live.emissive.diode = [live.flyback];
+  cable("switch", [[-121, -8, PZ + 19], [-121, -8, PZ + 24], [CTB.A[0], CTB.A[1] - 3, CTB.top + 6], [CTB.A[0], CTB.A[1] - 3, CTB.top + 1.5]], 1.0, M.copper, L("Flyback diode lead (band end)", "", "To the coil terminal fed from the + side."), { bend: 3, hot: "diode" });
+  cable("switch", [[-113, -6, PZ + 2], [-108, -6, PZ + 3], [CTB.B[0], CTB.B[1] - 3, CTB.top + 4], [CTB.B[0], CTB.B[1] - 3, CTB.top + 1.5]], 1.0, M.copper, L("Flyback diode lead (plain end)", "", "To the coil terminal that returns to the − bus."), { bend: 3, hot: "diode" });
 
-  // ---------------------------------------------------------------- block 4: barrel, coil, flyback, slug
-  for (const [x0, x1] of [[56, 64], [124, 132]]) box("coil", [x0, BARREL.y - 8, 0], [x1, BARREL.y + 8, BARREL.z - BARREL.r], M.absLight, L("Barrel saddle", "", "V-block holding the tube."));
-  live.barrel = ringX("coil", BARREL.x0, BARREL.x1, BARREL.y, BARREL.z, BARREL.bore, BARREL.r, M.acrylic, L("Acrylic barrel", "13 mm bore, 250 mm", "Non-magnetic and non-conductive, so it carries no eddy currents. Clear, so you can watch the slug."), { segs: 64, shadow: false });
+  // ---------------------------------------------------------------- 4 · Coil, barrel, slug
+  const saddleLabel = L("Stand (V-block)", "3D-printed", "Holds the tube 25 mm above the base plate. A zip tie over the tube stops it rolling.");
+  for (const [x0, x1] of [[-146, -134], [108, 120]]) {
+    box("coil", [x0, TUBE.y - 18, PZ], [x1, TUBE.y + 18, TUBE.z - TUBE.r], M.pla, saddleLabel);
+    for (const s of [-1, 1]) box("coil", [x0, TUBE.y + s * 12 - 3, TUBE.z - TUBE.r], [x1, TUBE.y + s * 12 + 3, TUBE.z - 2], M.pla, saddleLabel);
+    const tie = mesh(new THREE.TorusGeometry(TUBE.r + 0.8, 0.9, 8, 40), M.rubber);
+    tie.rotation.y = Math.PI / 2;
+    tie.position.copy(W((x0 + x1) / 2, TUBE.y, TUBE.z));
+    add("coil", tie, L("Zip tie", "", "Keeps the tube from rolling."));
+  }
+  live.barrel = ringX("coil", TUBE.x0, TUBE.x1, TUBE.y, TUBE.z, TUBE.bore, TUBE.r, M.acrylic, L("Barrel", "clear acrylic tube, 16 mm OD × 12 mm ID, 30 cm", "Smooth inside and not metal: a metal tube inside a coil is a shorted turn. Clear, so you can watch the slug. Breech toward the firer."), { segs: 64, shadow: false });
   live.barrel.renderOrder = 5;
-  ringX("coil", COIL.s0 - 2.2, COIL.s0, BARREL.y, BARREL.z, BARREL.r + 0.05, COIL.rOut + 1.4, M.phenolic, L("Coil cheek", "", "Keeps the winding square."));
-  ringX("coil", COIL.s1, COIL.s1 + 2.2, BARREL.y, BARREL.z, BARREL.r + 0.05, COIL.rOut + 1.4, M.phenolic, L("Coil cheek", "", "Keeps the winding square."));
-  live.coil = ringX("coil", COIL.s0, COIL.s1, BARREL.y, BARREL.z, BARREL.r + 0.05, COIL.rOut, M.enamel.clone(), L("Drive coil", "100 µH, 60 mm, 1.6 mm wire", "Pulls the slug toward its centre while current flows. L, C and wire gauge set the pulse length."), { segs: 64 });
-  for (let s = COIL.s0 + 1.2; s < COIL.s1 - 0.4; s += 1.5) {
-    const t = new THREE.Mesh(new THREE.TorusGeometry(COIL.rOut + 0.02, 0.16, 8, 64), M.copper);
+  ringX("coil", TUBE.x0 + 2, TUBE.x0 + 9, TUBE.y, TUBE.z, TUBE.r, TUBE.r + 0.4, M.tapeBlue, L("Breech tape", "", "Marks the breech end."));
+  const startTape = ringX("coil", BREECH + 19, BREECH + 21, TUBE.y, TUBE.z, TUBE.r, TUBE.r + 0.4, M.tapeYellow, L("Slug start mark", "", "Tape at the slug's tail so every shot starts the same: nose 1 to 2 cm inside the coil."));
+  live.startTape = startTape;
+  const cheekLabel = L("Cheek", "40 mm disc, 3D-printed PLA", "Stops the winding sliding off the tube. Glued on 40 mm apart, 4 cm from the breech.");
+  ringX("coil", COIL.x0 - COIL.cheekT, COIL.x0, TUBE.y, TUBE.z, TUBE.r + 0.05, COIL.cheekR, M.pla, cheekLabel);
+  ringX("coil", COIL.x1, COIL.x1 + COIL.cheekT, TUBE.y, TUBE.z, TUBE.r + 0.05, COIL.cheekR, M.pla, cheekLabel);
+  const coilLabel = L("Coil", "about 96 turns of 1.6 mm magnet wire, 40 mm, 4 layers", "One continuous wire wound around the tube. The rings are turns, not separate coils. Current through it makes the field that pulls the slug.");
+  live.coil = ringX("coil", COIL.x0, COIL.x1, TUBE.y, TUBE.z, TUBE.r + 0.05, COIL.rOut, M.enamel.clone(), coilLabel);
+  for (let x = COIL.x0 + 0.85; x < COIL.x1 - 0.4; x += 1.65) {
+    const t = mesh(new THREE.TorusGeometry(COIL.rOut + 0.02, 0.32, 6, 48), M.copper);
     t.rotation.y = Math.PI / 2;
-    t.position.copy(W(s, BARREL.y, BARREL.z));
-    groups.coil.add(t);
+    t.position.copy(W(x, TUBE.y, TUBE.z));
+    add("coil", t, coilLabel, { shadow: false });
   }
-  // coil field: nested glow shells, driven by the current squared
   live.field = [];
-  for (const [r, len, op] of [[COIL.rOut + 2.5, (COIL.s1 - COIL.s0) + 4, 0.16], [COIL.rOut + 6.5, (COIL.s1 - COIL.s0) + 12, 0.09], [COIL.rOut + 12, (COIL.s1 - COIL.s0) + 22, 0.045]]) {
-    const g = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 8, 32), new THREE.MeshBasicMaterial({ color: 0x5a7cff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  for (const [r, len, op] of [[COIL.rOut + 2.5, 42, 0.12], [COIL.rOut + 7, 50, 0.05]]) {
+    const g = mesh(new THREE.CapsuleGeometry(r, len, 8, 32), new THREE.MeshBasicMaterial({ color: 0x5a7cff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     g.rotation.z = Math.PI / 2;
-    g.position.copy(W((COIL.s0 + COIL.s1) / 2, BARREL.y, BARREL.z));
+    g.position.copy(W((COIL.x0 + COIL.x1) / 2, TUBE.y, TUBE.z));
     g.userData.peak = op;
     g.renderOrder = 6;
     groups.coil.add(g);
     live.field.push(g);
   }
-  const TB = { x0: 78, x1: 112, y0: 44, y1: 56, z1: 6 };
-  box("coil", [TB.x0, TB.y0, 0], [TB.x1, TB.y1, TB.z1], M.absLight, L("Coil terminal block", "", "Two bridged groups: feed, coil lead and diode on each side."));
-  const TB_T = { a1: [83, 47.5], a2: [83, 52.5], ad: [90, 52.5], b1: [107, 47.5], b2: [107, 52.5], bd: [100, 52.5] };
-  const termTop = TB.z1 + 2.6;
-  for (const [id, [x, y]] of Object.entries(TB_T)) cylZ("coil", x, y, TB.z1, termTop, 1.4, M.brass, null, { segs: 16 });
-  box("coil", [81.6, 46.2, TB.z1], [91.4, 53.8, TB.z1 + 0.4], M.brass, null);
-  box("coil", [98.6, 46.2, TB.z1], [108.4, 53.8, TB.z1 + 0.4], M.brass, null);
-  const term = (id) => [TB_T[id][0], TB_T[id][1], termTop];
-  const DIODE_Y = 52.5;
-  live.diode = cylX("coil", 92.4, 97.6, DIODE_Y, TB.z1 + 3.5, 3.0, M.diode.clone(), L("Flyback diode", "1200 V, 2 kA surge", "Across the coil. When the bank hits zero the coil's current has nowhere to go but through here; without it the spike kills the SCR on the first shot."), { segs: 32 });
-  cylX("coil", 97.6, 98.3, DIODE_Y, TB.z1 + 3.5, 3.0, M.alu, null);
-  box("coil", [92.6, DIODE_Y - 1.6, TB.z1], [97.4, DIODE_Y + 1.6, TB.z1 + 0.5], M.chip, null);
-  live.emissive.diode = [live.diode];
-  const DIODE_A = [91.6, DIODE_Y, TB.z1 + 3.5], DIODE_K = [98.4, DIODE_Y, TB.z1 + 3.5];
+  const ctbLabel = L("Coil terminal block", "2-way", "The coil's two tails land here, with the flyback diode across the same two terminals.");
+  box("coil", [CTB.x0, CTB.y0, PZ], [CTB.x1, CTB.y1, CTB.top], M.blackPlastic, ctbLabel);
+  for (const [x, y] of [CTB.A, CTB.B]) cylZ("coil", x, y, CTB.top, CTB.top + 1.6, 2.6, M.zinc, ctbLabel, { segs: 16 });
+  const tailLabel = L("Coil tail", "50 cm, enamel scraped off the last 2 cm", "Bright copper at the screw: enamel is insulation, and an unscraped tail reads as an open circuit.");
+  cable("coil", [[COIL.x0 + 1, TUBE.y, TUBE.z - COIL.rOut], [COIL.x0 + 1, TUBE.y + 6, PZ + 22], [CTB.A[0], CTB.A[1] - 1, CTB.top + 7], [CTB.A[0], CTB.A[1] - 1, CTB.top + 1.5]], 0.8, M.enamel, tailLabel, { bend: 5, hot: "loop" });
+  cable("coil", [[COIL.x1 - 1, TUBE.y, TUBE.z - COIL.rOut], [COIL.x1 - 1, TUBE.y + 6, PZ + 22], [CTB.B[0], CTB.B[1] - 1, CTB.top + 7], [CTB.B[0], CTB.B[1] - 1, CTB.top + 1.5]], 0.8, M.enamel, tailLabel, { bend: 5, hot: "loop" });
   // the slug
-  const slugGeo = new THREE.CylinderGeometry(SLUG.r, SLUG.r, SLUG.len - 2.4, 32);
+  const slugLabel = L("Slug", "10 mm × 30 mm mild steel, about 18 g", "Ferromagnetic: a fridge magnet must grab it. Soft steel, not hardened or stainless. Nose 1 to 2 cm inside the coil before firing.");
   const slug = new THREE.Group();
-  const slugBody = new THREE.Mesh(slugGeo, M.steel);
-  slugBody.rotation.z = -Math.PI / 2;
-  slug.add(slugBody);
-  for (const sgn of [-1, 1]) {
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(sgn > 0 ? SLUG.r - 1.2 : SLUG.r, sgn > 0 ? SLUG.r : SLUG.r - 1.2, 1.2, 32), M.steel);
+  const body = mesh(new THREE.CylinderGeometry(SLUG.r, SLUG.r, SLUG.len - 2, 32), M.steel);
+  body.rotation.z = -Math.PI / 2;
+  slug.add(body);
+  for (const s of [-1, 1]) {
+    const cap = mesh(new THREE.CylinderGeometry(s > 0 ? SLUG.r - 1 : SLUG.r, s > 0 ? SLUG.r : SLUG.r - 1, 1, 32), M.steel);
     cap.rotation.z = -Math.PI / 2;
-    cap.position.x = sgn * (SLUG.len - 1.2) / 2;
+    cap.position.x = s * (SLUG.len - 1) / 2;
     slug.add(cap);
   }
-  slug.children.forEach((m) => { m.castShadow = true; m.userData.label = L("Projectile", "8 g steel, 30 mm", "Starts with its nose at the coil's mouth. Pulled forward until it passes the coil's centre, then pulled back."); m.userData.group = "coil"; pickables.push(m); });
-  slug.position.copy(W(SLUG.breech + SLUG.len / 2, BARREL.y, BARREL.z - (BARREL.bore - SLUG.r)));
-  slug.userData.home = slug.position.clone();
-  groups.coil.add(slug);
+  add("coil", slug, slugLabel);
   live.slug = slug;
-  // force arrow and tracer
-  const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1, 0x3ddc84, 3, 2);
-  arrow.visible = false;
-  groups.coil.add(arrow);
-  live.arrow = arrow;
-  const tracerGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-  const tracer = new THREE.Line(tracerGeo, new THREE.LineBasicMaterial({ color: 0xffd36b, transparent: true, opacity: 0.0 }));
-  groups.coil.add(tracer);
-  live.tracer = tracer;
+  live.arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1, 0x3ddc84, 6, 4);
+  live.arrow.visible = false;
+  groups.coil.add(live.arrow);
+  live.tracer = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0xffd36b, transparent: true, opacity: 0 }));
+  groups.coil.add(live.tracer);
+  // catch box and the plywood behind it, 30 cm from the muzzle
+  const catchLabel = L("Catch box", "cardboard box stuffed with towels", "30 cm from the muzzle, open side to the barrel. Check the towels every ten shots.");
+  box("coil", [CATCH.x0, CATCH.y0, 0], [CATCH.x1, CATCH.y1, 3], M.cardboard, catchLabel);
+  box("coil", [CATCH.x1 - 3, CATCH.y0, 3], [CATCH.x1, CATCH.y1, CATCH.h], M.cardboard, catchLabel);
+  box("coil", [CATCH.x0, CATCH.y0, 3], [CATCH.x1 - 3, CATCH.y0 + 3, CATCH.h], M.cardboard, catchLabel);
+  box("coil", [CATCH.x0, CATCH.y1 - 3, 3], [CATCH.x1 - 3, CATCH.y1, CATCH.h], M.cardboard, catchLabel);
+  box("coil", [CATCH.x0, CATCH.y0, CATCH.h - 3], [CATCH.x1, CATCH.y1, CATCH.h], M.cardboard, catchLabel);
+  const towelLabel = L("Towels", "", "An 18 g slug at 8 m/s stops in a few centimetres of towel.");
+  box("coil", [CATCH.x0 + 18, CATCH.y0 + 3, 3], [CATCH.x1 - 3, CATCH.y1 - 3, 52], M.towel3, towelLabel);
+  box("coil", [CATCH.x0 + 26, CATCH.y0 + 3, 52], [CATCH.x1 - 3, CATCH.y1 - 3, 104], M.towel1, towelLabel);
+  box("coil", [CATCH.x0 + 34, CATCH.y0 + 3, 104], [CATCH.x1 - 3, CATCH.y1 - 3, CATCH.h - 3], M.towel2, towelLabel);
+  box("coil", [CATCH.x1 + 10, CATCH.y0 - 70, 0], [CATCH.x1 + 22, CATCH.y1 + 70, 340], M.plywood, L("Plywood backstop", "", "Behind the box, so a miss hits wood, not a wall or a window."));
 
-  // ---------------------------------------------------------------- block 5: optical gate and MCU
-  ringX("sensing", GATE_X - 2, GATE_X + 2, BARREL.y, BARREL.z, BARREL.r + 0.05, BARREL.r + 3.2, M.abs, L("Optical gate ring", "", "Holds an IR LED above and a photodiode below the bore. When the slug breaks the beam the MCU knows exactly where it is."));
-  cylZ("sensing", GATE_X, BARREL.y, BARREL.z + BARREL.r + 3.2, BARREL.z + BARREL.r + 6.8, 2.2, M.abs, L("IR emitter", "940 nm", "Shines across the barrel."), { segs: 24 });
-  sphere("sensing", [GATE_X, BARREL.y, BARREL.z + BARREL.r + 7.6], 1.4, M.irLens, null);
-  cylZ("sensing", GATE_X, BARREL.y, BARREL.z - BARREL.r - 6.8, BARREL.z - BARREL.r - 3.2, 2.2, M.abs, L("Photodiode", "", "Sees the beam until the slug blocks it. Its edge is the timing reference for the next stage."), { segs: 24 });
-  const IR_LEAD = [GATE_X, BARREL.y, BARREL.z + BARREL.r + 8.0];
-  const PD_LEAD = [GATE_X, BARREL.y, BARREL.z - BARREL.r - 7.4];
-  const MB = { x0: 104, x1: 142, y0: -50, y1: -24, z: 4, t: 1 };
-  const mcuTop = MB.z + MB.t;
-  for (const [x, y] of [[MB.x0 + 2.5, MB.y0 + 2.5], [MB.x1 - 2.5, MB.y0 + 2.5], [MB.x0 + 2.5, MB.y1 - 2.5], [MB.x1 - 2.5, MB.y1 - 2.5]]) cylZ("sensing", x, y, 0, MB.z, 1, M.brass, null, { segs: 12 });
-  box("sensing", [MB.x0, MB.y0, MB.z], [MB.x1, MB.y1, mcuTop], M.pcb, L("Microcontroller board", "", "Reads the optical gates and fires each stage at the right moment. Not needed for a single stage."));
-  const mchip = (x, y, len, wid, tall, label) => box("sensing", [x, y, mcuTop], [x + len, y + wid, mcuTop + tall], M.chip, label);
-  mchip(112, -42, 10.2, 7.2, 1.4, L("Microcontroller", "", "Timing: gate edge in, gate pulse out. With IGBTs it can also cut each pulse before the slug passes centre."));
-  mchip(126, -44, 4.6, 2.4, 1.1, L("Regulator", "", "5 V for the logic."));
-  mchip(112, -32, 4.6, 2.4, 1.1, L("EEPROM", "", "Stores stage timings."));
-  box("sensing", [126, -36, mcuTop], [130, -34.4, mcuTop + 1.3], M.alu, L("Crystal", "16 MHz", "Timing reference."));
-  cylZ("sensing", 134, -42, mcuTop, mcuTop + 3, 1.3, M.canSleeve, null, { segs: 16 });
-  const mcuLed = sphere("sensing", [136, -31, mcuTop + 0.5], 0.8, M.ledGreen.clone(), L("Status lamp", "", "On while the controller is powered."));
-  live.emissive.mcu = [mcuLed];
-  cylZ("sensing", 120, -31, mcuTop, mcuTop + 1.4, 1.1, M.absLight, L("Reset", "", ""), { segs: 12 });
-  box("sensing", [MB.x0 - 2, -40, mcuTop], [MB.x0 + 4, -36, mcuTop + 2.2], M.alu, L("USB", "", "Programming and logs."));
-  const MCU_FIRE = [MB.x0 + 4, -27, mcuTop];
-  box("sensing", [MCU_FIRE[0] - 1.2, MCU_FIRE[1] - 2.4, mcuTop], [MCU_FIRE[0] + 1.2, MCU_FIRE[1] + 2.4, mcuTop + 2.2], M.chip, L("Fire output header", "", "To the gate board's fire input."));
-  const MCU_GATE = [MB.x1 - 10, -27, mcuTop];
-  box("sensing", [MCU_GATE[0] - 1.2, MCU_GATE[1] - 2.4, mcuTop], [MCU_GATE[0] + 1.2, MCU_GATE[1] + 2.4, mcuTop + 2.2], M.chip, L("Gate input header", "", "IR emitter drive and photodiode sense."));
-  box("sensing", [MB.x0 + 8, MB.y0 + 1.2, mcuTop], [MB.x0 + 30, MB.y0 + 3.4, mcuTop + 2.2], M.chip, L("I/O header", "", "Spare pins for later stages."));
+  // ---------------------------------------------------------------- pulse wiring (10 AWG): + bus → switch → coil → − bus
+  const loopLabel = L("Discharge loop", "10 AWG, four joints", "+ bus → push switch → coil → − bus. That is the whole pulse path. Keep each wire under 20 cm.");
+  cable("wiring", [scr("L", 4), [TB.xL - 1, 60, TB.top + 1.5], [80, 69, PZ + 2.4], [-58, 69, PZ + 2.4], [-64, E_IN[1], PZ + 4], [E_IN[0] + 3, E_IN[1], E_IN[2]]], 2.2, M.cableRed, loopLabel, { bend: 7, hot: "loop" });
+  cable("wiring", [[E_OUT[0] + 3, E_OUT[1], E_OUT[2]], [-62, E_OUT[1], PZ + 4], [-62, 12, PZ + 2.4], [CTB.A[0], 12, PZ + 2.4], [CTB.A[0], 2, PZ + 4], [CTB.A[0], CTB.A[1] + 3, CTB.top + 1.5]], 2.2, M.cableRed, loopLabel, { bend: 6, hot: "loop" });
+  cable("wiring", [[CTB.B[0], CTB.B[1] + 3, CTB.top + 1.5], [CTB.B[0], 3, PZ + 4], [CTB.B[0] + 6, 5, PZ + 2.4], [TB.xL - 6, 5, PZ + 2.4], [TB.xL, 9, PZ + 6], scr("L", 1)], 2.2, M.cableBlack, loopLabel, { bend: 6, hot: "loop" });
 
-  // ---------------------------------------------------------------- key switch
-  const KEY = { x0: -140, x1: -126, y0: 30, y1: 44, z1: 6 };
-  box("charger", [KEY.x0, KEY.y0, 0], [KEY.x1, KEY.y1, KEY.z1], M.abs, L("Key switch", "", "Power to the charger. Key out means the bleeder is draining the bank."));
-  const KEY_C = [(KEY.x0 + KEY.x1) / 2, (KEY.y0 + KEY.y1) / 2];
-  cylZ("charger", KEY_C[0], KEY_C[1], KEY.z1, KEY.z1 + 1.2, 3.2, M.steel, null, { segs: 24 });
-  cylZ("charger", KEY_C[0], KEY_C[1], KEY.z1 + 1.2, KEY.z1 + 4, 2.4, M.steel, L("Key switch", "", "Power to the charger. Key out means the bleeder is draining the bank."), { segs: 24 });
-  const keyPivot = new THREE.Group();
-  keyPivot.position.copy(W(KEY_C[0], KEY_C[1], KEY.z1 + 4));
-  groups.charger.add(keyPivot);
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(7.2, 4.2, 1.8), M.steel);
-  blade.position.set(2.0, 2.1, 0);
-  blade.castShadow = true;
-  blade.userData.label = L("Key", "", "Turn it (K) to switch the charger on or off.");
-  blade.userData.group = "charger";
-  pickables.push(blade);
-  keyPivot.add(blade);
-  keyPivot.rotation.y = Math.PI / 2;
-  live.keyPivot = keyPivot;
-  const KEY_TERM = [KEY.x1 - 2.5, KEY.y0 + 2.5, KEY.z1], KEY_TERM2 = [KEY.x1 - 2.5, KEY.y1 - 2.5, KEY.z1];
-  for (const c of [KEY_TERM, KEY_TERM2]) cylZ("charger", c[0], c[1], KEY.z1, KEY.z1 + 1.6, 0.9, M.brass, null, { segs: 12 });
-
-  // ---------------------------------------------------------------- cables (the figure's routes)
-  const lane = (r) => r * 1.5 + 0.1;
-  const SOCKET = [-146, -26];
-  const JACK = [-134, CH.y1, 8];
-  cable("in.lead", [[SOCKET[0], SOCKET[1], 3.6], [SOCKET[0], SOCKET[1], 6.5], [SOCKET[0], -5.5, 7.5], [JACK[0], -5.5, JACK[2]], [JACK[0], JACK[1] + 2.4, JACK[2]]], 0.7, M.cableBlack, L("Input lead", "12–24 V", "From the bench socket to the charger."), { bend: 3 });
-  const KEYLANE_Z = lane(0.45);
-  [[KEY_TERM, CH_EN, -0.7, -1.0], [KEY_TERM2, CH_EN2, 0.7, -2.4]].forEach(([from, to, dx, yl], i) =>
-    cable(`key.lead${i}`, [[from[0], from[1], KEY.z1 + 1.6], [from[0], from[1], KEY.z1 + 4.5], [-120 + dx, from[1], KEY.z1 + 4.5], [-120 + dx, from[1], KEYLANE_Z], [-120 + dx, 20, KEYLANE_Z], [-120 + dx, yl, KEYLANE_Z], [to[0], yl, KEYLANE_Z], [to[0], yl, CH.z1 + 3.4], [to[0], to[1], CH.z1 + 3.4], [to[0], to[1], CH.z1 + 2.4]], 0.45, M.cableYellow, L("Key switch leads", "", "A low-voltage enable pair: the key never carries the bank."), { bend: 2.4 }));
-  cable("chg.pos", [[CH_OUT.pos[0], CH_OUT.pos[1], CH.z1 + 3], [CH_OUT.pos[0], CH_OUT.pos[1], CH.z1 + 6], [CH_OUT.pos[0] + 6, CH_OUT.pos[1] - 6, CH.z1 + 6], [RLIM.x0 - 7, RLIM.y, 12], [RLIM.x0 - 4.5, RLIM.y, RLIM.z], [RLIM.x0, RLIM.y, RLIM.z]], 0.7, M.cableRed, L("Charger + to limit resistor", "", ""), { bend: 3.5 });
-  cable("rlim.pos", [[RLIM.x1, RLIM.y, RLIM.z], [RLIM.x1 + 4.5, RLIM.y, RLIM.z], [RLIM.x1 + 7, RLIM.y, 12], [BUS.x0 + 1.5, RLIM.y + 6, busTop + 4], [BUS.x0 + 1.5, BANK.y + busDy("pos"), busTop + 4], busAt("pos", BUS.x0 + 1.5)], 0.7, M.cableRed, L("Limit resistor to + bus", "", ""), { bend: 3.5 });
-  cable("chg.neg", [[CH_OUT.neg[0], CH_OUT.neg[1], CH.z1 + 3], [CH_OUT.neg[0], CH_OUT.neg[1], busTop + 3], [BUS.x0 + 1.5, BANK.y + busDy("neg"), busTop + 3], busAt("neg", BUS.x0 + 1.5)], 0.7, M.cableBlack, L("Charger − to − bus", "", ""), { bend: 3.5 });
-  cable("bleed.pos", [[BLEED.x0, BLEED.y, BLEED.z], [BLEED.x0 - 4, BLEED.y, BLEED.z], [BLEED.x0 - 4, BLEED.y, busTop + 4.5], [BLEED.x0 - 4, BANK.y + busDy("pos") + 4, busTop + 4.5], [BLEED.x0 - 4, BANK.y + busDy("pos"), busTop + 4.5], busAt("pos", BLEED.x0 - 4)], 0.42, M.cableRed, L("Bleeder lead", "", "To the + bus."), { bend: 2.4 });
-  cable("bleed.neg", [[BLEED.x1, BLEED.y, BLEED.z], [BLEED.x1 + 4, BLEED.y, BLEED.z], [BLEED.x1 + 4, BLEED.y, busTop + 3], [BLEED.x1 + 4, BANK.y + busDy("neg") + 4, busTop + 3], [BLEED.x1 + 4, BANK.y + busDy("neg"), busTop + 3], busAt("neg", BLEED.x1 + 4)], 0.42, M.cableBlack, L("Bleeder lead", "", "To the − bus."), { bend: 2.4 });
-  const loopLabel = L("Discharge loop", "heavy cable, kiloamps", "The pulse path: + bus → SCR → coil → − bus. Keep it short and fat; every microhenry here slows the pulse.");
-  cable("loop.anode", [busAt("pos", BUS.x1 - 2), [BUS.x1 - 2, BANK.y + busDy("pos"), busTop + 6], [BUS.x1 + 6, BANK.y + busDy("pos") + 2, busTop + 6], [SCR_ANODE[0] - 5, SCR.c[1], SCR_ANODE[2] + 7], [SCR_ANODE[0], SCR.c[1], SCR_ANODE[2] + 7], [SCR_ANODE[0], SCR.c[1], SCR_ANODE[2] + 4.8]], 1.1, M.cableRed, loopLabel, { bend: 4.5, hot: "loop" });
-  const LOOP_Z = lane(1.1), LANE_A = 22.0, LANE_B = 18.4;
-  cable("loop.coil", [[SCR_K[0], SCR_K[1], HS.z1 + 2.2], [SCR_K[0], SCR_K[1], HS.z1 + 7], [-6, SCR_K[1], HS.z1 + 7], [-6, SCR_K[1], LOOP_Z], [-6, LANE_A, LOOP_Z], [76, LANE_A, LOOP_Z], [TB_T.a1[0], 40, LOOP_Z], [TB_T.a1[0], 40, termTop + 3.2], [TB_T.a1[0], TB_T.a1[1], termTop + 3.2], term("a1")], 1.1, M.cableRed, loopLabel, { bend: 4.5, hot: "loop" });
-  cable("loop.return", [term("b1"), [TB_T.b1[0], TB_T.b1[1], termTop + 3.2], [TB_T.b1[0], 40, termTop + 3.2], [TB_T.b1[0], 40, LOOP_Z], [116, 34, LOOP_Z], [116, LANE_B, LOOP_Z], [-2, LANE_B, LOOP_Z], [-2, BANK.y + busDy("neg") + 5, LOOP_Z], [-2, BANK.y + busDy("neg") + 5, busTop + 3], [BUS.x1 - 2, BANK.y + busDy("neg") + 2, busTop + 3], [BUS.x1 - 2, BANK.y + busDy("neg"), busTop + 3], busAt("neg", BUS.x1 - 2)], 1.1, M.cableBlack, loopLabel, { bend: 4.5, hot: "loop" });
-  const COIL_LUG = [[COIL.s0 - 1.1, BARREL.y, BARREL.z - COIL.rOut - 1.4], [COIL.s1 + 1.1, BARREL.y, BARREL.z - COIL.rOut - 1.4]];
-  cable("coil.leadA", [COIL_LUG[0], [COIL_LUG[0][0], COIL_LUG[0][1], 10], [TB.x0 - 2, 40, 10], [TB.x0 - 2, TB_T.a2[1], 10], [TB_T.a2[0], TB_T.a2[1], 10], term("a2")], 0.8, M.enamel, L("Coil lead", "", "The winding's own wire, down to the block."), { bend: 3, hot: "loop" });
-  cable("coil.leadB", [COIL_LUG[1], [COIL_LUG[1][0], COIL_LUG[1][1], 10], [TB.x1 + 2, 40, 10], [TB.x1 + 2, TB_T.b2[1], 10], [TB_T.b2[0], TB_T.b2[1], 10], term("b2")], 0.8, M.enamel, L("Coil lead", "", "The winding's own wire, down to the block."), { bend: 3, hot: "loop" });
-  cable("diode.leadA", [DIODE_A, [TB_T.ad[0] + 0.3, DIODE_Y, DIODE_A[2]], [TB_T.ad[0], DIODE_Y, DIODE_A[2]], [TB_T.ad[0], DIODE_Y, termTop]], 0.45, M.cableGrey, L("Diode lead", "", ""), { bend: 1.4, hot: "diode" });
-  cable("diode.leadK", [DIODE_K, [TB_T.bd[0] - 0.3, DIODE_Y, DIODE_K[2]], [TB_T.bd[0], DIODE_Y, DIODE_K[2]], [TB_T.bd[0], DIODE_Y, termTop]], 0.45, M.cableGrey, L("Diode lead", "", ""), { bend: 1.4, hot: "diode" });
-  cable("gate.lead", [[GATE_OUT[0], GATE_OUT[1], gateTop + 2.2], [GATE_OUT[0], GATE_OUT[1], gateTop + 5], [GATE_OUT[0], -9, gateTop + 5], [SCR_GATE[0], -9, HS.z1 + 4.4], [SCR_GATE[0], SCR_GATE[1], HS.z1 + 4.4], [SCR_GATE[0], SCR_GATE[1], SCR_GATE[2]]], 0.42, M.cableBlue, L("Gate lead", "", "The trigger pulse to the SCR's gate."), { bend: 2.4, hot: "gate" });
-  const SIG_Z = lane(0.45);
-  cable("mcu.fire", [[MCU_FIRE[0], MCU_FIRE[1], mcuTop + 2.2], [MCU_FIRE[0], MCU_FIRE[1], mcuTop + 5], [MCU_FIRE[0], -16, mcuTop + 5], [MCU_FIRE[0], -16, SIG_Z], [48, -16, SIG_Z], [48, GATE_IN[1], SIG_Z], [48, GATE_IN[1], gateTop + 3.6], [GATE_IN[0] + 3, GATE_IN[1], gateTop + 3.6], [GATE_IN[0], GATE_IN[1], gateTop + 3.6], [GATE_IN[0], GATE_IN[1], gateTop + 2.2]], 0.45, M.cableGrey, L("MCU fire line", "", "Later stages fire from here instead of the button."), { bend: 2.6 });
-  const MG = (dy, z) => [MCU_GATE[0] + dy, MCU_GATE[1] + (dy < 0 ? 1.2 : -1.2), z];
-  cable("gate.ir.lead", [IR_LEAD, [IR_LEAD[0], IR_LEAD[1], IR_LEAD[2] + 3], [138, 20, IR_LEAD[2] + 3], [138, 20, 10], [138, -18, 10], [MG(-0.8, 10)[0], -22, 10], MG(-0.8, 10), MG(-0.8, mcuTop + 2.2)], 0.42, M.cableGrey, L("IR emitter lead", "", ""), { bend: 2.4 });
-  cable("gate.pd.lead", [PD_LEAD, [PD_LEAD[0], PD_LEAD[1], PD_LEAD[2] - 2], [142, 22, PD_LEAD[2] - 2], [142, 22, 4], [142, -18, 4], [MG(0.8, 4)[0] + 1.2, -22, 9.5], MG(0.8, 10), MG(0.8, mcuTop + 2.2)], 0.42, M.cableGrey, L("Photodiode lead", "", ""), { bend: 2.4 });
-
-  // cable clamps on studs
-  for (const [x, y, along, r, z] of [[-120, 8, "y", 1.6, KEYLANE_Z], [-6, 4, "y", 1.7, LOOP_Z], [60, LANE_A, "x", 1.7, LOOP_Z], [20, LANE_B, "x", 1.7, LOOP_Z], [96, LANE_B, "x", 1.7, LOOP_Z], [74, -16, "x", 1.05, SIG_Z]]) {
-    cylZ("cables", x, y, 0, Math.max(0.4, z - r + 0.6), 0.9, M.steel, null, { segs: 12 });
-    const c = along === "x" ? cylX("cables", x - 0.9, x + 0.9, y, z, r, M.abs, L("Cable clamp", "", "")) : cylY("cables", x, y - 0.9, y + 0.9, z, r, M.abs, L("Cable clamp", "", ""));
-  }
-
-  // ---------------------------------------------------------------- group anchors for labels, homes for the explode
-  const anchors = {
-    charger: W(-123, -28, 34), bank: W(-48, -30, 36), switch: W(20, -22, 24), coil: W(95, 32, 44), sensing: W(123, -37, 14), bench: W(-100, 50, 8),
+  // ---------------------------------------------------------------- tools and safety
+  // multimeter: probes clipped across the bank, display reads the bank
+  const mmLabel = L("Multimeter", "DC volts, black on −, red on +", "The reading you trust before anyone touches anything. Under 5 V is safe to touch.");
+  const MM = { x: 70, y: 150, w: 72, d: 130 };
+  const mmGroup = new THREE.Group();
+  mmGroup.position.copy(W(MM.x, MM.y, 0));
+  mmGroup.rotation.x = -0.0;
+  groups.tools.add(mmGroup);
+  const mmBody = mesh(new THREE.BoxGeometry(MM.w, 26, MM.d), M.meterCase);
+  mmBody.position.set(0, 13, 0);
+  add("tools", mmBody, mmLabel, { parent: mmGroup });
+  const mmFace = mesh(new THREE.BoxGeometry(MM.w - 10, 2, MM.d - 12), M.meterFace);
+  mmFace.position.set(0, 26.5, 0);
+  add("tools", mmFace, mmLabel, { parent: mmGroup });
+  const mmDial = mesh(new THREE.CylinderGeometry(15, 15, 4, 32), M.blackPlastic);
+  mmDial.position.set(0, 28, 18);
+  add("tools", mmDial, L("Multimeter dial", "DC V", "Set to DC volts for the bank; resistance and continuity for the checks."), { parent: mmGroup });
+  for (const [x, mat] of [[-18, M.blackPlastic], [18, M.red]]) { const j = mesh(new THREE.CylinderGeometry(3.5, 3.5, 4, 16), mat); j.position.set(x, 28, 52); add("tools", j, mmLabel, { parent: mmGroup }); }
+  const mmDisplay = panel("tools", 52, 24, 384, L("Multimeter display", "bank voltage", "Read it out loud before and after the discharge stick."));
+  mmDisplay.mesh.rotation.x = -Math.PI / 2;
+  mmDisplay.mesh.position.set(0, 27.6, -28);
+  groups.tools.remove(mmDisplay.mesh);
+  mmGroup.add(mmDisplay.mesh);
+  live.mmDisplay = mmDisplay;
+  const probeLabel = L("Multimeter leads", "alligator clips", "Clipped across the bank: red on +, black on −.");
+  cable("tools", [[MM.x + 18, MM.y - 52, 30], [MM.x + 18, MM.y - 70, 36], [80, 90, 44], [79.5, TB.ys[3], 40], [TB.xL - 2, TB.ys[3], TB.top + 3]], 1.0, M.cableRed, probeLabel, { bend: 10 });
+  cable("tools", [[MM.x - 18, MM.y - 52, 30], [MM.x - 18, MM.y - 74, 40], [79.5, 70, 52], [79.5, TB.ys[0], 40], [TB.xL - 2, TB.ys[0], TB.top + 3]], 1.0, M.cableBlack, probeLabel, { bend: 10 });
+  // discharge stick on its hook; in use it moves over the bank
+  const DS = { hookX: 300, hookY: -210, hookZ: 300 };
+  const dsLabel = L("Discharge stick", "100 Ω, 10 W on a ruler, two leads with alligator clips", "Empties the bank on purpose. Black clip on − first, red on + for five seconds, meter again. D clips it on and hangs it back up.");
+  box("tools", [DS.hookX - 30, DS.hookY - 30, 0], [DS.hookX + 30, DS.hookY + 30, 8], M.benchWood, L("Hook stand", "", "The stick always hangs on the same hook."));
+  box("tools", [DS.hookX - 6, DS.hookY - 6, 8], [DS.hookX + 6, DS.hookY + 6, DS.hookZ + 20], M.benchWood, L("Hook stand", "", "The stick always hangs on the same hook."));
+  cylY("tools", DS.hookX, DS.hookY + 6, DS.hookY + 22, DS.hookZ, 1.6, M.zinc, null, { segs: 12 });
+  const stick = new THREE.Group();
+  const ruler = mesh(new THREE.BoxGeometry(25, 200, 4), M.plywood);
+  ruler.position.set(0, -100, 0);
+  const dsRes = mesh(new THREE.BoxGeometry(10, 48, 10), M.ceramic);
+  dsRes.position.set(0, -170, 7);
+  stick.add(ruler, dsRes);
+  for (const y of [-152, -188]) { const tape = mesh(new THREE.BoxGeometry(27, 6, 13), M.tapeBlue); tape.position.set(0, y, 3); stick.add(tape); }
+  const leadMat = (m) => m.clone();
+  const hangLead = (x, mat) => {
+    const c = routeCurve([new THREE.Vector3(x * 3, -195, 7), new THREE.Vector3(x * 10, -215, 9), new THREE.Vector3(x * 14, -260, 4), new THREE.Vector3(x * 10, -290, 2)], 10);
+    const m = mesh(new THREE.TubeGeometry(c, 40, 1.0, 10, false), leadMat(mat));
+    const clip = mesh(new THREE.BoxGeometry(5, 14, 4), mat === M.cableRed ? M.red : M.blackPlastic);
+    clip.position.set(x * 10, -297, 2);
+    stick.add(m, clip);
+    return [m, clip];
   };
-  for (const [id, g] of Object.entries(groups)) g.userData.explode = new THREE.Vector3(...GROUP_INFO[id].explode).set(GROUP_INFO[id].explode[0], GROUP_INFO[id].explode[2], GROUP_INFO[id].explode[1]);
+  const hang = [...hangLead(1, M.cableRed), ...hangLead(-1, M.cableBlack)];
+  stick.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.userData.label = dsLabel; o.userData.group = "tools"; pickables.push(o); } });
+  stick.position.copy(W(DS.hookX, DS.hookY + 16, DS.hookZ - 2));
+  groups.tools.add(stick);
+  // in use: the clip end lies over the terminal block, the handle end held up and to the right
+  const useRot = new THREE.Euler(0, 0, -Math.PI / 2 + 0.24);
+  const tipTarget = W(TB.xL + 14, 33, TB.top + 70);
+  const dir = new THREE.Vector3(0, -1, 0).applyEuler(useRot);
+  const usePos = tipTarget.clone().sub(dir.clone().multiplyScalar(178));
+  live.stick = { group: stick, hang, home: { pos: stick.position.clone(), rot: new THREE.Euler(0, 0, 0) }, use: { pos: usePos, rot: useRot } };
+  stick.position.copy(usePos);
+  stick.rotation.copy(useRot);
+  stick.updateMatrixWorld(true);
+  const resEnd = (y) => stick.localToWorld(new THREE.Vector3(0, y, 7));
+  const rTop = resEnd(-148), rBot = resEnd(-192);
+  stick.position.copy(live.stick.home.pos);
+  stick.rotation.copy(live.stick.home.rot);
+  const useLeads = [
+    cable("tools", [rTop, rTop.clone().add(new THREE.Vector3(0, -6, 14)), W(TB.xL + 6, TB.ys[3] + 8, TB.top + 18), W(TB.xL - 1.5, TB.ys[3] + 1, TB.top + 3)], 1.0, M.cableRed, dsLabel, { bend: 8 }),
+    cable("tools", [rBot, rBot.clone().add(new THREE.Vector3(0, -6, -14)), W(TB.xL + 6, TB.ys[0] - 8, TB.top + 18), W(TB.xL - 1.5, TB.ys[0] - 1, TB.top + 3)], 1.0, M.cableBlack, dsLabel, { bend: 8 }),
+  ];
+  for (const m of useLeads) { m.visible = false; live.cables.splice(live.cables.indexOf(m), 1); }
+  live.stick.useLeads = useLeads;
+  // safety glasses and the week 5 spare slugs
+  const glLabel = L("Safety glasses", "one pair per person in the room", "A slug at 8 m/s, a spark from the switch and a venting capacitor all go for the eyes.");
+  for (const s of [-1, 1]) { const lens = mesh(new THREE.CylinderGeometry(22, 22, 2, 32), M.glassLens); lens.position.copy(W(-260 + s * 26, 150, 3)); add("tools", lens, glLabel); }
+  box("tools", [-306, 128, 1], [-214, 132, 6], M.blackPlastic, glLabel);
+  for (const s of [-1, 1]) box("tools", [-260 + s * 46 - 2, 132, 1], [-260 + s * 46 + 2, 236, 4], M.blackPlastic, glLabel);
+  const spareLabel = L("Spare slugs", "25 mm and 40 mm", "For week 5: try both lengths and note where each lands.");
+  cylX("tools", -200, -175, 205, 5, 5, M.steel, spareLabel);
+  cylX("tools", -160, -120, 205, 5, 5, M.steel, spareLabel);
 
-  return { THREE, renderer, scene, camera, controls, groups, GROUP_INFO, anchors, pickables, live, materials: M, layout: { PLATE, BARREL, COIL, GATE_X, CATCH, SLUG, SCALE, METER, KNOB }, W, sun, hemi, fill };
+  // ---------------------------------------------------------------- week 6+ upgrades (hidden until toggled)
+  tagged(() => {
+    // SCR on a bracket where the push switch was; its legs land on the same two wires
+    const scrLabel = L("SCR (thyristor)", "400 V, 40 A or more, 500 A+ surge, TO-247", "Week 6 upgrade: replaces the push switch. A few milliamps into its gate snap it on; it switches off by itself at the end of the pulse.");
+    box("switch", [-100, 36, PZ], [-80, 56, PZ + 3], M.alu, L("SCR bracket", "aluminium angle", "Mounting for the SCR. At 55 V one shot puts only 1 to 2 J into it, so no big heatsink is needed."));
+    box("switch", [-100, 53, PZ + 3], [-80, 56, PZ + 32], M.alu, L("SCR bracket", "aluminium angle", "Mounting for the SCR."));
+    live.scrBody = box("switch", [-97, 47, PZ + 8], [-83, 53, PZ + 28], M.diodeBody.clone(), scrLabel);
+    live.emissive.scr = [live.scrBody];
+    cable("switch", [[-86, 47, PZ + 9], [-80, 46, PZ + 9], [E_IN[0] + 3, E_IN[1], E_IN[2]]], 1.0, M.tinned, scrLabel, { bend: 2, lugs: [false, true] });
+    cable("switch", [[-94, 47, PZ + 9], [-78, 40, PZ + 9], [E_OUT[0] + 3, E_OUT[1], E_OUT[2]]], 1.0, M.tinned, scrLabel, { bend: 2, lugs: [false, true] });
+    // trigger board on nylon standoffs, 9 V battery on the bench
+    const tbd = { x0: -148, x1: -113, y0: 8, y1: 68, z: PZ + 10 };
+    const tbdLabel = L("Trigger board", "60 × 35 mm, two layers, 2 mm isolation slot", "Your KiCad board: button side on a 9 V battery, an optocoupler across the slot, gate side pushing about 50 mA into the SCR's gate.");
+    for (const [x, y] of [[tbd.x0 + 4, tbd.y0 + 4], [tbd.x1 - 4, tbd.y0 + 4], [tbd.x0 + 4, tbd.y1 - 4], [tbd.x1 - 4, tbd.y1 - 4]]) cylZ("pcb", x, y, PZ, tbd.z, 2.2, M.nylon, L("Nylon standoff", "M3", ""), { segs: 12 });
+    box("pcb", [tbd.x0, tbd.y0, tbd.z], [tbd.x1, tbd.y1, tbd.z + 1.6], M.pcb, tbdLabel);
+    box("pcb", [tbd.x0 + 4, 37, tbd.z + 0.8], [tbd.x1 + 0.1, 39, tbd.z + 1.7], M.pcbBlue, L("Isolation slot", "2 mm", "Nothing copper crosses it; only the optocoupler's light does."));
+    box("pcb", [-136, 34, tbd.z + 1.6], [-126, 42, tbd.z + 6], M.chip, L("U1 PC817 optocoupler", "", "LED on one side, light sensor on the other, no wire between."));
+    live.trigBtn = cylZ("pcb", -142, 20, tbd.z + 1.6, tbd.z + 6, 3, M.blackPlastic.clone(), L("SW1 fire button", "", "Week 6 fire button: space fires when the upgrade is shown."), { segs: 16 });
+    box("pcb", [-136, 52, tbd.z + 1.6], [-118, 56, tbd.z + 6], M.ceramic, L("R2", "1 kΩ, 2 W", "Feeds the gate from the bank's + side."));
+    box("pcb", [-124, 44, tbd.z + 1.6], [-120, 48, tbd.z + 6], M.chip, L("Q1 2N2222", "", "Carries the 50 mA gate current."));
+    box("pcb", [-118, 22, tbd.z + 1.6], [-113, 34, tbd.z + 8], M.green, L("J2 screw terminal", "A, G, K", "To the SCR, wires under 10 cm."));
+    box("pcb", [-148, 12, tbd.z + 1.6], [-143, 22, tbd.z + 8], M.green, L("J1 screw terminal", "9 V in", "Battery clip plugs in here."));
+    cable("pcb", [[-115, 28, tbd.z + 8], [-104, 34, PZ + 20], [-90, 47, PZ + 22]], 0.6, M.cableBlue, L("Gate lead", "", "J2 to the SCR's gate."), { bend: 4, hot: "gate" });
+    box("pcb", [-250, 20, 0], [-224, 37, 48], M.battery, L("9 V battery", "", "Powers the button side only."));
+    box("pcb", [-246, 22, 48], [-228, 35, 51], M.batteryTop, null);
+    cable("pcb", [[-237, 28, 51], [-237, 28, 64], [-170, 18, 30], [-152, 17, PZ + 2], [-147, 17, tbd.z + 6]], 0.7, M.cableRed, L("Battery clip leads", "", ""), { bend: 10 });
+    // two optical gates past the coil, used as a chronograph; microcontroller on the bench
+    const gateLabel = (n) => L(`Optical gate ${n}`, "940 nm IR LED above, phototransistor below", "The slug breaks the beam and the signal pin flips. Two gates 50 mm apart and the microcontroller's clock give the slug's speed.");
+    GATES.forEach((gx, i) => {
+      ringX("sensing", gx - 3, gx + 3, TUBE.y, TUBE.z, TUBE.r + 0.05, TUBE.r + 6, M.blackPlastic, gateLabel(i + 1));
+      box("sensing", [gx - 8, TUBE.y - 8, TUBE.z + TUBE.r + 6], [gx + 8, TUBE.y + 8, TUBE.z + TUBE.r + 7.6], M.pcb, L("Sensor board (LED side)", "15 × 15 mm", "D1 IR LED and R1 220 Ω."));
+      box("sensing", [gx - 8, TUBE.y - 8, TUBE.z - TUBE.r - 7.6], [gx + 8, TUBE.y + 8, TUBE.z - TUBE.r - 6], M.pcb, L("Sensor board (eye side)", "15 × 15 mm", "Q1 phototransistor and R2 10 kΩ pull-down."));
+      cable("sensing", [[gx, TUBE.y - 6, TUBE.z + TUBE.r + 7.6], [gx, TUBE.y - 6, TUBE.z + TUBE.r + 16], [gx - 20 + i * 4, -90, 40], [gx - 20 + i * 4, -100, 1.4], [-80 + i * 6, -112, 1.4]], 0.6, M.cableBlack, L("Gate leads", "5 V, GND, SIGNAL", "To the microcontroller. Keep them a few centimetres from the coil leads."), { bend: 10 });
+    });
+    box("sensing", [-110, -140, 0], [-60, -110, 8], M.nylon, L("Microcontroller standoffs", "", ""));
+    box("sensing", [-108, -136, 8], [-63, -118, 9.6], M.pcbBlue, L("Microcontroller", "Arduino Nano", "Times the two gates: speed = 50 mm ÷ the time between the two beam breaks."));
+    box("sensing", [-96, -132, 9.6], [-80, -122, 11], M.chip, L("Microcontroller", "Arduino Nano", "Times the two gates."));
+  }, "later");
+
+  // label anchors (block tags) and the slug's rest position
+  const anchors = { charging: W(115, -220, 140), bank: W(90, 33, 90), switch: W(-92, 45, 50), coil: W(-90, -40, 70), sensing: W(25, -40, 70), pcb: W(-130, 38, 40), tools: W(70, 150, 50), bench: W(-120, 60, 20) };
+  return { THREE, renderer, scene, camera, controls, groups, GROUP_INFO, anchors, pickables, live, materials: M, layout: { PZ, TUBE, COIL, SLUG, BREECH, CATCH, GATES, SCALE }, W, sun, hemi, fill };
 }
 
-// The page: state machine, control panel, oscilloscope, labels, playback, camera, explode, theme.
+// The page: the guide's firing sequence, control panel, oscilloscope, labels, playback, camera, explode, theme.
 // MODEL, THREE, OrbitControls and buildScene are in scope (inlined by build3d.mjs).
 
 const root = document.documentElement;
@@ -2190,10 +2244,27 @@ const stage = document.querySelector(".cg3-stage");
 const canvas = document.querySelector(".cg3-canvas");
 const tooltip = document.querySelector(".cg3-tip");
 const tagsHost = document.querySelector(".cg3-tags");
-const panel = document.querySelector(".cg3-panel");
+const panelEl = document.querySelector(".cg3-panel");
 const scopeCanvas = document.querySelector(".cg3-scope");
 const still = matchMedia("(prefers-reduced-motion: reduce)");
-const p = { ...MODEL.DEFAULTS };
+const $ = (sel) => document.querySelector(sel);
+
+// ---------------------------------------------------------------- the guide's build, as model parameters
+const GUIDE = {
+  vSet: 55, vMin: 5, vMax: 55, // supply taped at 55 V; capacitors rated 63 V; under 5 V is safe to touch
+  caps: 2, capEach: 10000e-6, chargeI: 1, // two 10 000 µF cans, 1 A current limit
+  L: 75e-6, R: 0.06, // the 40 mm, 96-turn coil and the 10 AWG loop
+  bleedR: 1000, bleedW: 10, // 1 kΩ 10 W bleeder
+  mass: 0.018, slugLen: 0.03, coilLen: 0.04, coilAt: 0.06, barrelLen: 0.3, // 10 × 30 mm slug, coil 4 cm from the breech, 30 cm tube
+  k: 0.0003, noseIn: 0.01, // force constant (assumed), slug nose 1 cm inside the coil
+};
+const DIODE_DROP = 0.8; // the blocking diode costs about a volt
+const STICK_R = 100; // discharge stick: 100 Ω
+const SAFE_V = 5;
+const p = { ...MODEL.DEFAULTS, ...GUIDE };
+const slugStartOf = (q) => q.coilAt - q.coilLen / 2 + q.noseIn - q.slugLen;
+const vFull = () => Math.max(0, p.vSet - DIODE_DROP);
+const params = () => ({ ...p, vSet: vFull(), slugStart: slugStartOf(p) });
 
 const S = buildScene(THREE, OrbitControls, MODEL, canvas);
 const { renderer, scene, camera, controls, groups, live, layout, W } = S;
@@ -2211,18 +2282,19 @@ function applyTheme(name) {
   S.hemi.groundColor.set(t.hemiGround);
   renderer.toneMappingExposure = t.exposure;
   try { localStorage.setItem("cg3-theme", name); } catch {}
-  draw();
 }
 let theme = "dark";
 try { theme = localStorage.getItem("cg3-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch {}
 
 // ---------------------------------------------------------------- state
 const SPEEDS = [{ label: "×50 slower", slow: 50 }, { label: "×200 slower", slow: 200 }, { label: "×1000 slower", slow: 1000 }, { label: "real time", slow: 1 }];
-const BLEED_FAST = 17;
+const FLIGHT_SLOW = 20; // after the pulse the slug's flight plays 20× slower
 const state = {
-  power: false,
+  supplyOn: false,
+  knifeClosed: false,
+  stickOn: false,
+  upgrades: false,
   vBank: 0,
-  phase: "off",
   shot: null,
   shotT: 0,
   paused: false,
@@ -2233,156 +2305,246 @@ const state = {
   labelsAll: false,
   autoRotate: false,
   follow: false,
-  stage2: false,
-  env: { glow: 0, press: 0, key: 0, needle: 0, knob: 0 },
+  env: { glow: 0, press: 0, knife: 0, stick: 0 },
   hover: null,
   tour: true,
   tourStep: 0,
   tourAt: 0,
+  warn: "",
+  warnUntil: 0,
+  landed: null,
 };
-let derived = MODEL.derived(p);
-let traceShot = MODEL.shot(p, p.vSet);
+const connected = () => state.supplyOn && state.knifeClosed;
+let derived, traceShot, chrono;
 function recompute() {
-  derived = MODEL.derived(p);
-  traceShot = MODEL.shot(p, p.vSet);
+  const q = params();
+  derived = MODEL.derived(q);
+  derived.bleedTo5 = MODEL.bleedTimeTo(q, q.vSet, SAFE_V);
+  derived.stickTo5 = Math.log(Math.max(1, q.vSet / SAFE_V)) * ((q.bleedR * STICK_R) / (q.bleedR + STICK_R)) * MODEL.capacitance(q);
+  traceShot = MODEL.shot(q, q.vSet);
+  chrono = chronoOf(traceShot);
   refreshReadouts();
   drawScope();
-  rebuildLabels();
+  if (state.hover) showTip(state.hover);
 }
+function warn(text) { state.warn = text; state.warnUntil = state.clock + 4.5; }
 
-// ---------------------------------------------------------------- the machine
-function setPower(flag) {
-  if (state.power === flag) return;
-  state.power = flag;
-  if (flag) state.phase = state.vBank >= p.vSet - 0.5 ? "armed" : "charging";
-  else if (state.phase !== "firing") state.phase = "bleeding";
+// ---------------------------------------------------------------- the machine (the guide's sequence)
+function setSupply(on) {
+  state.supplyOn = on;
+  if (on && state.knifeClosed && state.stickOn) { state.knifeClosed = false; warn("opened the disconnect: never charge with the discharge stick on"); }
+  announce();
+}
+function setKnife(closed) {
+  if (closed && state.stickOn) { warn("hang up the discharge stick before closing the disconnect"); return; }
+  state.knifeClosed = closed;
+  announce();
+}
+function setStick(on) {
+  if (on && connected()) { warn("open the disconnect first (K): the supply is still on the bank"); return; }
+  if (state.shot) return;
+  state.stickOn = on;
   announce();
 }
 function fire() {
-  if (state.phase !== "armed" || state.vBank < p.vMin) return false;
-  state.shot = MODEL.shot(p, state.vBank);
+  if (state.shot) return false;
+  if (state.stickOn) { warn("the discharge stick is on the bank: nothing to fire"); return false; }
+  if (state.vBank < 1) { warn("the bank is empty: charge it first (supply on, close the disconnect)"); return false; }
+  if (connected()) warn("the disconnect was closed: open it before firing (tab 1). The blocking diode took the kick.");
+  const q = { ...params(), vSet: state.vBank };
+  state.shot = MODEL.shot(q, state.vBank);
+  state.shot.chrono = chronoOf(state.shot);
   state.shotT = 0;
-  state.phase = "firing";
-  state.firedAt = state.clock;
   state.paused = false;
-  live.slug.position.copy(live.slug.userData.home);
+  state.firedAt = state.clock;
+  state.landed = null;
   tracerPoints.length = 0;
   announce();
   return true;
 }
 function resetAll() {
-  state.power = false; state.vBank = 0; state.phase = "off"; state.shot = null; state.shotT = 0; state.paused = false;
-  live.slug.position.copy(live.slug.userData.home);
+  Object.assign(state, { supplyOn: false, knifeClosed: false, stickOn: false, vBank: 0, shot: null, shotT: 0, paused: false, landed: null, warn: "" });
   tracerPoints.length = 0;
+  placeSlugAt(slugStartOf(p) + p.slugLen / 2, 0);
   announce();
+}
+// position of the slug's centre (model metres from the breech face) and its speed at model time t,
+// carrying on ballistically after the integration ends
+function slugAt(s, t) {
+  if (t <= s.end) { const q = MODEL.sampleAt(s, t); return { x: q.x, v: q.v, i: q.i, vc: q.vc }; }
+  const n = s.t.length - 1;
+  const v = s.v[n];
+  return { x: s.x[n] + (v > 0 ? v * (t - s.end) : 0), v: v > 0 ? v : 0, i: 0, vc: 0 };
+}
+// times at which the slug's nose crosses each optical gate, and the speed they give
+function chronoOf(s) {
+  const noseAt = (gx) => (gx - layout.BREECH) / layout.SCALE;
+  const times = layout.GATES.map((gx) => {
+    const target = noseAt(gx) - p.slugLen / 2;
+    for (let i = 1; i < s.t.length; i++) if (s.x[i] >= target) { const f = (target - s.x[i - 1]) / (s.x[i] - s.x[i - 1] || 1); return s.t[i - 1] + f * (s.t[i] - s.t[i - 1]); }
+    const n = s.t.length - 1;
+    return s.v[n] > 0 ? s.end + (target - s.x[n]) / s.v[n] : null;
+  });
+  const [t1, t2] = times;
+  return { t1, t2, v: t1 !== null && t2 !== null && t2 > t1 ? ((layout.GATES[1] - layout.GATES[0]) / layout.SCALE) / (t2 - t1) : null };
 }
 const tracerPoints = [];
 function stepMachine(dt, calm) {
-  switch (state.phase) {
-    case "charging":
-      state.vBank = MODEL.charge(state.vBank, p, dt);
-      if (state.vBank >= p.vSet - 1e-6) { state.vBank = p.vSet; state.phase = "armed"; announce(); }
-      break;
-    case "armed":
-      if (state.vBank < p.vSet - 0.5) state.phase = "charging";
-      break;
-    case "firing": {
-      const s = state.shot;
-      if (!state.paused) state.shotT = Math.min(s.end, state.shotT + dt / SPEEDS[state.speed].slow);
-      const q = MODEL.sampleAt(s, state.shotT);
-      state.vBank = q.vc;
-      placeSlug(q);
-      if (state.shotT >= s.end && !state.paused) {
-        if (state.env.glow < 0.01) { state.phase = state.power ? "charging" : "bleeding"; state.shot = null; announce(); }
-      }
-      break;
+  const C = MODEL.capacitance(p);
+  if (state.shot) {
+    const s = state.shot;
+    if (!state.paused) state.shotT += dt / (state.shotT < s.pulse ? SPEEDS[state.speed].slow : Math.min(SPEEDS[state.speed].slow, FLIGHT_SLOW));
+    const q = slugAt(s, state.shotT);
+    state.vBank = q.vc;
+    const stopped = placeSlugAt(q.x, q.v, q.i);
+    if (!state.paused && state.shotT > s.end && (stopped || q.v <= 0)) {
+      state.landed = { v: s.chrono.v ?? s.v.at(-1), at: state.clock, inBox: stopped };
+      state.shot = null;
+      state.vBank = 0;
+      announce();
     }
-    case "bleeding":
-      state.vBank = MODEL.bleed(state.vBank, p, dt * BLEED_FAST);
-      if (state.vBank < 0.5) { state.vBank = 0; state.phase = "off"; announce(); }
-      break;
+  } else if (connected()) {
+    const net = p.chargeI - state.vBank / p.bleedR;
+    if (state.vBank < vFull() && net > 0) state.vBank = Math.min(vFull(), state.vBank + (net / C) * dt);
+  } else {
+    const R = state.stickOn ? (p.bleedR * STICK_R) / (p.bleedR + STICK_R) : p.bleedR;
+    state.vBank *= Math.exp(-dt / (R * C));
+    if (state.vBank < 0.005) state.vBank = 0;
   }
-  const q = state.shot ? MODEL.sampleAt(state.shot, state.shotT) : null;
-  const peakRef = MODEL.derived(p, p.vMax).peakI || 1;
-  const fieldTarget = q ? Math.pow(q.i / peakRef, 2) : 0;
+  const q = state.shot ? slugAt(state.shot, state.shotT) : null;
+  const peakRef = MODEL.derived({ ...params(), vSet: p.vMax }).peakI || 1;
   const env = state.env;
-  env.glow = calm ? fieldTarget : follow(env.glow, fieldTarget, dt, 0.05);
-  env.needle = calm ? state.vBank : follow(env.needle, state.vBank, dt, 0.22);
-  env.knob = calm ? p.vSet : follow(env.knob, p.vSet, dt, 0.15);
+  const ease = (x, target, tau) => (calm || Math.abs(target - x) < 1e-4 ? target : x + (target - x) * (1 - Math.exp(-dt / tau)));
+  env.glow = ease(env.glow, q ? Math.pow(q.i / peakRef, 2) : 0, 0.05);
   const pressing = state.clock - state.firedAt > 0 && state.clock - state.firedAt < 0.35;
-  env.press = calm ? (pressing ? 1 : 0) : follow(env.press, pressing ? 1 : 0, dt, 0.05);
-  env.key = calm ? (state.power ? 1 : 0) : follow(env.key, state.power ? 1 : 0, dt, 0.12);
+  env.press = ease(env.press, pressing ? 1 : 0, 0.05);
+  env.knife = ease(env.knife, state.knifeClosed ? 0 : 1, 0.12);
+  env.stick = ease(env.stick, state.stickOn ? 1 : 0, 0.3);
 }
-const follow = (x, target, dt, tau) => (Math.abs(target - x) < 1e-4 ? target : x + (target - x) * (1 - Math.exp(-dt / tau)));
-
-function placeSlug(q) {
-  const { BARREL, SCALE, SLUG, CATCH } = layout;
-  const rear = (q.x - p.slugLen / 2) * SCALE; // from the breech face
-  const centre = BARREL.x0 + rear + SLUG.len / 2;
-  const stop = CATCH.x0 + 3 - SLUG.len / 2;
-  const x = Math.min(stop, Math.max(BARREL.x0 + SLUG.len / 2, centre));
-  live.slug.position.copy(W(x, BARREL.y, BARREL.z - (BARREL.bore - SLUG.r)));
-  // force arrow: direction and size from the model's pull shape and current
-  const g = MODEL.pull(q.x, p);
-  const F = p.k * q.i * q.i * g;
-  const show = Math.abs(F) > 0.5 && x < stop - 0.5;
+// place the slug from its model centre position; returns true once it rests in the catch box
+function placeSlugAt(xModel, v = 0, i = 0) {
+  const { TUBE, SLUG, BREECH, CATCH, SCALE } = layout;
+  let cx = BREECH + xModel * SCALE;
+  const stop = CATCH.x0 + 24; // nose a few millimetres into the towels
+  const inBox = cx >= stop;
+  cx = Math.min(stop, Math.max(BREECH + SLUG.len / 2, cx));
+  const past = cx + SLUG.len / 2 - TUBE.x1; // nose past the muzzle, mm
+  const drop = past > 0 && v > 0.5 ? Math.min(SLUG.z - 4, 0.5 * 9.81 * Math.pow(past / 1000 / v, 2) * 1000) : 0;
+  live.slug.position.copy(W(cx, TUBE.y, SLUG.z - drop));
+  const g = MODEL.pull(xModel, p);
+  const F = p.k * i * i * g;
+  const show = Math.abs(F) > 0.05 && cx < TUBE.x1;
   live.arrow.visible = show;
   if (show) {
-    const len = Math.min(26, Math.abs(F) * 0.02);
-    live.arrow.position.copy(live.slug.position).add(new THREE.Vector3(0, SLUG.r + 2.5, 0));
+    const len = Math.min(40, Math.abs(F) * 1.2);
+    live.arrow.position.copy(live.slug.position).add(new THREE.Vector3(0, TUBE.r + 9, 0));
     live.arrow.setDirection(new THREE.Vector3(Math.sign(F), 0, 0));
-    live.arrow.setLength(len, Math.min(4, len * 0.4), 2);
+    live.arrow.setLength(Math.max(8, len), 6, 4);
     live.arrow.setColor(F > 0 ? 0x3ddc84 : 0xff5a5a);
   }
-  if (q.v > 1 && x < stop - 0.5) tracerPoints.push(live.slug.position.clone().add(new THREE.Vector3(-SLUG.len / 2, 0, 0)));
+  if (v > 0.5 && !inBox) tracerPoints.push(live.slug.position.clone().add(new THREE.Vector3(-SLUG.len / 2, 0, 0)));
+  return inBox;
+}
+
+// ---------------------------------------------------------------- displays (canvas textures)
+function drawSupplyDisplay() {
+  const d = live.supplyDisplay;
+  const charging = connected() && state.vBank < vFull() - 0.05 && !state.shot;
+  const volts = state.supplyOn ? (connected() ? Math.min(p.vSet, state.vBank + DIODE_DROP) : p.vSet) : p.vSet;
+  const amps = state.supplyOn && connected() && !state.shot ? (charging ? p.chargeI : state.vBank / p.bleedR) : 0;
+  const mode = !state.supplyOn ? "OFF" : charging ? "CC" : "CV";
+  const text = `${volts.toFixed(1)}|${amps.toFixed(3)}|${mode}`;
+  if (text === d.last) return;
+  d.last = text;
+  const g = d.ctx, w = d.cv.width, h = d.cv.height;
+  g.fillStyle = "#07090b"; g.fillRect(0, 0, w, h);
+  const big = `bold ${Math.round(h * 0.34)}px ui-monospace, Menlo, Consolas, monospace`;
+  const small = `${Math.round(h * 0.14)}px ui-monospace, Menlo, Consolas, monospace`;
+  g.textBaseline = "alphabetic";
+  g.font = big; g.textAlign = "right";
+  g.fillStyle = state.supplyOn ? "#ff3b30" : "#5a1c18"; g.fillText(volts.toFixed(1), w * 0.62, h * 0.4);
+  g.fillStyle = state.supplyOn ? "#30d158" : "#173f22"; g.fillText(amps.toFixed(3), w * 0.62, h * 0.82);
+  g.font = small; g.textAlign = "left"; g.fillStyle = "#9aa3ad";
+  g.fillText("V", w * 0.64, h * 0.4); g.fillText("A", w * 0.64, h * 0.82);
+  g.fillStyle = mode === "OFF" ? "#9aa3ad" : mode === "CC" ? "#ffb340" : "#30d158";
+  g.fillText(mode === "OFF" ? "OUT OFF" : mode, w * 0.76, h * 0.6);
+  d.tex.needsUpdate = true;
+}
+function drawMeterDisplay() {
+  const d = live.mmDisplay;
+  const v = state.vBank;
+  const text = v >= 99.995 ? "OL" : v.toFixed(2);
+  if (text === d.last) return;
+  d.last = text;
+  const g = d.ctx, w = d.cv.width, h = d.cv.height;
+  g.fillStyle = "#9aa58c"; g.fillRect(0, 0, w, h);
+  g.fillStyle = "#1a1d17";
+  g.font = `bold ${Math.round(h * 0.6)}px ui-monospace, Menlo, Consolas, monospace`;
+  g.textAlign = "right"; g.textBaseline = "alphabetic";
+  g.fillText(text, w * 0.84, h * 0.72);
+  g.font = `${Math.round(h * 0.2)}px ui-monospace, Menlo, Consolas, monospace`;
+  g.textAlign = "left";
+  g.fillText("V", w * 0.86, h * 0.72);
+  g.fillText("DC", w * 0.05, h * 0.26);
+  if (v < SAFE_V) { g.fillText("safe", w * 0.05, h * 0.9); }
+  d.tex.needsUpdate = true;
 }
 
 // ---------------------------------------------------------------- draw
-let lastTheme = "";
+const isShown = (o) => { for (let n = o; n; n = n.parent) if (!n.visible) return false; return true; };
+function applyUpgrades() {
+  for (const o of live.later) o.visible = state.upgrades;
+  for (const o of live.early) o.visible = !state.upgrades;
+  const fireBtn = document.querySelector("[data-action='fire']");
+  if (fireBtn) fireBtn.textContent = state.upgrades ? "Fire (trigger board)" : "Fire (push switch)";
+  refreshReadouts();
+}
+const tmpQ = new THREE.Quaternion(), qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
 function draw() {
   const env = state.env;
-  const { METER, KNOB, BARREL, SLUG } = layout;
-  // needle: -135° at 0 V, +135° at vMax
-  live.needlePivot.rotation.y = -(-135 + 270 * Math.min(1, env.needle / p.vMax)) * (Math.PI / 180);
-  const share = (env.knob - p.vMin) / (p.vMax - p.vMin);
-  live.knobPivot.rotation.z = -(-135 + 270 * share) * (Math.PI / 180);
-  live.button.position.y = live.button.userData.rest.y - 1.2 * env.press;
-  live.keyPivot.rotation.y = Math.PI / 2 - (Math.PI / 2) * env.key;
+  live.knifePivot.rotation.z = -1.2 * env.knife;
+  const btn = state.upgrades ? live.trigBtn : live.fireBtn;
+  if (live.fireBtn) live.fireBtn.position.y = live.fireBtn.userData.rest.y - 2.5 * (state.upgrades ? 0 : env.press);
+  if (live.trigBtn) live.trigBtn.scale.y = 1 - 0.4 * (state.upgrades ? env.press : 0);
+  // discharge stick: hook → over the bank
+  const st = live.stick;
+  st.group.position.lerpVectors(st.home.pos, st.use.pos, env.stick);
+  qa.setFromEuler(st.home.rot); qb.setFromEuler(st.use.rot);
+  st.group.quaternion.copy(tmpQ.slerpQuaternions(qa, qb, env.stick));
+  const clipped = env.stick > 0.97;
+  for (const m of st.hang) m.visible = !clipped;
+  for (const m of st.useLeads) m.visible = clipped;
   // lamps and conducting parts
-  const firing = state.phase === "firing" && state.shot;
-  const scrOn = firing && state.shotT < state.shot.diodeAt;
-  const diodeOn = firing && state.shotT >= state.shot.diodeAt && state.shotT < state.shot.pulse;
-  const loopOn = firing && state.shotT < state.shot.pulse;
-  const age = state.clock - state.firedAt;
-  glow(live.emissive.charge, state.phase === "charging" ? 1 : 0, 0xff6a3a);
-  glow(live.emissive.mcu, state.power ? 1 : 0, 0x3ddc84);
-  glow(live.emissive.gate, age > 0 && age < 0.6 ? 1 : 0, 0xff6a3a);
-  glow(live.emissive.scr, scrOn ? 0.9 : 0, 0xff7a2a);
-  glow(live.emissive.diode, diodeOn ? 0.9 : 0, 0xff7a2a);
-  glow(live.emissive.loop, loopOn ? Math.min(1, env.glow * 3 + 0.25) : 0, 0xff4a2a);
-  // bleeder warms while bleeding from a high voltage
-  glow([live.bleeder], state.phase === "bleeding" ? Math.min(0.6, MODEL.bleedWatts(p, state.vBank) / 20) : 0, 0xff5a1a);
+  const s = state.shot;
+  const firing = !!s;
+  const conducting = firing && state.shotT < (s.diodeAt ?? 0);
+  const freewheel = firing && state.shotT >= (s.diodeAt ?? 0) && state.shotT < s.pulse;
+  glow([live.outBtn], state.supplyOn ? 0.9 : 0, 0x30d158);
+  glow(live.emissive.scr, state.upgrades && conducting ? 0.9 : 0, 0xff7a2a);
+  glow(live.emissive.diode, freewheel ? 0.9 : 0, 0xff7a2a);
+  glow(live.emissive.loop, firing && state.shotT < s.pulse ? Math.min(1, env.glow * 3 + 0.25) : 0, 0xff4a2a);
+  glow(live.emissive.gate, state.upgrades && state.clock - state.firedAt > 0 && state.clock - state.firedAt < 0.5 ? 0.9 : 0, 0x6ea0ff);
+  glow([live.bleeder], !connected() && !firing ? Math.min(0.5, MODEL.bleedWatts(p, state.vBank) / 8) : 0, 0xff5a1a);
   const light = root.dataset.theme === "light";
   for (const shell of live.field) {
     shell.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
     shell.material.color.set(light ? 0x3b5bdb : 0x5a7cff);
-    shell.material.opacity = shell.userData.peak * Math.min(1, env.glow) * (light ? 0.55 : 1);
+    shell.material.opacity = shell.userData.peak * Math.min(1, env.glow) * (light ? 0.45 : 1);
   }
-  // tracer
   if (tracerPoints.length > 1) {
     live.tracer.geometry.setFromPoints(tracerPoints);
     live.tracer.material.opacity = firing ? 0.7 : Math.max(0, live.tracer.material.opacity - 0.01);
   } else live.tracer.material.opacity = 0;
   if (!firing) live.arrow.visible = false;
+  drawSupplyDisplay();
+  drawMeterDisplay();
   // explode
   for (const g of Object.values(groups)) g.position.copy(g.userData.explode).multiplyScalar(state.explode);
   for (const c of live.cables) { c.material.transparent = state.explode > 0.01; c.material.opacity = 1 - 0.85 * state.explode; }
-  // camera follow
   if (state.follow && firing) {
     const target = live.slug.getWorldPosition(new THREE.Vector3());
     controls.target.lerp(target, 0.2);
-    const want = target.clone().add(new THREE.Vector3(-20, 22, 70));
-    camera.position.lerp(want, 0.12);
+    camera.position.lerp(target.clone().add(new THREE.Vector3(-40, 50, 150)), 0.12);
   }
   controls.autoRotate = state.autoRotate && !still.matches && !state.follow;
   controls.update();
@@ -2394,97 +2556,111 @@ function glow(meshes, level, color) {
   if (!meshes) return;
   for (const m of meshes) {
     const mat = m.material;
-    if (!mat.emissive) continue;
+    if (!mat || !mat.emissive) continue;
     mat.emissive.set(color);
     mat.emissiveIntensity = level * 1.6;
   }
 }
 
 // ---------------------------------------------------------------- readouts and labels
-const words = {
-  off: () => `off · bank ${MODEL.fmt.v(state.vBank)}`,
-  charging: () => `charging · ${MODEL.fmt.v(state.vBank)} · ${MODEL.fmt.j(MODEL.energy(p, state.vBank))}`,
-  armed: () => `armed · ${MODEL.fmt.v(state.vBank)} · ${MODEL.fmt.j(MODEL.energy(p, state.vBank))}`,
-  firing: () => { const q = MODEL.sampleAt(state.shot, state.shotT); return `${state.paused ? "paused" : "firing"} · t ${(state.shotT * 1e3).toFixed(2)} ms · ${MODEL.fmt.a(q.i)} · bank ${MODEL.fmt.v(q.vc)} · slug ${MODEL.fmt.mps(Math.max(0, q.v))}`; },
-  bleeding: () => `bleeding · ${MODEL.fmt.v(state.vBank)} · 50 V in ${MODEL.fmt.s(MODEL.bleedTimeTo(p, state.vBank, p.vMin))}`,
-};
-const $ = (sel) => document.querySelector(sel);
-let lastReadout = "";
+function phaseText() {
+  const V = MODEL.fmt.v(state.vBank), E = MODEL.fmt.j(MODEL.energy(p, state.vBank));
+  if (state.shot) {
+    const s = state.shot, q = slugAt(s, state.shotT);
+    const tag = state.paused ? "paused" : state.shotT < s.pulse ? "firing" : "flight";
+    const chronoText = state.upgrades && s.chrono.v && state.shotT >= s.chrono.t2 ? ` · chronograph ${MODEL.fmt.mps(s.chrono.v)}` : "";
+    return `${tag} · t ${(state.shotT * 1e3).toFixed(2)} ms · ${MODEL.fmt.a(q.i)} · bank ${MODEL.fmt.v(q.vc)} · slug ${MODEL.fmt.mps(Math.max(0, q.v))}${chronoText}`;
+  }
+  if (state.landed && state.clock - state.landed.at < 3) return state.landed.inBox ? `landed in the catch box · ${MODEL.fmt.mps(state.landed.v)}${state.upgrades ? " (chronograph)" : ""}` : "the slug stopped in the barrel: the coil pulled it back";
+  if (state.stickOn) return state.vBank < SAFE_V ? `safe · stick on · ${V} · hands allowed` : `discharging · stick on · ${V}`;
+  if (connected()) return state.vBank < vFull() - 0.05 ? `charging · ${V} · ${E}` : `charged · ${V} · ${E} · open the disconnect (K), then fire`;
+  if (state.vBank >= SAFE_V) return `${state.supplyOn ? "disconnected" : "supply off"} · ${V} · bleeder draining · ready to fire`;
+  return `safe · ${V} · under 5 V`;
+}
+let lastReadout = "", scopeDirty = true;
 function refreshLive() {
-  const text = words[state.phase]();
+  let text = phaseText();
+  if (state.warn && state.clock < state.warnUntil) text = `${text} — ${state.warn}`;
   if (text !== lastReadout) { $("[data-readout]").textContent = text; lastReadout = text; }
   const scrub = $("#scrub");
-  if (state.shot && document.activeElement !== scrub) scrub.value = String(Math.round((state.shotT / state.shot.end) * 1000));
-  if (state.shot || scopeDirty) { drawScope(); }
+  if (state.shot && document.activeElement !== scrub) scrub.value = String(Math.round((Math.min(state.shotT, state.shot.end) / state.shot.end) * 1000));
+  if (state.shot || scopeDirty) drawScope();
 }
 function announce() {
-  const live = $("[data-status]");
-  live.textContent = state.phase;
+  $("[data-status]").textContent = phaseText();
   stage.setAttribute("aria-valuenow", String(p.vSet));
-  stage.setAttribute("aria-valuetext", `${state.phase}: set ${MODEL.fmt.v(p.vSet)}, bank ${MODEL.fmt.v(state.vBank)}`);
-  for (const b of document.querySelectorAll("[data-action='key']")) b.textContent = state.power ? "Key off" : "Key on";
+  stage.setAttribute("aria-valuetext", `${phaseText()}; supply set to ${MODEL.fmt.v(p.vSet)}`);
+  const set = (sel, t, on) => { const b = $(sel); if (b) { b.textContent = t; b.setAttribute("aria-pressed", on ? "true" : "false"); } };
+  set("[data-action='supply']", state.supplyOn ? "Supply output: on" : "Supply output: off", state.supplyOn);
+  set("[data-action='knife']", state.knifeClosed ? "Disconnect: closed" : "Disconnect: open", state.knifeClosed);
+  set("[data-action='stick']", state.stickOn ? "Hang up discharge stick" : "Clip on discharge stick", state.stickOn);
 }
 function refreshReadouts() {
   const d = derived;
+  if (!d) return;
   const out = {
-    C: `${(d.C * 1e6).toFixed(0)} µF`, E: MODEL.fmt.j(d.energy), charge: MODEL.fmt.s(d.chargeTime),
-    peak: MODEL.fmt.a(d.peakI), half: MODEL.fmt.ms(d.halfPeriod), zero: MODEL.fmt.ms(d.scrTime ?? 0), pulse: MODEL.fmt.ms(d.pulse),
-    bleed: MODEL.fmt.s(d.bleedTo50), tau: MODEL.fmt.s(d.bleedTau), watts: MODEL.fmt.w(d.bleedWatts),
-    exit: MODEL.fmt.mps(d.exitV), kinetic: `${(0.5 * p.mass * d.exitV * d.exitV).toFixed(1)} J`, eff: MODEL.fmt.pct(d.efficiency),
+    C: `${(d.C * 1e6).toFixed(0)} µF`, full: MODEL.fmt.v(vFull()), E: MODEL.fmt.j(d.energy), charge: MODEL.fmt.s(d.chargeTime),
+    peak: MODEL.fmt.a(d.peakI), zero: MODEL.fmt.ms(d.scrTime ?? 0), pulse: MODEL.fmt.ms(d.pulse),
+    tau: MODEL.fmt.s(d.bleedTau), bleed: MODEL.fmt.s(d.bleedTo5), stick: MODEL.fmt.s(d.stickTo5), watts: MODEL.fmt.w(d.bleedWatts),
+    exit: MODEL.fmt.mps(Math.max(0, d.exitV)), kinetic: `${(0.5 * p.mass * Math.max(0, d.exitV) ** 2).toFixed(2)} J`, eff: MODEL.fmt.pct(Math.max(0, d.efficiency)),
+    chrono: chrono && chrono.v ? MODEL.fmt.mps(chrono.v) : "slug does not reach gate 2",
   };
   for (const [k, v] of Object.entries(out)) { const el = $(`[data-out="${k}"]`); if (el) el.textContent = v; }
   const wattsEl = $('[data-out="watts"]');
-  wattsEl.classList.toggle("warn", d.bleedWatts > p.bleedW);
-  wattsEl.title = d.bleedWatts > p.bleedW ? `Over the ${p.bleedW} W rating at full charge` : "";
-  // suck-back warning: where is the slug when the coil current has decayed to 5 %?
+  if (wattsEl) { wattsEl.classList.toggle("warn", d.bleedWatts > p.bleedW); wattsEl.title = d.bleedWatts > p.bleedW ? `Over the bleeder's ${p.bleedW} W rating` : ""; }
+  const chronoRow = $("[data-row='chrono']");
+  if (chronoRow) chronoRow.hidden = !state.upgrades;
   const atEnd = MODEL.sampleAt(traceShot, traceShot.pulse);
   const inCoil = Math.abs(atEnd.x - p.coilAt) < (p.coilLen + p.slugLen) / 2;
-  const warn = $("#suckback");
-  warn.hidden = !(inCoil || d.exitV < 5);
-  warn.textContent = d.exitV < 5 ? "The slug does not leave: the field is too weak for this mass." : `At the end of the pulse the slug is still in the coil (${(atEnd.x * 1e3).toFixed(0)} mm): the tail pulls it back. Shorter pulse, lighter slug or an IGBT cut-off.`;
+  const w = $("#suckback");
+  if (w) {
+    w.hidden = !(inCoil || d.exitV < 1);
+    w.textContent = d.exitV < 1 ? "The slug does not leave: it is pulled back into the coil. Move its start, lighten it or shorten the pulse." : `At the end of the pulse the slug is still in the coil, so the tail pulls it back (the guide's suck-back). Try the nose closer to the coil's mouth.`;
+  }
 }
 function labelText(m) {
   const l = m.userData.label;
-  const v = valueFor(l.name) ?? l.value;
-  return { name: l.name, value: v, role: l.role };
+  return { name: l.name, value: valueFor(l.name) ?? l.value, role: l.role };
 }
 function valueFor(name) {
+  const d = derived;
   switch (name) {
-    case "Electrolytic capacitor": return `${(p.capEach * 1e6).toFixed(0)} µF ${p.vMax} V × ${p.caps}`;
-    case "Bleeder resistor": return `${(p.bleedR / 1e3).toFixed(p.bleedR >= 10e3 ? 0 : 1)} kΩ ${p.bleedW} W · 50 V in ${MODEL.fmt.s(derived.bleedTo50)}`;
-    case "Drive coil": return `${(p.L * 1e6).toFixed(0)} µH, ${(p.coilLen * 1e3).toFixed(0)} mm · pulse ${MODEL.fmt.ms(derived.pulse)}`;
-    case "Projectile": return `${(p.mass * 1e3).toFixed(0)} g, ${(p.slugLen * 1e3).toFixed(0)} mm · leaves at ${MODEL.fmt.mps(derived.exitV)}`;
-    case "SCR (thyristor)": return `peak ${MODEL.fmt.a(derived.peakI)} · on for ${MODEL.fmt.ms(derived.scrTime ?? 0)}`;
-    case "Flyback diode": return `carries the tail from ${MODEL.fmt.ms(derived.scrTime ?? 0)} to ${MODEL.fmt.ms(derived.pulse)}`;
-    case "Boost charger": return `${p.chargeI} A limit · ${MODEL.fmt.v(p.vSet)} set · ${MODEL.fmt.s(derived.chargeTime)} to charge`;
-    case "+ bus bar": case "− bus bar": return `${MODEL.fmt.j(derived.energy)} at ${MODEL.fmt.v(p.vSet)}`;
-    case "Bank voltmeter": return `reads ${MODEL.fmt.v(state.vBank)}`;
+    case "Capacitor C1": case "Capacitor C2": return `${(p.capEach * 1e6).toFixed(0)} µF 63 V · ${p.caps} in parallel = ${(d.C * 1e6).toFixed(0)} µF`;
+    case "Bleeder resistor": return `${(p.bleedR / 1e3).toFixed(p.bleedR >= 1e3 ? 0 : 1)} kΩ ${p.bleedW} W · to 5 V in ${MODEL.fmt.s(d.bleedTo5)}`;
+    case "Coil": return `${(p.L * 1e6).toFixed(0)} µH, ${(p.coilLen * 1e3).toFixed(0)} mm · peak ${MODEL.fmt.a(d.peakI)}`;
+    case "Slug": return `${(p.mass * 1e3).toFixed(0)} g, ${(p.slugLen * 1e3).toFixed(0)} mm · leaves at ${MODEL.fmt.mps(Math.max(0, d.exitV))}`;
+    case "Push switch": return `carries ${MODEL.fmt.a(d.peakI)} peak for ${MODEL.fmt.ms(d.scrTime ?? 0)}`;
+    case "SCR (thyristor)": return `peak ${MODEL.fmt.a(d.peakI)} · on for ${MODEL.fmt.ms(d.scrTime ?? 0)}`;
+    case "Flyback diode": return `carries the tail from ${MODEL.fmt.ms(d.scrTime ?? 0)} to ${MODEL.fmt.ms(d.pulse)}`;
+    case "Bench power supply": return `set ${MODEL.fmt.v(p.vSet)}, ${p.chargeI.toFixed(1)} A limit · charges in ${MODEL.fmt.s(d.chargeTime)}`;
+    case "Multimeter": case "Multimeter display": return `reads ${state.vBank.toFixed(2)} V`;
+    case "Terminal block": return `${MODEL.fmt.j(d.energy)} at ${MODEL.fmt.v(vFull())} (55 V less the diode)`;
+    case "Discharge stick": return `100 Ω, 10 W · bank to 5 V in ${MODEL.fmt.s(d.stickTo5)}`;
+    case "Optical gate 1": case "Optical gate 2": return chrono && chrono.v ? `chronograph reads ${MODEL.fmt.mps(chrono.v)}` : null;
     default: return null;
   }
 }
-function rebuildLabels() { if (state.hover) showTip(state.hover); }
-
-// hover: raycast, highlight, tooltip
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2(-9, -9);
-let hovered = null, hoverTime = 0;
+let hovered = null;
 function pick() {
   ray.setFromCamera(pointer, camera);
   const hits = ray.intersectObjects(S.pickables, false);
-  const hit = hits.find((h) => h.object.visible && (!h.object.material.transparent || h.object.material.opacity > 0.2));
+  const hit = hits.find((h) => isShown(h.object) && (!h.object.material.transparent || h.object.material.opacity > 0.2));
   const m = hit ? hit.object : null;
   if (m !== hovered) {
     if (hovered) setHighlight(hovered, false);
     hovered = m;
     state.hover = m;
-    if (m) { setHighlight(m, true); showTip(m); }
-    else hideTip();
+    if (m) { setHighlight(m, true); showTip(m); } else hideTip();
   }
   if (hovered) positionTip(hovered);
 }
 const highlighted = new Map();
+const NO_GLOW = new Set(["Workbench", "Base plate", "Plywood backstop", "Catch box", "Towels"]);
 function setHighlight(m, on) {
-  const same = S.pickables.filter((o) => o.userData.label && o.userData.label.name === m.userData.label.name && o.userData.group === m.userData.group);
+  if (NO_GLOW.has(m.userData.label.name)) return;
+  const same = S.pickables.filter((o) => o.userData.label && o.userData.label.name === m.userData.label.name);
   for (const o of same) {
     if (on) {
       if (!highlighted.has(o)) highlighted.set(o, o.material);
@@ -2501,25 +2677,20 @@ function showTip(m) {
   positionTip(m);
 }
 function hideTip() { tooltip.hidden = true; }
-const tmp = new THREE.Vector3();
-const bbox = new THREE.Box3();
+const tmp = new THREE.Vector3(), bbox = new THREE.Box3();
 function positionTip(m) {
   bbox.setFromObject(m);
   bbox.getCenter(tmp);
   tmp.y = bbox.max.y;
   tmp.project(camera);
   const r = canvas.getBoundingClientRect();
-  const x = (tmp.x * 0.5 + 0.5) * r.width;
-  const y = (-tmp.y * 0.5 + 0.5) * r.height;
-  tooltip.style.left = `${Math.max(8, Math.min(r.width - 8, x))}px`;
-  tooltip.style.top = `${Math.max(8, y - 10)}px`;
+  tooltip.style.left = `${Math.max(8, Math.min(r.width - 8, (tmp.x * 0.5 + 0.5) * r.width))}px`;
+  tooltip.style.top = `${Math.max(8, (-tmp.y * 0.5 + 0.5) * r.height - 10)}px`;
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// label-all tags: one per block at its anchor
 const tags = Object.entries(S.anchors).map(([id, at]) => {
   const el = document.createElement("div");
   el.className = "cg3-tag";
-  el.dataset.group = id;
   el.textContent = S.GROUP_INFO[id].title;
   el.hidden = true;
   tagsHost.appendChild(el);
@@ -2528,8 +2699,10 @@ const tags = Object.entries(S.anchors).map(([id, at]) => {
 function placeTags() {
   const r = canvas.getBoundingClientRect();
   for (const t of tags) {
-    t.el.hidden = !state.labelsAll;
-    if (!state.labelsAll) continue;
+    const later = t.id === "sensing" || t.id === "pcb";
+    const show = state.labelsAll && (!later || state.upgrades);
+    t.el.hidden = !show;
+    if (!show) continue;
     tmp.copy(t.at).add(groups[t.id].position).project(camera);
     if (tmp.z > 1) { t.el.hidden = true; continue; }
     t.el.style.left = `${(tmp.x * 0.5 + 0.5) * r.width}px`;
@@ -2538,12 +2711,11 @@ function placeTags() {
 }
 
 // ---------------------------------------------------------------- oscilloscope
-let scopeDirty = true;
 function drawScope() {
   const c = scopeCanvas, g = c.getContext("2d");
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = c.clientWidth, h = c.clientHeight;
-  if (!w || !h) return;
+  if (!w || !h || !traceShot) return;
   if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   const css = getComputedStyle(root);
@@ -2553,82 +2725,78 @@ function drawScope() {
   const s = state.shot ?? traceShot;
   const T = s.end;
   const pad = { l: 6, r: 6, t: 8, b: 16 };
-  const X = (t) => pad.l + (t / T) * (w - pad.l - pad.r);
+  const X = (t) => pad.l + (Math.min(t, T) / T) * (w - pad.l - pad.r);
   const Y = (f) => pad.t + (1 - f) * (h - pad.t - pad.b);
-  g.strokeStyle = grid; g.lineWidth = 1;
-  g.beginPath();
+  g.strokeStyle = grid; g.lineWidth = 1; g.beginPath();
   for (let i = 0; i <= 4; i++) { const y = Y(i / 4); g.moveTo(pad.l, y); g.lineTo(w - pad.r, y); }
   for (let ms = 0; ms * 1e-3 <= T; ms += 1) { const x = X(ms * 1e-3); g.moveTo(x, pad.t); g.lineTo(x, h - pad.b); }
   g.stroke();
   const v0 = Math.max(1, s.vc[0]);
-  const trace = (arr, norm, color, width = 1.6) => {
-    g.strokeStyle = color; g.lineWidth = width; g.beginPath();
+  const trace = (arr, norm, color) => {
+    g.strokeStyle = color; g.lineWidth = 1.6; g.beginPath();
     for (let i = 0; i < s.t.length; i++) { const x = X(s.t[i]), y = Y(Math.max(0, Math.min(1, arr[i] / norm))); i ? g.lineTo(x, y) : g.moveTo(x, y); }
     g.stroke();
   };
   trace(s.i, Math.max(1, s.peakI), "#ff7a2a");
   trace(s.vc, v0, "#4f8dff");
   trace(s.x, p.barrelLen, "#3ddc84");
-  if (state.shot) {
-    const x = X(state.shotT);
-    g.strokeStyle = ink; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, h - pad.b); g.stroke(); g.setLineDash([]);
-  }
-  g.fillStyle = ink; g.font = "10px ui-monospace, monospace"; g.textBaseline = "alphabetic";
-  g.fillText(`0`, pad.l, h - 4);
+  if (state.shot) { const x = X(state.shotT); g.strokeStyle = ink; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, h - pad.b); g.stroke(); g.setLineDash([]); }
+  g.fillStyle = ink; g.font = "10px ui-monospace, monospace";
+  g.textAlign = "left"; g.fillText("0", pad.l, h - 4);
   g.textAlign = "right"; g.fillText(`${(T * 1e3).toFixed(1)} ms`, w - pad.r, h - 4);
   g.textAlign = "left";
-  g.fillStyle = "#ff7a2a"; g.fillText(`i  ${MODEL.fmt.a(s.peakI)} pk`, pad.l + 4, pad.t + 10);
-  g.fillStyle = "#4f8dff"; g.fillText(`V  ${MODEL.fmt.v(v0)}`, pad.l + 4, pad.t + 22);
-  g.fillStyle = "#3ddc84"; g.fillText(`x  ${(p.barrelLen * 1e3).toFixed(0)} mm`, pad.l + 4, pad.t + 34);
+  g.fillStyle = "#ff7a2a"; g.fillText(`coil current  ${MODEL.fmt.a(s.peakI)} peak`, pad.l + 4, pad.t + 10);
+  g.fillStyle = "#4f8dff"; g.fillText(`bank voltage  ${MODEL.fmt.v(v0)}`, pad.l + 4, pad.t + 22);
+  g.fillStyle = "#3ddc84"; g.fillText(`slug position  0 to ${(p.barrelLen * 1e3).toFixed(0)} mm`, pad.l + 4, pad.t + 34);
   scopeDirty = false;
 }
 
-// ---------------------------------------------------------------- camera presets and explode
+// ---------------------------------------------------------------- camera presets
 const PRESETS = {
-  overview: { pos: W(10, 340, 190), target: W(20, 0, 8) },
-  charger: { pos: W(-150, 60, 60), target: W(-123, -28, 14) },
-  bank: { pos: W(-60, 70, 70), target: W(-48, -30, 16) },
-  switch: { pos: W(40, 60, 50), target: W(20, -18, 8) },
-  coil: { pos: W(70, 110, 60), target: W(100, 32, 24) },
-  muzzle: { pos: W(230, 90, 60), target: W(140, 32, 26) },
-  top: { pos: W(20, 40, 320), target: W(20, 0, 0) },
+  overview: { pos: W(260, 1080, 760), target: W(170, -40, 40) },
+  charging: { pos: W(300, 120, 300), target: W(130, -60, 30) },
+  bank: { pos: W(170, 210, 200), target: W(90, 33, 35) },
+  switch: { pos: W(-30, 210, 170), target: W(-95, 30, 20) },
+  coil: { pos: W(-20, 150, 140), target: W(-95, -30, 32) },
+  catch: { pos: W(250, 420, 330), target: W(470, -40, 60) },
+  top: { pos: W(150, 40, 1250), target: W(150, -40, 0) },
 };
 let camAnim = null;
 function goTo(name) {
   const pr = PRESETS[name];
   if (!pr) return;
-  state.follow = name === "follow";
   camAnim = { from: camera.position.clone(), to: pr.pos.clone(), tf: controls.target.clone(), tt: pr.target.clone(), start: performance.now() };
 }
-function stepCamera(dt) {
+function stepCamera() {
   if (!camAnim) return;
   const t = still.matches ? 1 : Math.min(1, (performance.now() - camAnim.start) / 900);
-  camAnim.t = t;
   const e = t < 0.5 ? 4 * t ** 3 : 1 - Math.pow(-2 * t + 2, 3) / 2;
   camera.position.lerpVectors(camAnim.from, camAnim.to, e);
   controls.target.lerpVectors(camAnim.tf, camAnim.tt, e);
-  if (camAnim.t >= 1) camAnim = null;
+  if (t >= 1) camAnim = null;
 }
 
 // ---------------------------------------------------------------- the panel
 const CONTROLS = [
-  { section: "Circuit", items: [
-    { id: "vSet", label: "Bank voltage", min: 50, max: 450, step: 10, unit: "V", get: () => p.vSet, set: (v) => { p.vSet = v; if (state.power && state.phase !== "firing") state.phase = state.vBank >= p.vSet - 0.5 ? "armed" : "charging"; } },
-    { id: "caps", label: "Capacitors in parallel", min: 1, max: 8, step: 1, unit: "", get: () => p.caps, set: (v) => (p.caps = v) },
-    { id: "capEach", label: "Capacitance each", min: 100, max: 4700, step: 10, unit: "µF", get: () => p.capEach * 1e6, set: (v) => (p.capEach = v * 1e-6) },
-    { id: "L", label: "Coil inductance", min: 20, max: 500, step: 5, unit: "µH", get: () => p.L * 1e6, set: (v) => (p.L = v * 1e-6) },
-    { id: "R", label: "Loop resistance", min: 10, max: 500, step: 5, unit: "mΩ", get: () => p.R * 1e3, set: (v) => (p.R = v * 1e-3) },
-    { id: "chargeI", label: "Charger current limit", min: 0.2, max: 5, step: 0.1, unit: "A", get: () => p.chargeI, set: (v) => (p.chargeI = v) },
-    { id: "bleedR", label: "Bleeder resistance", min: 1, max: 100, step: 1, unit: "kΩ", get: () => p.bleedR / 1e3, set: (v) => (p.bleedR = v * 1e3) },
-  ], outs: [["C", "Bank C"], ["E", "Stored energy"], ["charge", "Charge time"], ["peak", "Peak current"], ["half", "π√LC"], ["zero", "Bank at 0 V"], ["pulse", "Pulse to 5 %"], ["tau", "Bleed τ"], ["bleed", "Bleed to 50 V"], ["watts", "Bleeder at full charge"]] },
-  { section: "Projectile and coil", items: [
-    { id: "mass", label: "Slug mass", min: 2, max: 30, step: 0.5, unit: "g", get: () => p.mass * 1e3, set: (v) => (p.mass = v * 1e-3) },
-    { id: "slugLen", label: "Slug length", min: 10, max: 60, step: 1, unit: "mm", get: () => p.slugLen * 1e3, set: (v) => (p.slugLen = v * 1e-3) },
-    { id: "coilLen", label: "Coil length", min: 20, max: 120, step: 2, unit: "mm", get: () => p.coilLen * 1e3, set: (v) => (p.coilLen = v * 1e-3) },
-    { id: "coilAt", label: "Coil centre from breech", min: 40, max: 200, step: 5, unit: "mm", get: () => p.coilAt * 1e3, set: (v) => (p.coilAt = v * 1e-3) },
-    { id: "k", label: "Force constant k", min: 0.00002, max: 0.0006, step: 0.00001, unit: "N/A²", get: () => p.k, set: (v) => (p.k = v), fmt: (v) => v.toExponential(1) },
-  ], outs: [["exit", "Exit velocity"], ["kinetic", "Kinetic energy"], ["eff", "Efficiency"]], note: "suckback" },
+  { section: "Circuit (guide values)", items: [
+    { id: "vSet", label: "Supply set voltage", min: 5, max: 55, step: 1, unit: "V", get: () => p.vSet, set: (v) => (p.vSet = v), note: "Taped at 55 V: the capacitors are rated 63 V." },
+    { id: "caps", label: "Capacitors in parallel", min: 1, max: 4, step: 1, unit: "", get: () => p.caps, set: (v) => (p.caps = v) },
+    { id: "capEach", label: "Capacitance each", min: 1000, max: 22000, step: 500, unit: "µF", get: () => p.capEach * 1e6, set: (v) => (p.capEach = v * 1e-6) },
+    { id: "L", label: "Coil inductance", min: 20, max: 300, step: 5, unit: "µH", get: () => p.L * 1e6, set: (v) => (p.L = v * 1e-6) },
+    { id: "R", label: "Loop resistance", min: 20, max: 300, step: 5, unit: "mΩ", get: () => p.R * 1e3, set: (v) => (p.R = v * 1e-3) },
+    { id: "chargeI", label: "Supply current limit", min: 0.2, max: 3, step: 0.1, unit: "A", get: () => p.chargeI, set: (v) => (p.chargeI = v) },
+    { id: "bleedR", label: "Bleeder resistor", min: 0.2, max: 10, step: 0.1, unit: "kΩ", get: () => p.bleedR / 1e3, set: (v) => (p.bleedR = v * 1e3) },
+  ], outs: [["C", "Bank capacitance"], ["full", "Bank when full (after the diode)"], ["E", "Stored energy"], ["charge", "Charge time"], ["peak", "Peak coil current"], ["zero", "Bank at 0 V"], ["pulse", "Pulse ends (5 %)"], ["tau", "Bleed time constant"], ["bleed", "Bleeder: to 5 V"], ["stick", "Discharge stick: to 5 V"], ["watts", "Bleeder at full charge"]] },
+  { section: "Coil, barrel, slug", items: [
+    { id: "mass", label: "Slug mass", min: 5, max: 40, step: 0.5, unit: "g", get: () => p.mass * 1e3, set: (v) => (p.mass = v * 1e-3) },
+    { id: "slugLen", label: "Slug length", min: 15, max: 50, step: 1, unit: "mm", get: () => p.slugLen * 1e3, set: (v) => (p.slugLen = v * 1e-3) },
+    { id: "coilLen", label: "Coil length", min: 20, max: 60, step: 2, unit: "mm", get: () => p.coilLen * 1e3, set: (v) => (p.coilLen = v * 1e-3) },
+    { id: "noseIn", label: "Slug nose inside the coil", min: -10, max: 30, step: 1, unit: "mm", get: () => p.noseIn * 1e3, set: (v) => (p.noseIn = v * 1e-3), note: "The guide's rule is 1 to 2 cm; week 5 finds the sweet spot." },
+    { id: "k", label: "Force constant k (assumed)", min: 0.0001, max: 0.001, step: 0.00001, unit: "N/A²", get: () => p.k, set: (v) => (p.k = v), fmt: (v) => v.toExponential(1) },
+  ], outs: [["exit", "Exit velocity"], ["kinetic", "Kinetic energy"], ["eff", "Efficiency"], ["chrono", "Chronograph (gates 1 → 2)"]], note: "suckback" },
 ];
+const fmtVal = (it, v) => `${it.fmt ? it.fmt(v) : Number(v.toFixed(3))} ${it.unit}`.trim();
+function syncSliders() { for (const sec of CONTROLS) for (const it of sec.items) { const el = $(`#ctl-${it.id}`); if (el) { el.value = it.get(); el.nextElementSibling.textContent = fmtVal(it, it.get()); } } }
 function buildPanel() {
   const frag = document.createDocumentFragment();
   for (const sec of CONTROLS) {
@@ -2640,35 +2808,25 @@ function buildPanel() {
     for (const it of sec.items) {
       const row = document.createElement("label");
       row.className = "cg3-row";
-      row.innerHTML = `<span class="n">${it.label}</span><input id="ctl-${it.id}" type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.get()}"><output for="ctl-${it.id}">${(it.fmt ? it.fmt(it.get()) : it.get())} ${it.unit}</output>`;
+      row.innerHTML = `<span class="n">${it.label}</span><input id="ctl-${it.id}" type="range" min="${it.min}" max="${it.max}" step="${it.step}" value="${it.get()}"><output for="ctl-${it.id}">${fmtVal(it, it.get())}</output>`;
       const input = row.querySelector("input");
-      const out = row.querySelector("output");
-      input.addEventListener("input", () => {
-        const v = Number(input.value);
-        it.set(v);
-        out.textContent = `${it.fmt ? it.fmt(v) : v} ${it.unit}`;
-        recompute();
-        if (it.id === "vSet") announce();
-        takeOver();
-      });
+      input.addEventListener("input", () => { const v = Number(input.value); it.set(v); row.querySelector("output").textContent = fmtVal(it, v); if (it.id === "noseIn" || it.id === "slugLen" || it.id === "coilLen") { if (!state.shot) placeSlugAt(slugStartOf(p) + p.slugLen / 2); } recompute(); announce(); takeOver(); });
       body.appendChild(row);
+      if (it.note) { const n = document.createElement("p"); n.className = "cg3-note"; n.textContent = it.note; body.appendChild(n); }
     }
-    if (sec.outs) {
-      const grid = document.createElement("div");
-      grid.className = "cg3-outs";
-      grid.innerHTML = sec.outs.map(([k, l]) => `<span class="k">${l}</span><span class="o" data-out="${k}">–</span>`).join("");
-      body.appendChild(grid);
-    }
+    const grid = document.createElement("div");
+    grid.className = "cg3-outs";
+    grid.innerHTML = sec.outs.map(([k, l]) => `<span class="k" data-row="${k}">${l}</span><span class="o" data-out="${k}" data-row="${k}">–</span>`).join("");
+    body.appendChild(grid);
     if (sec.note === "suckback") { const w = document.createElement("p"); w.id = "suckback"; w.className = "cg3-warn"; w.hidden = true; body.appendChild(w); }
     d.appendChild(body);
     frag.appendChild(d);
   }
-  panel.querySelector("[data-controls]").appendChild(frag);
-  // playback
+  panelEl.querySelector("[data-controls]").appendChild(frag);
   $("#speed").innerHTML = SPEEDS.map((s, i) => `<option value="${i}"${i === state.speed ? " selected" : ""}>${s.label}</option>`).join("");
   $("#speed").addEventListener("change", (e) => { state.speed = Number(e.target.value); });
   $("#scrub").addEventListener("input", (e) => {
-    if (!state.shot) { if (state.phase !== "armed") return; fire(); }
+    if (!state.shot && !fire()) return;
     state.paused = true;
     state.shotT = (Number(e.target.value) / 1000) * state.shot.end;
     takeOver();
@@ -2677,37 +2835,44 @@ function buildPanel() {
   $("#explode").addEventListener("input", (e) => { state.explode = Number(e.target.value) / 100; takeOver(); });
   $("#autorotate").addEventListener("change", (e) => { state.autoRotate = e.target.checked; });
   $("#labels").addEventListener("change", (e) => { state.labelsAll = e.target.checked; });
+  $("#upgrades").addEventListener("change", (e) => { state.upgrades = e.target.checked; applyUpgrades(); takeOver(); });
   $("#shadows").addEventListener("change", (e) => { renderer.shadowMap.enabled = e.target.checked; scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); });
   $("#theme").addEventListener("change", (e) => applyTheme(e.target.checked ? "light" : "dark"));
   for (const b of document.querySelectorAll("[data-view]")) b.addEventListener("click", () => { goTo(b.dataset.view); takeOver(); });
   $("#follow").addEventListener("change", (e) => { state.follow = e.target.checked; if (!state.follow) goTo("coil"); });
-  $("#toggle-panel").addEventListener("click", () => { panel.classList.toggle("collapsed"); onResize(); });
+  $("#toggle-panel").addEventListener("click", () => { panelEl.classList.toggle("collapsed"); onResize(); });
 }
 function act(name) {
   switch (name) {
-    case "key": setPower(!state.power); break;
-    case "fire": if (!state.power) setPower(true); else fire(); break;
+    case "supply": setSupply(!state.supplyOn); break;
+    case "knife": setKnife(!state.knifeClosed); break;
+    case "fire": fire(); break;
+    case "stick": setStick(!state.stickOn); break;
     case "pause": if (state.shot) state.paused = !state.paused; break;
     case "reset": resetAll(); break;
+    case "guide": Object.assign(p, GUIDE); syncSliders(); if (!state.shot) placeSlugAt(slugStartOf(p) + p.slugLen / 2); recompute(); announce(); break;
     case "resetview": goTo("overview"); break;
   }
 }
 
-// ---------------------------------------------------------------- tour
-const TOUR_V = [400, 250, 450];
-let round = 0;
+// ---------------------------------------------------------------- tour: the guide's sequence on a loop
 function tourTick(dt) {
   state.tourAt += dt;
-  if (state.tourStep === 0 && state.tourAt > 0.8) { p.vSet = TOUR_V[round % TOUR_V.length]; $("#ctl-vSet").value = p.vSet; $("#ctl-vSet").nextElementSibling.textContent = `${p.vSet} V`; recompute(); setPower(true); state.tourStep = 1; state.tourAt = 0; }
-  else if (state.tourStep === 1 && state.phase === "armed" && state.tourAt > 1.4) { fire(); state.tourStep = 2; state.tourAt = 0; }
-  else if (state.tourStep === 2 && state.phase !== "firing" && state.tourAt > 1.5) { setPower(false); state.tourStep = 3; state.tourAt = 0; }
-  else if (state.tourStep === 3 && state.phase === "off" && state.tourAt > 1.2) { state.tourStep = 0; state.tourAt = 0; round++; }
+  const next = () => { state.tourStep++; state.tourAt = 0; };
+  switch (state.tourStep) {
+    case 0: if (state.tourAt > 0.8) { if (state.stickOn) setStick(false); setSupply(true); setKnife(true); next(); } break;
+    case 1: if (connected() && state.vBank >= vFull() - 0.05 && state.tourAt > 0.8) { setKnife(false); next(); } break;
+    case 2: if (state.tourAt > 0.9) { fire(); next(); } break;
+    case 3: if (!state.shot && state.tourAt > 1.6) { setStick(true); next(); } break;
+    case 4: if (state.vBank < SAFE_V && state.tourAt > 2.2) { setStick(false); next(); } break;
+    default: if (state.tourAt > 1.4) { state.tourStep = 0; state.tourAt = 0; }
+  }
 }
 let idleTimer = 0;
 function takeOver() {
   state.tour = false;
   clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => { if (!still.matches) { state.tour = true; state.tourStep = state.power ? 1 : 0; state.tourAt = 0; } }, 20000);
+  idleTimer = setTimeout(() => { if (!still.matches && !state.shot) { state.tour = true; state.tourStep = 0; state.tourAt = 0; } }, 20000);
 }
 
 // ---------------------------------------------------------------- loop, input, resize
@@ -2718,7 +2883,7 @@ function tick(now) {
   state.clock += dt;
   if (state.tour && !still.matches) tourTick(dt);
   stepMachine(dt, still.matches);
-  stepCamera(dt);
+  stepCamera();
   pick();
   draw();
   requestAnimationFrame(tick);
@@ -2728,6 +2893,7 @@ function onResize() {
   const w = Math.max(200, r.width), h = Math.max(200, r.height);
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
+  camera.fov = camera.aspect < 1 ? 58 : 34; // a portrait phone sees the whole bench too
   camera.updateProjectionMatrix();
   scopeDirty = true;
 }
@@ -2736,44 +2902,34 @@ new ResizeObserver(onResize).observe(stage);
 canvas.addEventListener("pointermove", (e) => {
   const r = canvas.getBoundingClientRect();
   pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-  if (drag) { p.vSet = Math.round(Math.min(p.vMax, Math.max(p.vMin, drag.v0 - (e.clientY - drag.y0) * 2.5)) / 10) * 10; $("#ctl-vSet").value = p.vSet; $("#ctl-vSet").nextElementSibling.textContent = `${p.vSet} V`; recompute(); announce(); }
 });
-canvas.addEventListener("pointerleave", () => { pointer.set(-9, -9); });
-let drag = null;
-canvas.addEventListener("pointerdown", (e) => {
-  if (hovered && hovered.userData.label.name === "Voltage set knob") {
-    drag = { y0: e.clientY, v0: p.vSet };
-    controls.enabled = false;
-    canvas.setPointerCapture(e.pointerId);
-    takeOver();
-  }
-});
-const endDrag = () => { if (drag) { drag = null; controls.enabled = true; } };
-canvas.addEventListener("pointerup", endDrag);
-canvas.addEventListener("pointercancel", endDrag);
+canvas.addEventListener("pointerleave", () => pointer.set(-9, -9));
 let downAt = null;
 canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
 canvas.addEventListener("click", (e) => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 4 || !hovered) return;
   const name = hovered.userData.label.name;
-  if (name === "Fire button") { act("fire"); takeOver(); }
-  else if (name === "Key" || name === "Key switch") { act("key"); takeOver(); }
+  const acts = { "Fire button (green)": "fire", "Push switch": "fire", "SW1 fire button": "fire", "Disconnect switch (knife switch)": "knife", "Supply output button": "supply", "Discharge stick": "stick" };
+  if (acts[name]) { act(acts[name]); takeOver(); }
 });
 stage.addEventListener("keydown", (e) => {
-  const step = e.shiftKey ? 50 : 10;
-  const setV = (v) => { p.vSet = Math.min(p.vMax, Math.max(p.vMin, v)); $("#ctl-vSet").value = p.vSet; $("#ctl-vSet").nextElementSibling.textContent = `${p.vSet} V`; recompute(); announce(); };
+  const step = e.shiftKey ? 1 : 5;
+  const setV = (v) => { p.vSet = Math.min(55, Math.max(5, v)); syncSliders(); recompute(); announce(); };
   let handled = true;
   switch (e.key) {
     case "ArrowUp": case "ArrowRight": setV(p.vSet + step); break;
     case "ArrowDown": case "ArrowLeft": setV(p.vSet - step); break;
-    case "Home": setV(p.vMin); break;
-    case "End": setV(p.vMax); break;
+    case "Home": setV(5); break;
+    case "End": setV(55); break;
     case " ": case "Enter": act("fire"); break;
-    case "k": case "K": act("key"); break;
+    case "s": case "S": act("supply"); break;
+    case "k": case "K": act("knife"); break;
+    case "d": case "D": act("stick"); break;
     case "p": case "P": act("pause"); break;
+    case "u": case "U": state.upgrades = !state.upgrades; $("#upgrades").checked = state.upgrades; applyUpgrades(); break;
     case "l": case "L": state.labelsAll = !state.labelsAll; $("#labels").checked = state.labelsAll; break;
     case "r": case "R": goTo("overview"); break;
-    case "Escape": setPower(false); break;
+    case "Escape": setKnife(false); setSupply(false); break;
     default: handled = false;
   }
   if (!handled) return;
@@ -2782,13 +2938,18 @@ stage.addEventListener("keydown", (e) => {
 });
 
 buildPanel();
-window.__cg3 = { camera, controls, state, live, p, goTo, PRESETS };
+window.__cg3 = { camera, controls, state, live, p, goTo, PRESETS, act };
 applyTheme(theme);
 $("#theme").checked = theme === "light";
+camera.position.copy(PRESETS.overview.pos);
+controls.target.copy(PRESETS.overview.target);
+controls.update();
+placeSlugAt(slugStartOf(p) + p.slugLen / 2);
+applyUpgrades();
 recompute();
 announce();
 onResize();
-if (still.matches) { state.tour = false; state.autoRotate = false; p.vSet = 400; state.vBank = 400; state.power = true; state.phase = "armed"; state.env.needle = 400; state.env.knob = 400; state.env.key = 1; announce(); }
+if (still.matches) { state.tour = false; state.supplyOn = true; state.vBank = vFull(); announce(); }
 requestAnimationFrame(tick);
 
 </script></body></html>

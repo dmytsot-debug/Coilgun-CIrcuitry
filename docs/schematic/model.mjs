@@ -21,6 +21,7 @@ export const DEFAULTS = {
   coilAt: 0.095, // coil centre from breech face, m
   slugLen: 0.03, // projectile length, m
   k: 0.00013, // force constant: F = k·i²·g(x), N/A² at the steepest point
+  slugStart: 0, // slug's rear face from the breech face at the shot, m
 };
 
 export const capacitance = (p) => p.caps * p.capEach;
@@ -66,7 +67,7 @@ export function pull(x, p) {
 export function shot(p, v0, { dt = 5e-6, until = 10 * p.L / p.R } = {}) {
   const C = capacitance(p);
   const t = [], i = [], vc = [], x = [], vel = [];
-  let I = 0, V = v0, X = p.slugLen / 2, U = 0, time = 0;
+  let I = 0, V = v0, X = (p.slugStart ?? 0) + p.slugLen / 2, U = 0, time = 0;
   let phase = "scr"; // "scr" → "diode" → "off"
   let peakI = 0, peakAt = 0, diodeAt = null, offAt = null, exitAt = null, exitV = null;
   const every = Math.max(1, Math.round(1e-5 / dt));

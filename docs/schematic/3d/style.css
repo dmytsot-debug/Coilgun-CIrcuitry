@@ -72,3 +72,8 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(-
   .cg3-corner.bl { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .cg3-tip, .cg3-tag { transition: none; } }
+
+.cg3-note { margin: -2px 0 4px; color: var(--muted); font-size: 11.5px; }
+.cg3-steps { margin: 0 0 4px; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.cg3-steps li { margin: 1px 0; }
+.cg3-panel button[aria-pressed="true"] { border-color: var(--accent-2); color: var(--accent-2); }
