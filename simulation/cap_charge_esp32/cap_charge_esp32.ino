@@ -3,12 +3,12 @@
  * ESP32 + SSD1306 128x64 I2C OLED
  *
  * Board circuit (see README.md):
- *   3V3 -->|D1|-- SW1 (push-button) -- R_CHARGE 1k --+-- NODE --> GPIO34
+ *   3V3 -->|D1|-- SW1 (push-button) -- R_CHARGE 1k --+-- NODE --> D15 (GPIO15)
  *                                                    |
  *                                                 R_BLEED 10k  [C_BANK optional]
  *                                                    |
  *                                                   GND
- *   10k pot: ends to 3V3/GND, wiper -> GPIO35  (sets virtual capacitance)
+ *   10k pot: ends to 3V3/GND, wiper -> D4 (GPIO4)  (sets virtual capacitance)
  *   OLED: SDA -> GPIO21, SCL -> GPIO22, VCC -> 3V3, GND -> GND
  *
  * USE_REAL_CAP 0: no capacitor on the board. The ESP32 measures the real
@@ -39,8 +39,8 @@ const float DISPLAY_SCALE = 1.0f;
 
 const float SWITCH_CLOSED_V = 0.30f;  // node above this = switch closed (virtual mode)
 
-const int NODE_PIN = 34;   // ADC1, input-only
-const int POT_PIN  = 35;   // ADC1, input-only
+const int NODE_PIN = 15;   // D15, ADC2 (fine because WiFi is not used)
+const int POT_PIN  = 4;    // D4,  ADC2 (fine because WiFi is not used)
 const int SDA_PIN  = 21;
 const int SCL_PIN  = 22;
 

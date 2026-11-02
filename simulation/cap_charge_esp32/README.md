@@ -6,14 +6,14 @@ Breadboard stand-in for the front end of the coilgun, read out on an ESP32 + SSD
 
 ```
                 D1 1N400x / 1N4148      SW1             R_CHG 1k
-ESP32 3V3 ────────►|──────────────────o  o──────────/\/\/\────┬───────────┬──────► GPIO34 (ADC)
+ESP32 3V3 ────────►|──────────────────o  o──────────/\/\/\────┬───────────┬──────► D15 (ADC)
                (band toward SW1)   push-button                │           │
                                   ("knife switch")         R_BLEED     C_BANK
                                                              10k     (virtual in firmware,
                                                               │       or real cap, + to node)
 ESP32 GND ────────────────────────────────────────────────────┴───────────┴──────── GND rail
 
-10k pot:   one end -> 3V3, other end -> GND, wiper -> GPIO35   (sets virtual C, 100 uF to 10 mF)
+10k pot:   one end -> 3V3, other end -> GND, wiper -> D4   (sets virtual C, 100 uF to 10 mF)
 OLED:      VCC -> 3V3, GND -> GND, SDA -> GPIO21, SCL -> GPIO22
 ```
 
