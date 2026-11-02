@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="660" viewBox="0 0 860 660" font-family="Helvetica, Arial, sans-serif">
+  <rect width="860" height="660" fill="#ffffff"/>
+  <style>
+    .w{stroke:#111;stroke-width:2;fill:none}
+    .p{stroke:#111;stroke-width:2;fill:none;stroke-linejoin:round}
+    .t{font-size:13px;fill:#111}
+    .s{font-size:11px;fill:#555}
+    .b{font-size:13px;font-weight:bold;fill:#111}
+    .dot{fill:#111}
+  </style>
+
+  <text x="430" y="36" text-anchor="middle" font-size="18" font-weight="bold">Coilgun stages 1–2 bench: supply → blocking diode → switch → bank + bleeder</text>
+
+  <!-- ESP32 -->
+  <rect x="40" y="80" width="160" height="480" class="w" fill="#f4f4f4"/>
+  <text x="70" y="320" class="b" font-size="20">ESP32</text>
+  <text x="70" y="340" class="s">DevKit</text>
+  <text x="192" y="124" class="t" text-anchor="end">3V3</text>
+  <text x="192" y="174" class="t" text-anchor="end">GPIO34</text>
+  <text x="192" y="384" class="t" text-anchor="end">GND</text>
+  <text x="192" y="474" class="t" text-anchor="end">GPIO35</text>
+  <text x="192" y="504" class="t" text-anchor="end">GPIO21</text>
+  <text x="192" y="534" class="t" text-anchor="end">GPIO22</text>
+
+  <!-- 3V3 to diode -->
+  <line x1="200" y1="120" x2="260" y2="120" class="w"/>
+  <polygon points="260,107 260,133 296,120" fill="#111"/>
+  <line x1="297" y1="106" x2="297" y2="134" stroke="#111" stroke-width="3"/>
+  <text x="278" y="96" class="t" text-anchor="middle">D1</text>
+  <text x="278" y="152" class="s" text-anchor="middle">1N4001 / 1N4148</text>
+  <text x="278" y="165" class="s" text-anchor="middle">band toward switch</text>
+
+  <!-- diode to switch -->
+  <line x1="297" y1="120" x2="366" y2="120" class="w"/>
+  <circle cx="370" cy="120" r="4" class="w" fill="#fff"/>
+  <circle cx="420" cy="120" r="4" class="w" fill="#fff"/>
+  <line x1="362" y1="106" x2="428" y2="106" class="w"/>
+  <line x1="395" y1="106" x2="395" y2="92" class="w"/>
+  <line x1="386" y1="92" x2="404" y2="92" class="w"/>
+  <text x="395" y="80" class="t" text-anchor="middle">SW1</text>
+  <text x="395" y="142" class="s" text-anchor="middle">push-button</text>
+  <text x="395" y="155" class="s" text-anchor="middle">(knife switch)</text>
+
+  <!-- switch to R_CHG -->
+  <line x1="424" y1="120" x2="470" y2="120" class="w"/>
+  <path d="M470,120 l5,-8 l10,16 l10,-16 l10,16 l10,-16 l10,16 l10,-16 l10,16 l5,-8" class="p"/>
+  <text x="510" y="96" class="t" text-anchor="middle">R_CHG</text>
+  <text x="510" y="146" class="s" text-anchor="middle">1 kΩ</text>
+  <line x1="550" y1="120" x2="690" y2="120" class="w"/>
+  <circle cx="620" cy="120" r="4" class="dot"/>
+  <text x="628" y="110" class="b">NODE</text>
+
+  <!-- bleeder -->
+  <line x1="620" y1="120" x2="620" y2="220" class="w"/>
+  <circle cx="620" cy="170" r="4" class="dot"/>
+  <path d="M620,220 l8,5 l-16,10 l16,10 l-16,10 l16,10 l-16,10 l16,10 l-16,10 l8,5" class="p"/>
+  <text x="606" y="255" class="t" text-anchor="end">R_BLEED</text>
+  <text x="606" y="270" class="s" text-anchor="end">10 kΩ</text>
+  <line x1="620" y1="300" x2="620" y2="380" class="w"/>
+
+  <!-- GPIO34 sense -->
+  <line x1="200" y1="170" x2="620" y2="170" class="w"/>
+  <text x="420" y="188" class="s" text-anchor="middle">ADC sense: bank voltage</text>
+
+  <!-- capacitor (virtual) -->
+  <line x1="690" y1="120" x2="690" y2="250" class="w"/>
+  <line x1="668" y1="250" x2="712" y2="250" stroke="#111" stroke-width="3"/>
+  <path d="M668,266 Q690,256 712,266" class="w" stroke-width="3"/>
+  <text x="660" y="246" class="t">+</text>
+  <line x1="690" y1="261" x2="690" y2="380" class="w"/>
+  <rect x="650" y="200" width="200" height="120" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="724" y="236" class="b" fill="#c0392b">C_BANK</text>
+  <text x="724" y="256" class="s">simulated in firmware</text>
+  <text x="724" y="270" class="s">(pot sets C)</text>
+  <text x="724" y="290" class="s">later: real 100–1000 µF</text>
+
+  <!-- GND rail -->
+  <line x1="200" y1="380" x2="690" y2="380" class="w"/>
+  <circle cx="620" cy="380" r="4" class="dot"/>
+  <text x="430" y="398" class="s" text-anchor="middle">GND rail</text>
+
+  <!-- potentiometer -->
+  <line x1="270" y1="436" x2="300" y2="436" class="w"/>
+  <path d="M300,436 l5,-8 l10,16 l10,-16 l10,16 l10,-16 l10,16 l10,-16 l10,16 l5,-8" class="p"/>
+  <line x1="380" y1="436" x2="420" y2="436" class="w"/>
+  <text x="264" y="440" class="t" text-anchor="end">3V3</text>
+  <line x1="420" y1="436" x2="420" y2="448" class="w"/>
+  <line x1="408" y1="448" x2="432" y2="448" class="w"/>
+  <line x1="412" y1="453" x2="428" y2="453" class="w"/>
+  <line x1="416" y1="458" x2="424" y2="458" class="w"/>
+  <polyline points="200,470 340,470 340,452" class="w"/>
+  <polygon points="334,454 346,454 340,444" fill="#111"/>
+  <text x="340" y="420" class="t" text-anchor="middle">RV1 10 kΩ pot (wiper sets virtual C)</text>
+  <line x1="200" y1="450" x2="200" y2="470" stroke="#f4f4f4" stroke-width="0"/>
+
+  <!-- OLED -->
+  <rect x="580" y="430" width="170" height="125" class="w" fill="#eef3fb"/>
+  <text x="740" y="454" class="b" text-anchor="end">SSD1306 OLED</text>
+  <text x="740" y="470" class="s" text-anchor="end">128×64 I²C, 0x3C</text>
+  <text x="588" y="454" class="t">VCC</text>
+  <text x="588" y="474" class="t">GND</text>
+  <text x="588" y="504" class="t">SDA</text>
+  <text x="588" y="534" class="t">SCL</text>
+  <line x1="540" y1="450" x2="580" y2="450" class="w"/>
+  <text x="534" y="454" class="t" text-anchor="end">3V3</text>
+  <line x1="545" y1="470" x2="580" y2="470" class="w"/>
+  <line x1="545" y1="470" x2="545" y2="480" class="w"/>
+  <line x1="535" y1="480" x2="555" y2="480" class="w"/>
+  <line x1="539" y1="485" x2="551" y2="485" class="w"/>
+  <line x1="543" y1="490" x2="547" y2="490" class="w"/>
+  <line x1="200" y1="500" x2="580" y2="500" class="w"/>
+  <line x1="200" y1="530" x2="580" y2="530" class="w"/>
+
+  <!-- notes -->
+  <text x="40" y="592" class="s">Net labels "3V3" and ground symbols connect to the ESP32 3V3 pin and GND rail.</text>
+  <text x="40" y="608" class="s">Button held: bank charges, tau = (R_CHG ∥ R_BLEED)·C. Released: diode + open switch isolate supply, bleeder drains bank, tau = R_BLEED·C.</text>
+  <text x="40" y="624" class="s">Real cap later: negative leg to GND, rated ≥ 6.3 V, set USE_REAL_CAP 1. Expected full charge ≈ 2.45 V (3.3 V − diode drop, divided by 10k/11k).</text>
+</svg>
