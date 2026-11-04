@@ -10,7 +10,7 @@ A breadboard rehearsal of the stage-one cut-off logic (build guide, tab 5, versi
 | Barrel sensors | Two LED + photoresistor light gates, 50 mm apart |
 | Gate A at coil entrance | Gate A: breaking it turns the "coil" LED on |
 | Gate B at coil centre | Gate B: breaking it starts the cut-off countdown |
-| IGBT gate signal | "Coil" LED on GPIO 25 |
+| IGBT gate signal | "Coil" LED on GPIO 18 (D18) |
 
 The beam breaks when the slug's nose arrives, but the cut must happen when the slug's centre reaches the coil centre. The sketch measures speed between A and B and waits `(slug length / 2) / speed` after B breaks. It then checks itself: the midpoint of B's blocked period is when the slug's centre really crossed B, and the OLED shows the difference as `err`.
 
@@ -24,13 +24,15 @@ The beam breaks when the slug's nose arrives, but the cut must happen when the s
 
 ## Wiring
 
+See `schematic.png` (all wires on the left side of the ESP32).
+
 ```
-Gate A:  3.3V ── LDR ──┬── GPIO 34        Gate B: same, to GPIO 35
+Gate A:  3.3V ── LDR ──┬── GPIO 15 (D15)       Gate B: same, to GPIO 4 (D4)
                        └── 10k ── GND
 
 Gate LEDs (always on):  3.3V ── 220Ω ── LED(+) ── LED(-) ── GND   (x2)
 
-Coil LED:  GPIO 25 ── 220Ω ── LED(+) ── LED(-) ── GND
+Coil LED:  GPIO 18 (D18) ── 220Ω ── LED(+) ── LED(-) ── GND
 
 OLED:  VCC → 3.3V,  GND → GND,  SDA → GPIO 21,  SCL → GPIO 22
 ```

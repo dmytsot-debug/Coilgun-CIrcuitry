@@ -22,9 +22,9 @@
 #include <Adafruit_SSD1306.h>
 
 // ---- Pins -------------------------------------------------------------------
-const int PIN_GATE_A = 34;  // ADC1, input only. LDR divider output.
-const int PIN_GATE_B = 35;  // ADC1, input only. LDR divider output.
-const int PIN_COIL   = 25;  // "coil" LED (stands in for the IGBT gate).
+const int PIN_GATE_A = 15;  // D15, LDR divider node (ADC2: fine with WiFi off)
+const int PIN_GATE_B = 4;   // D4, LDR divider node (ADC2: fine with WiFi off)
+const int PIN_COIL   = 18;  // D18, "coil" LED (stands in for the IGBT gate).
 // OLED on the default I2C pins: SDA = GPIO 21, SCL = GPIO 22.
 
 // ---- Geometry: measure yours and edit ---------------------------------------
