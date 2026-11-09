@@ -233,7 +233,7 @@ $$\Delta T = \frac{E_{drawn} - E_K}{m_{Cu} c_{Cu}} = \frac{207 - 4.8}{(56.6\time
 
 ## Figures
 
-The schematic below predates the bleeder and flyback resistor: the 1 kΩ bleeder goes across the series bank, the 0.20 Ω resistor in series with the flyback diode.
+Figure 1 includes the 1 kΩ bank bleeder and the 0.20 Ω flyback resistor (drawn in blue). Source: [`figures/src/make_fig.py`](figures/src/make_fig.py), rendered with `node docs/figures/src/render.js 2 docs/figures/system-diagram.png`.
 
 ![System diagram: circuit schematic and to-scale coil, barrel and projectile cross-section](figures/system-diagram.png)
 

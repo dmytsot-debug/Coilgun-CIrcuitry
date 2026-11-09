@@ -37,10 +37,9 @@ Calculations for the single-stage design are final. The source of truth is the t
 
 ## Next steps
 
-1. Update the Figure 1 schematic with the bleeder and flyback resistor.
-2. Simulate the discharge loop in KiCad / ngspice and compare against `coilgun_model.py`.
-3. Design the low-voltage control board: microcontroller, IGBT gate driver, optical gate input.
-4. Review with the team before ordering parts or boards.
+1. Simulate the discharge loop in KiCad / ngspice and compare against `coilgun_model.py`.
+2. Design the low-voltage control board: microcontroller, IGBT gate driver, optical gate input.
+3. Review with the team before ordering parts or boards.
 
 ## Safety
 
