@@ -60,6 +60,10 @@ body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body)
 .seg button:first-child { border-left: 0; }
 .seg button[aria-pressed="true"] { background: var(--fg); color: var(--panel); }
 .row { display: flex; gap: 8px; }
+.speed label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+.speed label span { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.speed input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+.speed-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; }
 .btn { flex: 1; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; padding: 9px 10px; font: 600 13px var(--font-body); cursor: pointer; }
 .btn.fire { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn:disabled { opacity: .5; cursor: default; }
@@ -110,6 +114,11 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
     <section class="controls">
       <h2>Fire</h2>
       <div class="seg" id="volts" role="group" aria-label="Charge voltage"></div>
+      <div class="speed">
+        <label for="speed">Animation speed <span id="speedval">1×</span></label>
+        <input type="range" id="speed" min="0.1" max="4" step="0.05" value="1" aria-describedby="speednote">
+        <div class="speed-scale" id="speednote"><span>0.1× slower</span><span>4× faster</span></div>
+      </div>
       <div class="row">
         <button class="btn fire" id="fire" type="button">Fire</button>
         <button class="btn" id="reset" type="button">Reset</button>
@@ -563,7 +572,8 @@ window.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); })
 // ------------------------------------------------------------------ simulation playback
 let V = 126, data = SIM["126"];
 let state = "idle", simT = 0, slugX = SLUG_START, slugV = 0, lastNow = 0;
-const SLOW = 1 / 900;          // 1 ms of shot time = 0.9 s on screen
+let speed = 1;                 // playback multiplier; 1 ms of shot time = 0.9 s on screen at 1×
+const SLOW = () => speed / 900;
 const voltsEl = document.getElementById("volts");
 VOLTS.forEach(v => {
   const b = document.createElement("button");
@@ -607,6 +617,10 @@ document.getElementById("fire").addEventListener("click", () => {
   lastNow = performance.now();
 });
 document.getElementById("reset").addEventListener("click", reset);
+document.getElementById("speed").addEventListener("input", e => {
+  speed = Number(e.target.value);
+  document.getElementById("speedval").textContent = (Math.round(speed * 100) / 100) + "×";
+});
 document.getElementById("cut").addEventListener("change", e => setCut(e.target.checked));
 
 function setCurrentGlow(i) {
@@ -626,7 +640,7 @@ function updateReadouts(t, vb, i) {
 function step(now) {
   const dtReal = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
   if (state === "firing" || state === "cutoff" || state === "freewheel") {
-    simT += dtReal * 1000 * SLOW * (reduceMotion ? 4 : 1);
+    simT += dtReal * 1000 * SLOW() * (reduceMotion ? 4 : 1);
     const t = Math.min(simT, tEnd());
     const i = interp(data.i, t), vb = interp(data.vc, t);
     slugV = interp(data.v, t);
@@ -639,7 +653,7 @@ function step(now) {
     if (simT >= tEnd()) { setState("coast", `Slug free at ${data.vexit.toFixed(1)} m/s.`); slugV = data.vexit; }
   } else if (state === "coast") {
     // after the pulse, speed up time so the slug reaches the box in about two seconds
-    const dtSim = dtReal * 0.008; // s of real flight per frame
+    const dtSim = dtReal * 0.008 * speed; // s of real flight per frame
     slugX += slugV * 1000 * dtSim;
     setCurrentGlow(0);
     beam.material.opacity = (slugX - L / 2 <= GATE_X + 0.5) ? 0.08 : 0.85;
