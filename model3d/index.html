@@ -86,6 +86,28 @@ td { padding: 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; 
 td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 8px; }
 .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
 .new-key { color: var(--accent-2); font-weight: 600; }
+.detail { position: absolute; right: 16px; bottom: 16px; width: min(520px, calc(100% - 32px)); max-height: calc(100% - 90px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.28); padding: 12px 14px 12px; z-index: 6; animation: detail-in .22s ease-out; }
+.detail[hidden] { display: none; }
+@keyframes detail-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .detail { animation: none; } }
+.detail h3 { margin: 0 28px 2px 0; font-size: 14px; }
+.detail .sub { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.detail-x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; font-size: 16px; line-height: 1; cursor: pointer; }
+.detail ul { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.detail li { margin: 2px 0; }
+.sch { width: 100%; height: auto; display: block; }
+.sch .w { fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sch .hl { fill: none; stroke: var(--accent-2); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.sch .box { fill: var(--panel); stroke: var(--fg); stroke-width: 1.4; }
+.sch .part { fill: color-mix(in srgb, var(--accent-2) 20%, var(--panel)); stroke: var(--accent-2); stroke-width: 1.6; }
+.sch .plate { fill: color-mix(in srgb, var(--muted) 20%, var(--panel)); stroke: var(--muted); stroke-width: 1.2; }
+.sch .blk { fill: color-mix(in srgb, var(--fg) 70%, var(--panel)); stroke: var(--fg); }
+.sch .dot { fill: var(--fg); }
+.sch .t { fill: var(--fg); font: 500 11px var(--font-body); }
+.sch .tm { fill: var(--muted); font: 10.5px var(--font-body); }
+.sch .tb { fill: var(--accent-2); font: 600 11.5px var(--font-body); }
+.sch .sec { fill: var(--muted); font: 600 10px var(--font-body); letter-spacing: .07em; text-transform: uppercase; }
+.sch .pin { fill: var(--fg); font: 500 10.5px var(--font-mono); }
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
   .panel { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
@@ -101,6 +123,13 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
 <body>
 <div class="app">
   <div class="stage" id="stage">
+    <div class="detail" id="detail" hidden role="dialog" aria-labelledby="d-title">
+      <button class="detail-x" id="detail-x" type="button" aria-label="Close schematic">×</button>
+      <h3 id="d-title"></h3>
+      <div class="sub" id="d-sub"></div>
+      <div id="d-svg"></div>
+      <ul id="d-notes"></ul>
+    </div>
     <div class="stage-head">
       <div>
         <h1>Single-stage coilgun, 126 V series bank</h1>
@@ -125,6 +154,7 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
       </div>
       <div class="checks">
         <label for="cut"><input type="checkbox" id="cut"> Cut away coil</label>
+        <label for="bare"><input type="checkbox" id="bare"> Show bare coil former</label>
       </div>
       <div class="state"><span class="pill" id="pill" data-s="idle">Charged</span><span id="statetext">Bank charged, switch open.</span></div>
     </section>
@@ -168,7 +198,7 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
         <tr><td>Flyback diode</td><td>≥ 200 V, ≥ 450 A pulse</td></tr>
         <tr><td class="new-key">Flyback resistor</td><td>0.20 Ω, ≥ 25 W</td></tr>
       </table>
-      <p class="note">Blue parts were added with the bleeder and flyback-resistor revision. Capacitor can size is representative; check your part's datasheet.</p>
+      <p class="note"><span style="color:#2fb5a3;font-weight:600">Teal parts are 3D printed:</span> capacitor holder, coil former, barrel supports. Blue labels mark the bleeder and flyback-resistor revision. Capacitor can size is representative; check your part's datasheet.</p>
     </section>
   </aside>
 </div>
@@ -241,6 +271,7 @@ const M = {
   box: new THREE.MeshStandardMaterial({ color: 0x8b6b45, roughness: 0.9 }),
   foam: new THREE.MeshStandardMaterial({ color: 0x3b3f46, roughness: 1 }),
   supply: new THREE.MeshStandardMaterial({ color: 0x2c3036, roughness: 0.5 }),
+  print: new THREE.MeshStandardMaterial({ color: 0x2fb5a3, roughness: 0.55 }),   // 3D-printed parts
 };
 const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 40); // keeps z < 40 (back half of the barrel axis)
 const barrelMat = new THREE.MeshStandardMaterial({ color: 0x9cc6e8, roughness: 0.15, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false });
@@ -279,18 +310,20 @@ part(plate, { name: "Base plate", spec: "500 × 360 mm, 10 mm plywood", role: "E
   const m = new THREE.Mesh(geo, barrelMat);
   m.rotation.z = -Math.PI / 2;
   m.position.set(x0, AX, BZ);
-  const sup = (x) => group(box(18, AX - 6, 26, M.black, x, (AX - 6) / 2, BZ), cyl(8, 18, M.black, x, AX, BZ));
+  const sup = (x) => group(box(18, AX - 6, 26, M.print, x, (AX - 6) / 2, BZ), cyl(8, 18, M.print, x, AX, BZ));
   const s1 = sup(-125), s2 = sup(130);
   s1.children[1].rotation.z = Math.PI / 2; s2.children[1].rotation.z = Math.PI / 2;
   part(group(m), { name: "Barrel", short: "Barrel", spec: "8.4 mm bore, 10.5 mm OD, non-magnetic", role: "Guides the slug. Its OD is the coil's ID, so the winding sits straight on it." }, V3(-130, AX + 18, BZ));
-  part(group(s1, s2), { name: "Barrel supports", spec: "Clamp blocks", role: "Hold the barrel on the axis, clear of the coil." });
+  part(group(s1, s2), { name: "3D-printed barrel supports", short: "Barrel supports", spec: "PETG or PLA · saddle blocks, bolted to the plate", role: "Hold the barrel on the axis at both ends, clear of the coil. Printed, so the saddle height and bore are set from the CAD." });
   barrelMat.clippingPlanes = [];
 }
 
 // ------------------------------------------------------------------ coil: 4 layers × 41 turns of 1.02 mm wire
 const coilMeshes = [];
+let coilGroup;
 {
   const g = new THREE.Group();
+  coilGroup = g;
   for (let j = 0; j < LAYERS; j++) {
     const r = RI + (j + 0.5) * PITCH_R;
     const geo = new THREE.TorusGeometry(r, 0.51, 6, 40);
@@ -307,6 +340,22 @@ const coilMeshes = [];
   part(g, { name: "Coil", short: "Coil · 164 turns", spec: "4 layers × 41 turns, 1.02 mm Cu · L = 94 µH · R = 0.160 Ω", role: "Each layer is wound the same rotational way; only the axial direction reverses. Peak 519 A gives ≈ 2.26 T at the centre." }, V3(0, AX + 40, BZ));
 }
 
+// ------------------------------------------------------------------ 3D-printed coil former (the spool the winding sits on)
+{
+  const g = new THREE.Group();
+  const FL = 2.5, FR = 12.5;
+  const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.27, 0), new THREE.Vector2(5.27, L + 2 * FL), new THREE.Vector2(4.2, L + 2 * FL)];
+  const core = new THREE.Mesh(new THREE.LatheGeometry(prof, 56), M.print);
+  core.rotation.z = -Math.PI / 2; core.position.set(COIL_X0 - FL, AX, BZ); g.add(core);
+  for (const x0 of [COIL_X0 - FL, L / 2]) {
+    const sh = new THREE.Shape(); sh.absarc(0, 0, FR, 0, Math.PI * 2, false);
+    const hole = new THREE.Path(); hole.absarc(0, 0, 5.25, 0, Math.PI * 2, true); sh.holes.push(hole);
+    const fl = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: FL, bevelEnabled: false, curveSegments: 56 }), M.print);
+    fl.rotation.y = Math.PI / 2; fl.position.set(x0, AX, BZ); g.add(fl);
+  }
+  part(g, { name: "3D-printed coil former", short: "Coil former", spec: "PETG · Ø10.5 mm core, 2 × Ø25 mm flanges × 2.5 mm, 45.6 mm winding window", role: "The spool the 164 turns wind onto, like a fishing-rod reel. Core OD equals the barrel OD, so r_i stays 5.25 mm and L = 94 µH still holds. The core wall is about 1 mm: print fine layers, or print a sleeve and recompute L." }, null);
+}
+
 // ------------------------------------------------------------------ slug
 const slug = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, L, 32), M.steel);
 slug.rotation.z = Math.PI / 2;
@@ -315,7 +364,7 @@ slug.position.set(SLUG_START, AX, BZ);
 part(slug, { name: "Projectile", short: "Slug · 18 g", spec: "Soft iron, Ø8.0 × 45.6 mm, 18 g", role: "Starts with its nose at the coil entrance. Saturates at 0.077 T applied field, far below the coil's 2.26 T." }, null);
 
 // ------------------------------------------------------------------ optical gate at the coil exit
-const GATE_X = L / 2 + 4;
+const GATE_X = L / 2 + 6.5;   // just past the coil former's exit flange
 let beam;
 {
   const fork = group(
@@ -332,46 +381,80 @@ let beam;
   part(fork, { name: "Optical gate", short: "Optical gate", spec: "IR LED above, phototransistor below, at the coil exit", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, V3(GATE_X + 4, AX + 34, BZ - 8));
 }
 
+// ------------------------------------------------------------------ wiring helper: straight runs on the axes, corners cut at 45 degrees
+const WR = 1.6; // 4 mm² cable incl. insulation
+function segMesh(a, b, r, mat) {
+  const d = b.clone().sub(a), len = d.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
+  m.position.copy(a).addScaledVector(d, 0.5);
+  m.quaternion.setFromUnitVectors(V3(0, 1, 0), d.normalize());
+  return m;
+}
+function wire(pts, r, mat, bend = 5) {
+  const P = pts.map(q => V3(q[0], q[1], q[2]));
+  const out = [P[0]];
+  for (let i = 1; i < P.length - 1; i++) {
+    const a = P[i - 1], b = P[i], c = P[i + 1];
+    const d1 = b.clone().sub(a), d2 = c.clone().sub(b), l1 = d1.length(), l2 = d2.length();
+    if (l1 < 1e-6 || l2 < 1e-6) continue;
+    const u1 = d1.divideScalar(l1), u2 = d2.divideScalar(l2);
+    if (u1.dot(u2) > 0.999) continue;                    // straight through: no corner
+    const k = Math.min(bend, l1 / 2, l2 / 2);
+    out.push(b.clone().addScaledVector(u1, -k), b.clone().addScaledVector(u2, k));
+  }
+  out.push(P[P.length - 1]);
+  const g = new THREE.Group();
+  for (let i = 0; i < out.length - 1; i++) if (out[i].distanceTo(out[i + 1]) > 1e-4) g.add(segMesh(out[i], out[i + 1], r, mat));
+  for (let i = 1; i < out.length - 1; i++) { const j = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat); j.position.copy(out[i]); g.add(j); }
+  return g;
+}
+const pad = (x, y, z, r = 1.6, mat = M.gold) => cyl(r, 1.2, mat, x, y, z, 12);
+
 // ------------------------------------------------------------------ capacitors in series
-const CAP_R = 45, CAP_H = 145;
-function capacitor(x, z, label) {
+const CAP_R = 36, CAP_H = 116;   // 20 % smaller than the first pass (45 x 145)
+function capacitor(x, z) {
   const g = group(
     cyl(CAP_R, CAP_H, M.can, x, CAP_H / 2, z, 48),
     cyl(CAP_R - 3, 3, M.canTop, x, CAP_H + 1.5, z, 48),
-    box(10, CAP_H - 10, 2, M.stripe, x - 28, CAP_H / 2, z + CAP_R - 12),
-    cyl(5, 10, M.brass, x + 16, CAP_H + 8, z),  // +
-    cyl(5, 10, M.brass, x - 16, CAP_H + 8, z)   // −
+    box(8, CAP_H - 10, 2, M.stripe, x - 22, CAP_H / 2, z + CAP_R - 10),
+    cyl(5, 10, M.brass, x + 16, CAP_H + 8, z),
+    cyl(5, 10, M.brass, x - 16, CAP_H + 8, z)
   );
-  g.children[2].lookAt(x - 70, CAP_H / 2, z + 80);
+  g.children[2].lookAt(x - 56, CAP_H / 2, z + 64);
   return g;
 }
-const C1X = -175, C2X = -75, CZ = -150;
-part(capacitor(C1X, CZ), { name: "C1", short: "C1 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Top half of the series bank. Its − terminal links to C2's +." }, V3(C1X, CAP_H + 30, CZ));
-part(capacitor(C2X, CZ), { name: "C2", short: "C2 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Bottom half of the series bank. Together: 0.05 F at 126 V, 397 J." }, V3(C2X, CAP_H + 30, CZ));
-const T = { // terminal tops
-  c1p: V3(C1X + 16, CAP_H + 13, CZ), c1n: V3(C1X - 16, CAP_H + 13, CZ),
-  c2p: V3(C2X + 16, CAP_H + 13, CZ), c2n: V3(C2X - 16, CAP_H + 13, CZ),
-};
-// balancing resistors: one across each can's terminals
-function axialRes(a, b, mat, r = 2.2, len = 10) {
-  const mid = a.clone().add(b).multiplyScalar(0.5).add(V3(0, 9, 0));
-  const g = new THREE.Group();
-  const body = cyl(r, len, mat, 0, 0, 0, 16);
-  body.position.copy(mid); body.rotation.z = Math.PI / 2;
-  g.add(body);
-  g.add(tube([a, V3(a.x, mid.y, a.z), V3(mid.x - len / 2, mid.y, mid.z)], 0.4, M.thin));
-  g.add(tube([V3(mid.x + len / 2, mid.y, mid.z), V3(b.x, mid.y, b.z), b], 0.4, M.thin));
-  return g;
-}
-part(group(axialRes(T.c1n, T.c1p, M.resistor), axialRes(T.c2n, T.c2p, M.resistor)),
-  { name: "Balancing resistors", short: "10 kΩ balancing", spec: "10 kΩ, 1 W, one across each capacitor · 6.3 mA, 0.40 W", role: "Keep the 126 V split 63 / 63 V so neither can exceeds its rating." }, V3(-125, CAP_H + 46, CZ));
+const C1X = -175, C2X = -75, CZ = -150, TY = CAP_H + 13;   // TY = top of the terminals
+part(capacitor(C1X, CZ), { name: "C1", short: "C1 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Top half of the series bank. Its + terminal is the bank +; its − links to C2's +." });
+part(capacitor(C2X, CZ), { name: "C2", short: "C2 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Bottom half of the series bank. Its − terminal is the bank −. Together: 0.05 F at 126 V, 397 J." });
+// terminals (C1 is mounted with + on the left and C2 with + on the left too, so the series link between them is short)
+const T = { c1p: V3(C1X - 16, TY, CZ), c1n: V3(C1X + 16, TY, CZ), c2p: V3(C2X - 16, TY, CZ), c2n: V3(C2X + 16, TY, CZ) };
 
-// ------------------------------------------------------------------ helpers for wires
-function tube(points, r, mat) {
-  const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.05);
-  return new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, points.length * 12), r, 10, false), mat);
+// balancing resistors: one across each can
+function balRes(a, b) {
+  const y = TY + 8, mx = (a.x + b.x) / 2, hl = 7, g = new THREE.Group();
+  const body = cyl(2.2, 2 * hl, M.resistor, mx, y, a.z, 16); body.rotation.z = Math.PI / 2; g.add(body);
+  g.add(wire([[a.x, TY, a.z], [a.x, y, a.z], [mx - hl, y, a.z]], 0.4, M.thin, 2));
+  g.add(wire([[mx + hl, y, a.z], [b.x, y, a.z], [b.x, TY, b.z]], 0.4, M.thin, 2));
+  return g;
 }
-const WR = 1.6; // 4 mm² cable incl. insulation
+part(group(balRes(T.c1p, T.c1n), balRes(T.c2p, T.c2n)),
+  { name: "Balancing resistors", short: "10 kΩ balancing", spec: "10 kΩ, 1 W, one across each capacitor · 6.3 mA, 0.40 W", role: "Keep the 126 V split 63 / 63 V so neither can exceeds its rating." });
+
+// ------------------------------------------------------------------ 3D-printed capacitor bank holder
+{
+  const HX0 = (C1X + C2X) / 2, HL = (C2X - C1X) + 2 * (CAP_R + 8), HD = 2 * (CAP_R + 8);
+  const g = new THREE.Group();
+  g.add(box(HL, 6, HD, M.print, HX0, 3, CZ));
+  for (const cx of [C1X, C2X]) {
+    const sh = new THREE.Shape(); sh.absarc(0, 0, CAP_R + 4, 0, Math.PI * 2, false);
+    const hole = new THREE.Path(); hole.absarc(0, 0, CAP_R + 0.4, 0, Math.PI * 2, true); sh.holes.push(hole);
+    const ring = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 36, bevelEnabled: false, curveSegments: 48 }), M.print);
+    ring.rotation.x = -Math.PI / 2; ring.position.set(cx, 6, CZ); g.add(ring);
+  }
+  g.add(box(100 - 2 * CAP_R + 6, 30, 6, M.print, HX0, 21, CZ));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(3.2, 2.5, M.black, HX0 + sx * (HL / 2 - 7), 7.2, CZ + sz * (HD / 2 - 7), 16));
+  part(g, { name: "3D-printed capacitor bank holder", short: "Capacitor holder", spec: "PETG · two Ø72.8 mm sockets, 36 mm walls, 6 mm floor · about 188 × 88 mm · 4 × M5 to the plate", role: "Keeps both cans upright and 28 mm apart so the pulse's magnetic kick cannot walk them. Sockets are sized for the can in the model; measure your cans and adjust before printing." }, null);
+}
 
 // ------------------------------------------------------------------ bleeder (new): 1 kΩ 25 W on an aluminium plate
 const BLX = 65, BLZ = -170;
@@ -383,86 +466,87 @@ const BLX = 65, BLZ = -170;
     cyl(1.2, 8, M.thin, BLX - 17, 12, BLZ), cyl(1.2, 8, M.thin, BLX + 17, 12, BLZ)
   );
   for (let i = -2; i <= 2; i++) g.add(box(26, 2.5, 1.6, M.gold, BLX, 17.5, BLZ + i * 5));
-  part(g, { name: "Bank bleeder", short: "Bleeder 1 kΩ 25 W", spec: "1 kΩ, 25 W aluminium-housed · 15.9 W at 126 V · τ = 50 s", role: "Drains the bank from 126 V to under 5 V in about 2.7 min. The balancing pair alone would take 54 min. Bolted to the plate as its heatsink." }, V3(BLX, 40, BLZ), true);
+  part(g, { detail: "bleeder", name: "Bank bleeder", short: "Bleeder 1 kΩ 25 W", spec: "1 kΩ, 25 W aluminium-housed · 15.9 W at 126 V · τ = 50 s", role: "Drains the bank from 126 V to under 5 V in about 2.7 min. The balancing pair alone would take 54 min. Bolted to the plate as its heatsink." }, null, true);
 }
-// bleeder leads to bank + (C1+) and bank − (C2−)
-scene.add(part(tube([V3(BLX - 17, 16, BLZ), V3(BLX - 30, 30, BLZ + 10), V3(-40, CAP_H + 30, CZ + 30), V3(T.c1p.x + 10, CAP_H + 30, CZ + 10), T.c1p], 0.9, M.red),
-  { name: "Bleeder lead (+)", spec: "to bank + (C1 +)", role: "Bleeder sits across the whole series bank." }));
-scene.add(part(tube([V3(BLX + 17, 16, BLZ), V3(BLX + 25, 34, BLZ - 30), V3(-40, CAP_H + 22, CZ - 40), V3(T.c2n.x - 6, CAP_H + 20, CZ - 15), T.c2n], 0.9, M.blk),
-  { name: "Bleeder lead (−)", spec: "to bank − (C2 −)", role: "Bleeder sits across the whole series bank." }));
+// across the whole bank: + to C1 +, − to C2 −; the − run sits above the + run so the two never cross
+part(wire([[BLX - 17, 16, BLZ], [BLX - 17, 150, BLZ], [T.c1p.x, 150, BLZ], [T.c1p.x, 150, CZ], [T.c1p.x, TY, CZ]], 0.9, M.red),
+  { name: "Bleeder lead (+)", spec: "bleeder to bank + (C1 +)", role: "The bleeder sits across the whole series bank." });
+part(wire([[BLX + 17, 16, BLZ], [BLX + 17, 165, BLZ], [T.c2n.x, 165, BLZ], [T.c2n.x, 165, CZ], [T.c2n.x, TY, CZ]], 0.9, M.blk),
+  { name: "Bleeder lead (−)", spec: "bleeder to bank − (C2 −)", role: "The bleeder sits across the whole series bank." });
 
-// ------------------------------------------------------------------ IGBT on heatsink + gate driver
-const IGX = -60, IGZ = -40;
-const igbtPins = { c: V3(IGX, 22, IGZ + 22), e: V3(IGX + 6, 22, IGZ + 22), g: V3(IGX - 6, 22, IGZ + 22) };
+// ------------------------------------------------------------------ IGBT on a heatsink
+const IGX = -60, IGZ = -40, PIN_Z = IGZ + 22.5;       // pin tips at z = -17.5, y = 35.5
+const PIN_Y = 35.5, PIN = { g: V3(IGX - 5.45, PIN_Y, PIN_Z), c: V3(IGX, PIN_Y, PIN_Z), e: V3(IGX + 5.45, PIN_Y, PIN_Z) };
 {
   const hs = new THREE.Group();
   hs.add(box(50, 4, 40, M.alu, IGX, 2, IGZ));
   for (let i = -4; i <= 4; i++) hs.add(box(1.8, 26, 40, M.alu, IGX + i * 5.5, 17, IGZ));
   hs.add(box(52, 3, 42, M.alu, IGX, 31.5, IGZ));
-  const pkg = group(box(16, 21, 5, M.chip, IGX, 43, IGZ + 14));
-  pkg.add(cyl(1.8, 6, M.alu, IGX, 49, IGZ + 14));
-  for (const dx of [-6, 0, 6]) { const leg = box(1.2, 14, 0.8, M.alu, IGX + dx, 28, IGZ + 17); pkg.add(leg); }
+  const pkg = group(box(16, 5, 21, M.chip, IGX, 35.5, IGZ), cyl(2, 1.5, M.alu, IGX, 38.7, IGZ - 5, 12));
+  for (const dx of [-5.45, 0, 5.45]) pkg.add(box(1.2, 1.2, 12, M.alu, IGX + dx, PIN_Y, IGZ + 16.5));
   part(hs, { name: "IGBT heatsink", spec: "Finned aluminium", role: "Spreads the switch's conduction loss." });
-  part(pkg, { name: "IGBT switch", short: "IGBT", spec: "≥ 200 V, ≥ 600 A pulse · sees ≈ 171 V at turn-off", role: "Closes to fire, opens on the optical-gate signal at 4.35 ms. An SCR cannot turn off, so it cannot do the cut-off." }, V3(IGX, 66, IGZ + 14));
-  igbtPins.c.set(IGX, 22, IGZ + 17); igbtPins.e.set(IGX + 6, 22, IGZ + 17); igbtPins.g.set(IGX - 6, 22, IGZ + 17);
+  part(pkg, { name: "IGBT switch", short: "IGBT", spec: "≥ 200 V, ≥ 600 A pulse · sees ≈ 171 V at turn-off", role: "Closes to fire, opens on the optical-gate signal at 4.35 ms. An SCR cannot turn off, so it cannot do the cut-off. Pins: gate, collector, emitter, left to right." });
 }
+// ------------------------------------------------------------------ gate driver
 const GDX = 15, GDZ = -60;
 {
   const g = group(box(50, 1.6, 34, M.pcb, GDX, 12, GDZ), box(9, 4, 6, M.chip, GDX - 12, 15, GDZ - 5), box(12, 5, 8, M.chip, GDX + 8, 15.5, GDZ + 4),
     box(8, 7, 6, M.supply, GDX + 18, 16, GDZ - 10));
   for (const [dx, dz] of [[-22, -14], [22, -14], [-22, 14], [22, 14]]) g.add(cyl(1.5, 11, M.alu, GDX + dx, 5.5, GDZ + dz, 8));
-  part(g, { name: "Gate driver", short: "Gate driver", spec: "Isolated driver board", role: "Turns the controller's trigger and cut-off signals into IGBT gate drive." }, V3(GDX, 34, GDZ));
+  g.add(pad(-8, 13.4, -52), pad(22, 13.4, -45));    // gate-out pad and trigger-in pad
+  part(g, { name: "Gate driver", short: "Gate driver", spec: "Isolated driver board", role: "Turns the controller's trigger and cut-off signals into IGBT gate drive." }, null);
 }
 
-// ------------------------------------------------------------------ coil terminal block (both leads at the breech end)
-const TBX = -42, TBZ = 8;
-const tb = { a: V3(TBX - 6, 14, TBZ), b: V3(TBX + 6, 14, TBZ) };
-part(group(box(28, 10, 14, M.black, TBX, 5, TBZ), cyl(2.5, 4, M.brass, TBX - 6, 12, TBZ), cyl(2.5, 4, M.brass, TBX + 6, 12, TBZ)),
-  { name: "Coil terminal block", spec: "2-way, 30 A", role: "Both coil leads finish at the breech end with 4 layers, so they land here." });
-// coil leads from outer layer at breech end
+// ------------------------------------------------------------------ coil terminal block (both leads finish at the breech end)
+const TBX = -42, TBZ = 8, TBY = 14;
+const TA = V3(TBX - 6, TBY, TBZ), TB_ = V3(TBX + 6, TBY, TBZ);     // A = end the IGBT feeds, B = returns to bank −
+part(group(box(28, 10, 14, M.black, TBX, 5, TBZ), cyl(2.5, 4, M.brass, TA.x, 12, TBZ), cyl(2.5, 4, M.brass, TB_.x, 12, TBZ)),
+  { name: "Coil terminal block", spec: "2-way, 30 A · A = switched end, B = return", role: "Both coil leads finish at the breech end with 4 layers, so they land here." });
+// coil leads: layer 4 (finish) to B, layer 1 (start) to A, leaving through the breech flange
 part(group(
-  tube([V3(COIL_X0 + 0.6, AX - RI - DEPTH, BZ - 3), V3(COIL_X0 - 4, AX - 20, BZ - 8), V3(TBX - 6, 26, TBZ + 6), tb.a], 0.51, copperMats[3]),
-  tube([V3(COIL_X0 + 0.6, AX - RI - 0.5, BZ + 3), V3(COIL_X0 - 8, AX - 26, BZ - 2), V3(TBX + 6, 24, TBZ + 6), tb.b], 0.51, copperMats[0])),
+  wire([[COIL_X0 + 0.5, AX - 9.08, BZ], [TB_.x, AX - 9.08, BZ], [TB_.x, AX - 9.08, TBZ], [TB_.x, TBY, TBZ]], 0.51, copperMats[3], 4),
+  wire([[COIL_X0 + 0.5, AX - 5.8, BZ], [TA.x, AX - 5.8, BZ], [TA.x, AX - 5.8, TBZ], [TA.x, TBY, TBZ]], 0.51, copperMats[0], 4)),
   { name: "Coil leads", spec: "1.02 mm magnet wire, enamel scraped at the ends", role: "Start and finish of the 7.67 m winding." });
 
 // ------------------------------------------------------------------ flyback diode + flyback resistor (new)
-const FDX = 75, FDZ = -35, FRX = 135, FRZ = -40;
+const FDX = -130, FDZ = 75, FRX = -45, FRZ = 75;
 {
   const d = group(box(34, 8, 30, M.black, FDX, 4, FDZ), cyl(9.5, 6, M.steel, FDX, 11, FDZ, 6), cyl(7, 14, M.steel, FDX, 21, FDZ, 24), cyl(1.6, 10, M.thin, FDX, 33, FDZ, 8));
-  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "≥ 200 V, ≥ 450 A pulse, fast recovery · stud = cathode", role: "Gives the coil's 8.0 J a path after cut-off so the switch is not destroyed. Stud on an insulating block: it is live." }, V3(FDX, 50, FDZ));
-  const r = group(box(100, 3, 70, M.alu, FRX + 10, 1.5, FRZ), box(28, 14, 27, M.gold, FRX, 10, FRZ), box(40, 2, 20, M.gold, FRX, 4, FRZ),
+  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "≥ 200 V, ≥ 450 A pulse, fast recovery · stud = cathode", role: "Gives the coil's 8.0 J a path after cut-off so the switch is not destroyed. Stud on an insulating block: it is live." }, null);
+  const r = group(box(70, 3, 46, M.alu, FRX, 1.5, FRZ), box(28, 14, 27, M.gold, FRX, 10, FRZ), box(40, 2, 20, M.gold, FRX, 4, FRZ),
     cyl(1.2, 8, M.thin, FRX - 17, 12, FRZ), cyl(1.2, 8, M.thin, FRX + 17, 12, FRZ));
   for (let i = -2; i <= 2; i++) r.add(box(26, 2.5, 1.6, M.gold, FRX, 17.5, FRZ + i * 5));
-  part(r, { name: "Flyback resistor", short: "R_fb 0.20 Ω", spec: "0.20 Ω pulse-rated wirewound, ≥ 25 W · absorbs ≈ 4.4 J/shot, 34 kW peak", role: "In series with the diode. Cuts the post-cut-off decay from 0.59 to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s." }, V3(FRX, 40, FRZ + 22), true);
+  part(r, { detail: "flyback", name: "Flyback resistor", short: "R_fb 0.20 Ω", spec: "0.20 Ω pulse-rated wirewound, ≥ 25 W · absorbs ≈ 4.4 J/shot, 34 kW peak", role: "In series with the diode. Cuts the post-cut-off decay from 0.59 to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s." }, null, true);
 }
-// diode cathode (stud) to coil lead A (switched +); anode → R_fb → coil lead B
+// cathode (stud) to A; anode through R_fb to B
 part(group(
-  tube([V3(FDX - 10, 8, FDZ), V3(FDX - 40, 8, FDZ - 6), V3(TBX - 6, 18, TBZ + 14), tb.a], 1.1, M.thin),
-  tube([V3(FDX, 38, FDZ), V3(FDX + 20, 34, FDZ - 4), V3(FRX - 17, 16, FRZ)], 1.1, M.thin),
-  tube([V3(FRX + 17, 16, FRZ), V3(FRX + 26, 22, FRZ - 30), V3(20, 20, TBZ - 20), V3(TBX + 6, 18, TBZ - 8), tb.b], 1.1, M.thin)),
-  { name: "Flyback loop", spec: "Diode cathode to the switched + end of the coil; anode through R_fb to the − end", role: "Reverse-biased while firing; carries the coil current only after the IGBT opens." });
+  wire([[FDX - 10, 11, FDZ], [FDX - 25, 11, FDZ], [FDX - 25, TBY, FDZ], [FDX - 25, TBY, TBZ], [TA.x, TBY, TBZ]], 1.1, M.red, 4),
+  wire([[FDX, 38, FDZ], [FDX, 50, FDZ], [FRX - 17, 50, FRZ], [FRX - 17, 16, FRZ]], 1.1, M.thin, 4),
+  wire([[FRX + 17, 16, FRZ], [FRX + 17, 16, 22], [TB_.x, 16, 22], [TB_.x, TBY, TBZ]], 1.1, M.blk, 4)),
+  { name: "Flyback loop", spec: "Diode cathode to terminal A; anode through R_fb to terminal B", role: "Reverse-biased while firing; carries the coil current only after the IGBT opens." });
 
-// ------------------------------------------------------------------ pulse-loop cables (4 mm²)
-const loopRed = [], loopBlk = [];
-loopRed.push(tube([T.c1p, V3(T.c1p.x, CAP_H + 26, T.c1p.z + 20), V3(-120, 70, -70), V3(IGX, 40, IGZ + 30), igbtPins.c], WR, M.red));
-loopRed.push(tube([igbtPins.e, V3(IGX + 10, 18, IGZ + 36), V3(TBX - 6, 18, TBZ - 10), tb.a], WR, M.red));
-loopBlk.push(tube([tb.b, V3(TBX + 10, 10, TBZ - 30), V3(-90, 12, -95), V3(T.c2n.x - 4, 40, CZ + CAP_R + 10), V3(T.c2n.x, CAP_H + 24, T.c2n.z + 12), T.c2n], WR, M.blk));
-const link = tube([T.c1n, V3(T.c1n.x, CAP_H + 22, T.c1n.z - 30), V3((T.c1n.x + T.c2p.x) / 2, CAP_H + 30, CZ - 42), V3(T.c2p.x, CAP_H + 22, T.c2p.z - 30), T.c2p], WR, M.blk);
-part(group(...loopRed), { name: "Pulse loop (+)", spec: "≥ 4 mm², insulation > 126 V", role: "Bank + → IGBT → coil. Keep it short: it counts toward R_ext = 0.060 Ω." });
-part(group(...loopBlk), { name: "Pulse loop (−)", spec: "≥ 4 mm², insulation > 126 V", role: "Coil → bank −." });
-part(link, { name: "Series link", spec: "C1 − to C2 +", role: "Puts the two 63 V cans in series: 126 V, 0.05 F." });
+// ------------------------------------------------------------------ pulse loop (4 mm²): bank + → IGBT → coil A ... coil B → bank −
+part(group(
+  wire([[T.c1p.x, TY, CZ], [T.c1p.x, 150, CZ], [T.c1p.x, 150, 0], [IGX, 150, 0], [IGX, PIN_Y, 0], [IGX, PIN_Y, PIN_Z]], WR, M.red),
+  wire([[PIN.e.x, PIN_Y, PIN_Z], [PIN.e.x, PIN_Y, TBZ], [TA.x, PIN_Y, TBZ]], WR, M.red)),
+  { name: "Pulse loop (+)", spec: "≥ 4 mm², insulation > 126 V", role: "Bank + → IGBT collector; IGBT emitter → coil terminal A. Keep it short: it counts toward R_ext = 0.060 Ω." });
+part(wire([[TB_.x, TBY, TBZ], [TB_.x + 6, TBY, TBZ], [TB_.x + 6, 60, TBZ], [TB_.x + 6, 60, -95], [T.c2n.x, 60, -95], [T.c2n.x, 140, -95], [T.c2n.x, 140, CZ], [T.c2n.x, TY, CZ]], WR, M.blk),
+  { name: "Pulse loop (−)", spec: "≥ 4 mm², insulation > 126 V", role: "Coil terminal B → bank −." });
+part(wire([[T.c1n.x, TY, CZ], [T.c1n.x, 165, CZ], [T.c2p.x, 165, CZ], [T.c2p.x, TY, CZ]], WR, M.thin),
+  { name: "Series link", spec: "C1 − to C2 +", role: "Puts the two 63 V cans in series: 126 V, 0.05 F." });
 
 // ------------------------------------------------------------------ controller and signal wiring
-const ESX = 150, ESZ = 110;
+const ESX = 30, ESZ = 95;
 {
   const g = group(box(52, 1.6, 28, M.pcbBlue, ESX, 9, ESZ), box(18, 3, 16, M.alu, ESX + 8, 11.3, ESZ), box(6, 2, 8, M.chip, ESX - 18, 10.8, ESZ));
   for (const [dx, dz] of [[-23, -11], [23, -11], [-23, 11], [23, 11]]) g.add(cyl(1.5, 8, M.alu, ESX + dx, 4, ESZ + dz, 8));
-  part(g, { name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Reads the optical gate, commands the gate driver, logs speed and the discharge curve (470 kΩ / 10 kΩ divider on GPIO34)." }, V3(ESX, 28, ESZ));
+  g.add(pad(22, 10, 83, 1.3), pad(GATE_X, 10, 83, 1.3));
+  part(g, { detail: "esp32", name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Reads the optical gate, commands the gate driver, logs speed and the discharge curve (470 kΩ / 10 kΩ divider on GPIO34)." }, null);
 }
 part(group(
-  tube([V3(GATE_X, 3, BZ - 16), V3(GATE_X + 40, 4, BZ + 30), V3(ESX - 26, 9, ESZ)], 0.7, M.sig),
-  tube([V3(ESX - 20, 9, ESZ - 14), V3(80, 6, -20), V3(GDX + 25, 12, GDZ + 12)], 0.7, M.sig),
-  tube([V3(GDX - 25, 12, GDZ), V3(IGX + 10, 18, IGZ - 10), igbtPins.g], 0.7, M.sig)),
+  wire([[GATE_X, 3, BZ - 11], [GATE_X, 3, 76], [GATE_X, 10, 76], [GATE_X, 10, 83]], 0.7, M.sig, 4),          // optical gate -> ESP32
+  wire([[22, 10, 83], [22, 16, 83], [22, 16, -45], [22, 13.4, -45]], 0.7, M.sig, 4),                          // ESP32 -> gate driver
+  wire([[-8, 13.4, -52], [-8, 14, -52], [-8, 14, -10], [PIN.g.x, 14, -10], [PIN.g.x, PIN_Y, -10], [PIN.g.x, PIN_Y, PIN_Z]], 0.7, M.sig, 4)), // gate driver -> IGBT gate
   { name: "Signal wiring", spec: "Optical gate → ESP32 → gate driver → IGBT gate", role: "Low-voltage side. Never shares a conductor with the bank." });
 
 // ------------------------------------------------------------------ charger, off the plate
@@ -473,12 +557,12 @@ part(group(
   const disp = new THREE.Mesh(new THREE.PlaneGeometry(64, 24), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) }));
   disp.position.set(-170, 58, -264.6);
   g.add(disp);
-  g.add(cyl(4, 6, M.red, -105, 25, -264), cyl(4, 6, M.blk, -90, 25, -264));
-  g.children[2].rotation.x = Math.PI / 2; g.children[3].rotation.x = Math.PI / 2;
-  part(g, { name: "Charger", short: "Charger 126 V", spec: "126 V output, stops automatically at 126 V", role: "Fills the bank, then is switched off the bank before firing." }, V3(-150, 104, -340));
+  const tp = cyl(4, 6, M.red, -105, 25, -264), tn = cyl(4, 6, M.blk, -90, 25, -264);
+  tp.rotation.x = Math.PI / 2; tn.rotation.x = Math.PI / 2; g.add(tp, tn);
+  part(g, { name: "Charger", short: "Charger 126 V", spec: "126 V output, stops automatically at 126 V", role: "Fills the bank, then is switched off the bank before firing." }, null);
   part(group(
-    tube([V3(-105, 25, -258), V3(-110, 10, -230), V3(T.c1p.x + 10, 60, CZ - 60), V3(T.c1p.x, CAP_H + 20, T.c1p.z - 10), T.c1p], 0.9, M.red),
-    tube([V3(-90, 25, -258), V3(-80, 8, -230), V3(T.c2n.x, 60, CZ - 70), V3(T.c2n.x, CAP_H + 18, T.c2n.z - 8), T.c2n], 0.9, M.blk)),
+    wire([[-105, 25, -261], [-105, 25, -250], [-105, 185, -250], [T.c1p.x, 185, -250], [T.c1p.x, 185, CZ], [T.c1p.x, TY, CZ]], 0.9, M.red),
+    wire([[-90, 25, -261], [-90, 25, -250], [-90, 180, -250], [T.c2n.x, 180, -250], [T.c2n.x, 180, CZ], [T.c2n.x, TY, CZ]], 0.9, M.blk)),
     { name: "Charge leads", spec: "Charger to bank + and −", role: "Charging side only; the pulse never flows here." });
 }
 
@@ -500,6 +584,113 @@ function setCut(on) {
   barrelMat.clippingPlanes = planes; barrelMat.needsUpdate = true;
 }
 
+// ------------------------------------------------------------------ detail schematics
+const T_ = (x, y, str, cls = "t", anchor = "start") => `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${str}</text>`;
+const L_ = (pts, cls = "w", extra = "") => `<polyline class="${cls}" ${extra} points="${pts.map(p => p.join(",")).join(" ")}"/>`;
+const D_ = (x, y) => `<circle class="dot" cx="${x}" cy="${y}" r="2.6"/>`;
+function zig(x, y1, y2, cls = "w") {
+  const pad = 12, n = 7, len = (y2 - y1) - 2 * pad, st = len / n, pts = [[x, y1], [x, y1 + pad]];
+  for (let k = 0; k < n; k++) pts.push([x + (k % 2 === 0 ? 7 : -7), y1 + pad + st * (k + 0.5)]);
+  pts.push([x, y2 - pad], [x, y2]);
+  return L_(pts, cls);
+}
+function cap(x, y1, y2) {
+  const m = (y1 + y2) / 2;
+  return L_([[x, y1], [x, m - 4]]) + L_([[x, m + 4], [x, y2]]) + L_([[x - 14, m - 4], [x + 14, m - 4]]) + L_([[x - 14, m + 4], [x + 14, m + 4]]);
+}
+function coilSym(x, y1, y2, n = 4) {
+  const h = (y2 - y1) / n; let d = `M${x},${y1} `;
+  for (let k = 0; k < n; k++) d += `a ${h / 2},${h / 2} 0 0 1 0,${h} `;
+  return `<path class="w" d="${d}"/>`;
+}
+function diodeUp(x, y1, y2) {   // cathode toward y1
+  const m = (y1 + y2) / 2;
+  return L_([[x, y1], [x, m - 9]]) + L_([[x, m + 9], [x, y2]]) + `<polygon class="w" points="${x - 10},${m + 9} ${x + 10},${m + 9} ${x},${m - 9}"/>` + L_([[x - 10, m - 9], [x + 10, m - 9]], "w", 'style="stroke-width:2.4"');
+}
+const SVG_ = (inner, h) => `<svg class="sch" viewBox="0 0 520 ${h}" role="img">${inner}</svg>`;
+
+const DETAILS = {
+  bleeder: {
+    title: "Bank bleeder, 1 kΩ 25 W",
+    sub: "Schematic preview: where it sits in the circuit and how it mounts",
+    svg: SVG_(
+      T_(12, 16, "In the circuit", "sec") +
+      L_([[40, 42], [300, 42]]) + L_([[40, 142], [300, 142]]) +
+      cap(80, 42, 92) + cap(80, 92, 142) + D_(80, 42) + D_(80, 142) + D_(80, 92) +
+      T_(100, 70, "C1", "t") + T_(100, 84, "0.1 F", "tm") + T_(100, 120, "C2", "t") + T_(100, 134, "0.1 F", "tm") +
+      zig(170, 42, 92) + zig(170, 92, 142) + L_([[80, 92], [170, 92]]) + D_(170, 92) + D_(170, 42) + D_(170, 142) +
+      T_(184, 70, "10 kΩ", "tm") + T_(184, 120, "10 kΩ", "tm") +
+      zig(250, 42, 142, "hl") + D_(250, 42) + D_(250, 142) +
+      T_(264, 88, "Bleeder", "tb") + T_(264, 103, "1 kΩ · 25 W", "tb") +
+      T_(40, 36, "bank +", "tm") + T_(40, 158, "bank −", "tm") +
+      T_(340, 62, "126 V / 1 kΩ = 0.126 A") + T_(340, 80, "P = 15.9 W while full") + T_(340, 98, "τ = 50 s") + T_(340, 116, "126 V → 5 V in 2.7 min") + T_(340, 134, "pair alone: 54 min", "tm") +
+      T_(12, 182, "On the bench (top view)", "sec") +
+      `<rect class="plate" x="40" y="216" width="190" height="116" rx="3"/>` +
+      T_(135, 346, "aluminium offcut, 100 × 100 mm", "tm", "middle") +
+      `<rect class="part" x="82" y="256" width="106" height="24" rx="2"/><rect class="part" x="102" y="244" width="66" height="48" rx="4"/>` +
+      [112, 122, 132, 142, 152, 162].map(x => L_([[x, 248], [x, 288]], "w", 'style="stroke-width:1"')).join("") +
+      `<circle class="blk" cx="90" cy="268" r="4.5"/><circle class="blk" cx="180" cy="268" r="4.5"/>` +
+      T_(135, 306, "finned body", "tm", "middle") +
+      L_([[120, 244], [120, 204]]) + L_([[150, 244], [150, 204]]) +
+      `<circle class="blk" cx="120" cy="232" r="4"/><circle class="blk" cx="150" cy="232" r="4"/>` +
+      T_(116, 200, "to bank +", "t", "end") + T_(154, 200, "to bank −", "t", "start") +
+      T_(262, 244, "Aluminium-housed wirewound, rated") + T_(262, 258, "25 W only when bolted to metal.") +
+      T_(262, 282, "Two bolts clamp it flat to the offcut,", "tm") + T_(262, 296, "which is the heatsink.", "tm") +
+      T_(262, 320, "Keep the offcut clear of the + and −", "tm") + T_(262, 334, "buses: it runs hot.", "tm"), 356),
+    notes: ["Placed across the whole series bank, so it drains both capacitors together.", "Draws 0.126 A from the charger the whole time it is connected; negligible against the 519 A pulse."],
+  },
+  flyback: {
+    title: "Flyback path: diode + 0.20 Ω",
+    sub: "Schematic preview: the resistor in series with the diode, across the coil",
+    svg: SVG_(
+      T_(12, 16, "In the circuit", "sec") +
+      L_([[30, 44], [70, 44]]) + `<rect class="box" x="70" y="30" width="60" height="28" rx="3"/>` + T_(100, 48, "IGBT", "t", "middle") + L_([[130, 44], [330, 44]]) + L_([[30, 144], [330, 144]]) +
+      D_(160, 44) + D_(160, 144) + diodeUp(160, 44, 96) + zig(160, 96, 144, "hl") +
+      L_([[330, 44], [330, 62]]) + coilSym(330, 62, 126) + L_([[330, 126], [330, 144]]) + D_(330, 44) + D_(330, 144) +
+      T_(30, 36, "bank +", "tm") + T_(30, 162, "bank −", "tm") +
+      T_(176, 66, "Diode, ≥ 200 V, ≥ 450 A", "t") + T_(176, 80, "cathode up, to the IGBT side", "tm") +
+      T_(176, 124, "R", "tb") + T_(185, 127, "fb", "tb") + T_(200, 124, "0.20 Ω pulse-rated", "tb") +
+      T_(344, 96, "Coil", "t") + T_(344, 110, "94 µH", "tm") +
+      T_(12, 194, "On the bench (top view)", "sec") +
+      `<rect class="blk" x="22" y="238" width="76" height="56" rx="3"/><circle class="part" cx="46" cy="262" r="8"/><circle class="part" cx="76" cy="262" r="8"/>` +
+      T_(46, 266, "A", "t", "middle") + T_(76, 266, "B", "t", "middle") + `<text class="tm" style="fill:#fff" x="60" y="286" text-anchor="middle">terminal block</text>` +
+      `<rect class="plate" x="150" y="276" width="76" height="12" rx="2"/>` + T_(188, 304, "insulating block", "tm", "middle") +
+      `<polygon class="part" points="170,254 188,244 206,254 206,268 188,278 170,268"/><circle class="blk" cx="188" cy="261" r="5"/>` + T_(188, 236, "diode · stud = cathode", "t", "middle") +
+      `<rect class="plate" x="290" y="226" width="150" height="80" rx="3"/><rect class="part" x="306" y="248" width="118" height="36" rx="4"/>` + [326, 338, 350, 362, 374, 386, 398].map(x => L_([[x, 252], [x, 280]], "w", 'style="stroke-width:1"')).join("") + T_(365, 322, "R_fb on its own aluminium plate", "tm", "middle") +
+      L_([[170, 261], [120, 261], [120, 216], [46, 216], [46, 254]]) +
+      L_([[206, 261], [296, 261], [306, 266]]) +
+      L_([[424, 266], [460, 266], [460, 338], [76, 338], [76, 270]]),
+      352),
+    notes: ["Terminal A is the coil end the IGBT feeds; B returns to bank −. The diode's stud (cathode) goes to A. The stud is live: mount it on plywood or an insulating washer kit.", "Time constant falls from 0.59 ms (diode alone) to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s.", "Absorbs about 4.4 J per shot, 34 kW peak for about 1 ms: pulse-rated wirewound only. The switch sees 171 V at turn-off."],
+  },
+  esp32: {
+    title: "ESP32 controller",
+    sub: "Schematic preview: what connects to which pin",
+    svg: SVG_(
+      `<rect class="box" x="170" y="24" width="180" height="300" rx="6"/>` + T_(260, 46, "ESP32", "t", "middle") +
+      `<rect class="box" x="12" y="62" width="118" height="34" rx="4"/>` + T_(71, 77, "Optical gate", "t", "middle") + T_(71, 90, "phototransistor", "tm", "middle") + L_([[130, 79], [170, 79]]) + T_(178, 83, "GPIO27 · in", "pin") + T_(12, 110, "interrupt on beam break", "tm") +
+      `<rect class="box" x="12" y="140" width="118" height="46" rx="4"/>` + T_(71, 157, "470 kΩ / 10 kΩ", "t", "middle") + T_(71, 170, "divider + 1 nF", "t", "middle") + T_(71, 182, "to bank +", "tm", "middle") + L_([[130, 163], [170, 163]]) + T_(178, 167, "GPIO34 · ADC", "pin") + T_(12, 200, "126 V reads 2.63 V at the pin", "tm") +
+      `<rect class="box" x="12" y="228" width="118" height="34" rx="4"/>` + T_(71, 243, "5 V battery bank", "t", "middle") + T_(71, 256, "USB power", "tm", "middle") + L_([[130, 245], [170, 245]]) + T_(178, 249, "5V / USB", "pin") +
+      T_(342, 83, "GPIO26 · out", "pin", "end") + L_([[350, 79], [390, 79]]) + `<rect class="box" x="390" y="58" width="120" height="42" rx="4"/>` + T_(450, 75, "Gate driver", "t", "middle") + T_(450, 88, "trigger / cut-off", "tm", "middle") + T_(450, 114, "→ IGBT gate", "tm", "middle") +
+      T_(342, 167, "3V3 · out", "pin", "end") + L_([[350, 163], [390, 163]]) + `<rect class="box" x="390" y="142" width="120" height="42" rx="4"/>` + T_(450, 159, "IR LED", "t", "middle") + T_(450, 172, "+ series resistor", "tm", "middle") + T_(450, 198, "value to be chosen", "tm", "middle") +
+      T_(342, 249, "GND", "pin", "end") + L_([[350, 245], [390, 245]]) + `<rect class="box" x="390" y="228" width="120" height="34" rx="4"/>` + T_(450, 243, "Common ground", "t", "middle") + T_(450, 256, "see note below", "tm", "middle") +
+      T_(260, 300, "chronograph · capture · trigger", "tm", "middle"), 340),
+    notes: ["GPIO numbers are suggestions; the build plan has only fixed GPIO34 so far.", "The divider ties the ESP32's ground to bank −. Power it from a battery bank, never from a laptop while the bank is connected.", "Optical gate: its beam break is the cut-off event, at 4.35 ms into the shot at 126 V."],
+  },
+};
+const detail = document.getElementById("detail");
+function showDetail(key) {
+  const d = DETAILS[key];
+  document.getElementById("d-title").textContent = d.title;
+  document.getElementById("d-sub").textContent = d.sub;
+  document.getElementById("d-svg").innerHTML = d.svg;
+  const ul = document.getElementById("d-notes"); ul.innerHTML = "";
+  d.notes.forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+  detail.hidden = false;
+}
+function hideDetail() { detail.hidden = true; }
+document.getElementById("detail-x").addEventListener("click", () => deselect());
+
 // ------------------------------------------------------------------ click a part: glow, bob, label card
 const card = document.createElement("div");
 card.className = "tip";
@@ -515,7 +706,7 @@ function pickAt(e) {
   const r = renderer.domElement.getBoundingClientRect();
   mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(mouse, camera);
-  const hit = ray.intersectObjects(pickables, false)[0];
+  const hit = ray.intersectObjects(pickables, false).find(h => h.object.userData.root.visible);
   return hit ? hit.object : null;
 }
 function deselect() {
@@ -524,6 +715,7 @@ function deselect() {
   savedMats.clear();
   sel.root.position.y = sel.baseY;
   cardObj.visible = false;
+  hideDetail();
   sel = null;
 }
 function select(mesh) {
@@ -546,7 +738,8 @@ function select(mesh) {
   card.querySelector(".role").textContent = info.role || "";
   const box = new THREE.Box3().setFromObject(root), c = box.getCenter(new THREE.Vector3());
   cardObj.position.set(c.x, box.max.y + 4, c.z);
-  cardObj.visible = true;
+  if (info.detail) { cardObj.visible = false; showDetail(info.detail); }
+  else cardObj.visible = true;
 }
 function updateSelection(now) {
   if (!sel) return;
@@ -567,6 +760,7 @@ renderer.domElement.addEventListener("pointerup", e => {
   else deselect();
 });
 renderer.domElement.addEventListener("pointermove", e => { if (e.buttons === 0) renderer.domElement.style.cursor = pickAt(e) ? "pointer" : "grab"; });
+window.__selectByName = n => { const m = pickables.find(o => o.userData.info.name === n); if (m) select(m); };
 window.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); });
 
 // ------------------------------------------------------------------ simulation playback
@@ -621,6 +815,7 @@ document.getElementById("speed").addEventListener("input", e => {
   speed = Number(e.target.value);
   document.getElementById("speedval").textContent = (Math.round(speed * 100) / 100) + "×";
 });
+document.getElementById("bare").addEventListener("change", e => { coilGroup.visible = !e.target.checked; if (sel && sel.root === coilGroup) deselect(); });
 document.getElementById("cut").addEventListener("change", e => setCut(e.target.checked));
 
 function setCurrentGlow(i) {
@@ -746,6 +941,7 @@ renderer.setAnimationLoop((now) => {
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
 });
+window.__view = (px, py, pz, tx, ty, tz) => { camera.position.set(px, py, pz); controls.target.set(tx, ty, tz); controls.update(); };
 window.__ready = true;
 </script>
 </body>
