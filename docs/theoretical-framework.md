@@ -1,6 +1,6 @@
 # Theoretical framework: inductive coil launcher
 
-Single-stage design, final calculations. Source document: [Formulas_and_Theoretical_Framework.pdf](Formulas_and_Theoretical_Framework.pdf). Every number below is reproduced by [`simulation/coilgun_model.py`](../simulation/coilgun_model.py).
+Single-stage design, final calculations. Source of truth: the team's **Formulas_and_Theoretical_Framework** doc on the shared drive; this file mirrors it (last synced 2026-11-09, including the bank bleeder and flyback resistor). Every number below is reproduced by [`simulation/coilgun_model.py`](../simulation/coilgun_model.py).
 
 ## Design parameters
 
@@ -22,6 +22,8 @@ Single-stage design, final calculations. Source document: [Formulas_and_Theoreti
 | Coil turns | $N$ | 164 |
 | Coil resistance | $R_{coil}$ | 0.160 Ω |
 | External resistance (ESR, switch, leads; estimated) | $R_{ext}$ | 0.060 Ω |
+| Bleeder resistance (across bank) | $R_{bleed}$ | 1.0 kΩ, 25 W |
+| Flyback resistance (in series with diode) | $R_{fb}$ | 0.20 Ω |
 | Relative permeability (low-carbon steel) | $\mu_r$ | 500 |
 | Saturation flux density (low-carbon steel) | $B_{sat}$ | 1.6 T |
 | Permeability of free space | $\mu_0$ | 4π × 10⁻⁷ H/m |
@@ -43,6 +45,18 @@ Same total energy as the parallel connection, delivered at twice the voltage.
 **Balancing resistors.** A 10 kΩ, 1 W resistor across each capacitor keeps either one from exceeding 63 V:
 
 $$I_{bal} = \frac{63}{10\,000} = 6.3\ \text{mA} \qquad P = \frac{63^2}{10\,000} = 0.40\ \text{W}$$
+
+**Bank bleeder.** The balancing resistors alone drain the bank too slowly to count as a safety measure. In series they put 20 kΩ across the bank:
+
+$$\tau_{bal} = (2R_{bal})C_T = (20\,000)(0.05) = 1000\ \text{s}$$
+
+so 126 V takes about 54 minutes to fall below 5 V. A 1 kΩ, 25 W aluminium-housed bleeder across the whole bank fixes this:
+
+$$I_{bleed} = \frac{V}{R_{bleed}} = \frac{126}{1000} = 0.126\ \text{A} \qquad P_{bleed} = \frac{V^2}{R_{bleed}} = \frac{126^2}{1000} = 15.9\ \text{W}$$
+
+$$\tau_{bleed} = R_{bleed} C_T = (1000)(0.05) = 50\ \text{s} \qquad t_{5\,V} = \tau_{bleed}\ln\frac{V}{5} = 50\ln\frac{126}{5} = 161\ \text{s} \approx 2.7\ \text{min}$$
+
+The 25 W rating holds only with the housing bolted to a heatsink, so it is mounted on an aluminium plate. During a 4 ms shot the bleeder draws 0.126 A against a 519 A peak, so it does not affect the launch; while charging, the charger supplies this 0.126 A continuously.
 
 ## Target
 
@@ -157,6 +171,24 @@ The energy left in the coil goes into a flyback diode across the coil:
 
 $$E_L = \tfrac{1}{2} L I_{cut}^2 = \tfrac{1}{2}(94\times10^{-6})(412)^2 = 8.0\ \text{J}$$
 
+**Flyback resistor.** With the diode alone, the coil current decays slowly after the cut-off because only the coil's own resistance absorbs it:
+
+$$\tau_{fly} = \frac{L}{R_{coil}} = \frac{94\times10^{-6}}{0.160} = 0.59\ \text{ms}$$
+
+During this time the slug is past the coil centre, so the decaying current pulls it backward: the simulation gives 23.1 m/s at cut-off but only 20.9 m/s at the coil exit. A 0.20 Ω resistor in series with the flyback diode makes the current decay faster:
+
+$$\tau_{fly} = \frac{L}{R_{coil} + R_{fb}} = \frac{94\times10^{-6}}{0.160 + 0.20} = 0.26\ \text{ms}$$
+
+which raises the exit velocity to **22.4 m/s (4.50 J)**. The cost is a higher voltage across the switch at turn-off:
+
+$$V_{switch} = V_{end} + I_{cut}R_{fb} + V_{diode} = 87.2 + (412)(0.20) + 0.9 = 171\ \text{V}$$
+
+This is inside the switch's 200 V rating, which is why the resistor is not larger: at 0.25 Ω the switch would see 191 V. Of the 8.0 J left in the coil, the resistor absorbs about 4.4 J per shot, with a peak power of
+
+$$P_{fb,peak} = I_{cut}^2 R_{fb} = (412)^2(0.20) = 34\ \text{kW}$$
+
+for about 1 ms, so it must be a pulse-rated wirewound (aluminium-housed, 25 W or larger), not a film resistor.
+
 ## Efficiency
 
 After the cut-off the bank is left at V_end = 87.2 V:
@@ -175,8 +207,10 @@ $$\Delta T = \frac{E_{drawn} - E_K}{m_{Cu} c_{Cu}} = \frac{207 - 4.8}{(56.6\time
 
 | Component | Rating | Notes |
 |---|---|---|
-| Switch (IGBT / MOSFET) | ≥ 200 V, ≥ 600 A pulse | Must be able to turn off; an SCR cannot |
-| Flyback diode | ≥ 200 V, ≥ 450 A pulse | Fast recovery, across the coil |
+| Switch (IGBT / MOSFET) | ≥ 200 V, ≥ 600 A pulse | Must be able to turn off; an SCR cannot. Sees ≈ 171 V at turn-off |
+| Flyback diode | ≥ 200 V, ≥ 450 A pulse | Fast recovery, across the coil, in series with R_fb |
+| Flyback resistor | 0.20 Ω, pulse-rated wirewound, ≥ 25 W | In series with the flyback diode; absorbs ≈ 4.4 J per shot, 34 kW peak |
+| Bleeder resistor | 1 kΩ, 25 W, aluminium-housed | Across the whole bank, bolted to a heatsink; 15.9 W at 126 V |
 | Balancing resistors | 10 kΩ, 1 W | One across each capacitor |
 | Charger | 126 V output | Stops automatically at 126 V |
 | Wiring | ≥ 4 mm², insulation > 126 V | Keep leads short (counts toward R_ext) |
@@ -192,10 +226,14 @@ $$\Delta T = \frac{E_{drawn} - E_K}{m_{Cu} c_{Cu}} = \frac{207 - 4.8}{(56.6\time
 | Peak current | ≈ 519 A |
 | Field at centre | ≈ 2.26 T |
 | Cut-off time | ≈ 4.35 ms |
-| Muzzle velocity | 18–23 m/s |
+| Velocity at cut-off / coil exit | 23.1 / 22.4 m/s |
+| Muzzle velocity (with losses) | 18–21 m/s |
+| Bleed-down to 5 V | ≈ 2.7 min |
 | Efficiency | ≈ 1.2 % |
 
 ## Figures
+
+The schematic below predates the bleeder and flyback resistor: the 1 kΩ bleeder goes across the series bank, the 0.20 Ω resistor in series with the flyback diode.
 
 ![System diagram: circuit schematic and to-scale coil, barrel and projectile cross-section](figures/system-diagram.png)
 

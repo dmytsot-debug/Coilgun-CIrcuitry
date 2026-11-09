@@ -1,10 +1,12 @@
 """Single-stage coilgun model: hand calculations + time-domain simulation.
 
-Reproduces every number in docs/theoretical-framework.md from the design
+Reproduces every number in docs/theoretical-framework.md (mirror of the team's
+Formulas_and_Theoretical_Framework doc, the source of truth) from the design
 parameters, then runs the circuit + projectile simulation.
 
 Model (matches the framework document):
-  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 94 uH (Wheeler), R = 0.220 ohm.
+  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 94 uH (Wheeler), R = 0.220 ohm,
+    with the 1 kohm bank bleeder and the two 10 kohm balancing resistors as a leak.
     Inductance is held constant and the slug's back-EMF is ignored (the document's
     assumption). Pass --back-emf to couple the slug's motional EMF into the circuit.
   * Field: Biot-Savart sum over all 164 loops (4 layers x 41 turns), off-axis via
@@ -13,13 +15,13 @@ Model (matches the framework document):
     F = M * integral over the end faces of [B_z(front) - B_z(back)] dA.
   * Cut-off: the switch opens when the slug centre reaches the coil centre
     (nose at coil exit). After that the coil current freewheels through the
-    flyback diode and decays through R_coil.
+    flyback diode and decays through R_coil + R_flyback (0.20 ohm).
 
 Usage:
   python3 simulation/coilgun_model.py             # document model
   python3 simulation/coilgun_model.py --back-emf  # adds slug back-EMF
   python3 simulation/coilgun_model.py --no-cutoff # switch never opens
-  python3 simulation/coilgun_model.py --flyback-r 0.25  # resistor in the flyback path
+  python3 simulation/coilgun_model.py --flyback-r 0     # diode only, no flyback resistor
 
 Only needs numpy.
 """
@@ -54,7 +56,8 @@ P = dict(
     rho_cu=8960.0,
     c_cu=385.0,
     V_diode=0.9,         # V, flyback diode forward drop while freewheeling
-    R_flyback=0.0,       # ohm, optional resistor in series with the flyback diode
+    R_flyback=0.20,      # ohm, resistor in series with the flyback diode
+    R_bleed=1000.0,      # ohm, bank bleeder across the whole series bank
 )
 
 
@@ -141,6 +144,17 @@ def hand_calcs(p):
     r["I_peak"] = k * (math.exp(s1 * t_pk) - math.exp(s2 * t_pk))
     r["B_long_solenoid"] = MU0 * N * r["I_peak"] / l
 
+    # bank bleeder (balancing resistors in parallel with it)
+    r["tau_bal"] = p["n_series"] * p["R_bal"] * r["C_T"]
+    r["t5_bal"] = r["tau_bal"] * math.log(r["V"] / 5)
+    r["I_bleed"] = r["V"] / p["R_bleed"]
+    r["P_bleed"] = r["V"] ** 2 / p["R_bleed"]
+    r["tau_bleed"] = p["R_bleed"] * r["C_T"]
+    r["t5_bleed"] = r["tau_bleed"] * math.log(r["V"] / 5)
+    r["R_leak"] = 1 / (1 / p["R_bleed"] + 1 / (p["n_series"] * p["R_bal"]))
+    r["tau_fly_diode"] = r["L"] / r["R_coil"]
+    r["tau_fly"] = r["L"] / (r["R_coil"] + p["R_flyback"])
+
     r["m_cu"] = p["rho_cu"] * (math.pi * p["d_wire"] ** 2 / 4) * r["l_wire"]
     return r
 
@@ -185,8 +199,9 @@ def simulate(p, r, fld, back_emf=False, cutoff=True, dt=1e-7, t_end=15e-3):
     z_c = 0.5 * p["l_coil"]                 # coil centre
     x = -0.5 * l_p                          # slug centre; nose at coil entrance (z = 0)
     v, q, i, t = 0.0, C * r["V"], 0.0, 0.0  # q = capacitor charge
-    switch_on, freewheel = True, False
-    out = dict(t_cut=None, I_cut=None, V_end=None, v_cut=None, I_peak=0.0, t_peak=0.0)
+    switch_on = True
+    out = dict(t_cut=None, I_cut=None, V_end=None, v_cut=None, I_peak=0.0, t_peak=0.0,
+               E_Rfb=0.0, E_coil_after=0.0)
     hist = []
 
     def force_per_amp(x, i):
@@ -202,11 +217,11 @@ def simulate(p, r, fld, back_emf=False, cutoff=True, dt=1e-7, t_end=15e-3):
         if switch_on:
             Vc = q / C
             di = (Vc - R * i - emf) / L
-            dq = -i
+            dq = -i - Vc / r["R_leak"]
         else:
             Vc = q / C
             di = (-(r["R_coil"] + p["R_flyback"]) * i - p["V_diode"] - emf) / L if i > 0 else 0.0
-            dq = 0.0
+            dq = -Vc / r["R_leak"]
         a = F / p["m"]
         # semi-implicit Euler
         i = max(i + di * dt, 0.0) if not switch_on else i + di * dt
@@ -214,6 +229,9 @@ def simulate(p, r, fld, back_emf=False, cutoff=True, dt=1e-7, t_end=15e-3):
         v += a * dt
         x += v * dt
         t += dt
+        if not switch_on and i > 0:
+            out["E_Rfb"] += i * i * p["R_flyback"] * dt
+            out["E_coil_after"] += i * i * r["R_coil"] * dt
         if i > out["I_peak"]:
             out["I_peak"], out["t_peak"] = i, t
         if switch_on and cutoff and x >= z_c:
@@ -235,7 +253,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--back-emf", action="store_true")
     ap.add_argument("--no-cutoff", action="store_true")
-    ap.add_argument("--flyback-r", type=float, default=0.0,
+    ap.add_argument("--flyback-r", type=float, default=P["R_flyback"],
                     help="ohm in series with the flyback diode (faster decay, higher switch voltage)")
     args = ap.parse_args()
     P["R_flyback"] = args.flyback_r
@@ -281,6 +299,14 @@ def main():
         ("B centre, loop sum at I_peak", B_c_per_A * r["I_peak"], "T"),
         ("B averaged over centred slug", B_slug_per_A * 1e3, "mT/A"),
         ("Copper mass", r["m_cu"] * 1e3, "g"),
+        ("Balancing pair alone: tau", r["tau_bal"], "s"),
+        ("Balancing pair alone: 126 V to 5 V", r["t5_bal"] / 60, "min"),
+        ("Bleeder current", r["I_bleed"], "A"),
+        ("Bleeder power", r["P_bleed"], "W"),
+        ("Bleeder tau", r["tau_bleed"], "s"),
+        ("Bleeder: 126 V to 5 V", r["t5_bleed"] / 60, "min"),
+        ("Flyback decay tau, diode only", r["tau_fly_diode"] * 1e3, "ms"),
+        ("Flyback decay tau, with R_fb", r["tau_fly"] * 1e3, "ms"),
     ]
     for name, val, unit in rows:
         print(f"  {name:36s} {val:12.4g} {unit}")
@@ -302,7 +328,9 @@ def main():
         print(f"  Coil temperature rise (upper bound) {dT:.1f} C")
         V_sw = s["V_end"] + s["I_cut"] * P["R_flyback"] + P["V_diode"]
         print(f"  Switch voltage at turn-off ~{V_sw:6.0f} V (bank + flyback path drop)")
-    print(f"  Final velocity       {s['v_final']:8.2f} m/s (after flyback current decays / slug exits)")
+    if s["t_cut"] is not None:
+        print(f"  Flyback resistor     {s['E_Rfb']:8.2f} J per shot, peak {s['I_cut']**2*P['R_flyback']/1e3:.1f} kW")
+    print(f"  Exit velocity        {s['v_final']:8.2f} m/s ({0.5*P['m']*s['v_final']**2:.2f} J, after the flyback current decays)")
 
 
 if __name__ == "__main__":
