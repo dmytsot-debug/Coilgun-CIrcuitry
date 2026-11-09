@@ -172,8 +172,8 @@ rows = [
     ("Cut-off time", "≈ 4.35 ms"),
     ("Switch at turn-off", "≈ 171 V"),
     ("Exit velocity (sim.)", "22.4 m/s"),
-    ("Muzzle velocity", "18–23 m/s"),
-    ("Efficiency", "≈ 1.2 %"),
+    ("Muzzle velocity (exp.)", "19–21 m/s"),
+    ("Efficiency", "≈ 1.1 %"),
     ("Bleed to 5 V", "≈ 2.7 min"),
 ]
 KH = 34 + 16.5 * len(rows)

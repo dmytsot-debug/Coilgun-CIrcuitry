@@ -21,9 +21,9 @@ Calculations for the single-stage design are final. The source of truth is the t
 | Peak current | ≈ 519 A at 1.47 ms |
 | Field at coil centre | ≈ 2.26 T |
 | Cut-off | ≈ 4.35 ms, 412 A, bank left at 87.2 V |
-| Muzzle velocity | 23.1 m/s at cut-off, 22.4 m/s at coil exit simulated; 18–21 m/s expected after eddy, friction and back-EMF losses (target 20 m/s) |
-| Efficiency | 2.3 % of energy drawn, 1.2 % of energy stored |
-| Coil heating | ≤ 9.3 °C per shot |
+| Muzzle velocity | 23.1 m/s at cut-off, 22.4 m/s at coil exit simulated; 19–21 m/s expected after eddy, friction and back-EMF losses (target 20 m/s) |
+| Efficiency | 2.2 % of energy drawn, 1.1 % of energy stored (at exit) |
+| Coil heating | ≤ 9.1 °C per shot |
 
 ![System diagram](docs/figures/system-diagram.png)
 

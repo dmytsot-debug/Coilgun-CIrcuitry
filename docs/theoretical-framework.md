@@ -161,13 +161,13 @@ $$W = (2.29\times10^{-6})(1.27\times10^{6})(1.74 - 0.039) = 4.96\ \text{J}$$
 
 $$v = \sqrt{\frac{2W}{m}} = \sqrt{\frac{2(4.96)}{0.018}} = 23.5\ \text{m/s}$$
 
-A time-domain simulation of circuit and projectile together gives **23.1 m/s (4.78 J)**. It leaves out eddy currents, friction and back-EMF, which typically cost 15–30 % of the kinetic energy, so the expected muzzle velocity is **18–21 m/s**.
+A time-domain simulation of circuit and projectile together gives **23.1 m/s (4.78 J)**. It leaves out eddy currents, friction and back-EMF, which typically cost 15–30 % of the kinetic energy, so the expected muzzle velocity is **19–21 m/s** (from the 22.4 m/s exit velocity below).
 
 ## Current cut-off
 
 Coil length equals slug length, so the slug centre reaches the coil centre as its nose reaches the coil exit. An optical gate at the coil exit turns the switch off there (simulated t_cut ≈ 4.35 ms). Without the cut-off, τ_C = 11 ms outlasts the stroke and the slug is pulled back to about 6.1 m/s.
 
-The energy left in the coil goes into a flyback diode across the coil:
+The energy left in the coil is absorbed by the flyback diode and the 0.20 Ω flyback resistor across the coil:
 
 $$E_L = \tfrac{1}{2} L I_{cut}^2 = \tfrac{1}{2}(94\times10^{-6})(412)^2 = 8.0\ \text{J}$$
 
@@ -195,13 +195,13 @@ After the cut-off the bank is left at V_end = 87.2 V:
 
 $$E_{drawn} = \tfrac{1}{2} C_T (V^2 - V_{end}^2) = \tfrac{1}{2}(0.05)(126^2 - 87.2^2) = 207\ \text{J}$$
 
-$$\eta_{drawn} = \frac{4.78}{207} = 2.3\ \% \qquad \eta_{total} = \frac{4.78}{397} = 1.2\ \%$$
+$$\eta_{drawn} = \frac{4.50}{207} = 2.2\ \% \qquad \eta_{total} = \frac{4.50}{397} = 1.1\ \%$$
 
 ## Heat per shot
 
 $$m_{Cu} = \rho_{Cu} A_{wire} l_{wire} = (8960)(0.823\times10^{-6})(7.67) = 56.6\ \text{g}$$
 
-$$\Delta T = \frac{E_{drawn} - E_K}{m_{Cu} c_{Cu}} = \frac{207 - 4.8}{(56.6\times10^{-3})(385)} = 9.3\ ^\circ\text{C}$$
+$$\Delta T = \frac{E_{drawn} - E_K - E_{fb}}{m_{Cu} c_{Cu}} = \frac{207 - 4.5 - 4.4}{(56.6\times10^{-3})(385)} = 9.1\ ^\circ\text{C}$$
 
 ## Component ratings
 
@@ -227,9 +227,9 @@ $$\Delta T = \frac{E_{drawn} - E_K}{m_{Cu} c_{Cu}} = \frac{207 - 4.8}{(56.6\time
 | Field at centre | ≈ 2.26 T |
 | Cut-off time | ≈ 4.35 ms |
 | Velocity at cut-off / coil exit | 23.1 / 22.4 m/s |
-| Muzzle velocity (with losses) | 18–21 m/s |
+| Muzzle velocity (with losses) | 19–21 m/s |
 | Bleed-down to 5 V | ≈ 2.7 min |
-| Efficiency | ≈ 1.2 % |
+| Efficiency | ≈ 1.1 % |
 
 ## Figures
 
