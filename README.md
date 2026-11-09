@@ -1,23 +1,47 @@
 # Coilgun Circuitry
 
-Electronics design for a multi-stage coilgun (electromagnetic accelerator): a capacitor bank discharges into a solenoid to accelerate a projectile, with additional coils staged along the barrel.
+Electronics design for a coilgun (electromagnetic accelerator): a capacitor bank discharges into a multilayer coil to pull a soft-iron slug down a non-magnetic barrel. The first prototype is single stage; multi-stage is the goal.
 
 ## Status
 
-Early design phase. Nothing is built or ordered yet. First prototype is a single-stage, capacitor-discharge design; multi-stage is the goal.
+Calculations for the single-stage design are final ([theoretical framework](docs/theoretical-framework.md)) and reproduced by a simulation script. Hardware is not built yet; open design issues are listed in the [design review](docs/design-review.md).
 
-## Planned work
+## Design at a glance
 
-1. Simulate the capacitor-discharge circuit (capacitor, switch, coil, bleeder resistor) in KiCad / ngspice and compare against hand calculations.
-2. Design the low-voltage control board: microcontroller, switch gate driver, and projectile-detection sensor input.
-3. Review with the team before ordering parts or boards.
+| | |
+|---|---|
+| Bank | 2 × 0.1 F, 63 V electrolytics in series: 0.05 F at 126 V, 397 J, 10 kΩ 1 W balancing resistor across each |
+| Coil | 4 layers × 41 turns = 164 turns of 1.02 mm (18 AWG) enamelled copper, 45.6 mm long, 10.5 mm ID, 19.3 mm OD, 7.67 m of wire |
+| Coil electrical | L = 94 µH (Wheeler), R_coil = 0.160 Ω, R_total = 0.220 Ω (overdamped) |
+| Projectile | soft iron / low-carbon steel, 8.0 mm × 45.6 mm, 18 g |
+| Barrel | non-magnetic, 8.4 mm bore, 10.5 mm OD |
+| Switch | IGBT / MOSFET, ≥ 200 V, ≥ 600 A pulse, turned off by an optical gate at the coil exit |
+| Flyback diode | ≥ 200 V, ≥ 450 A pulse, fast recovery, across the coil |
+| Peak current | ≈ 519 A at 1.47 ms |
+| Field at coil centre | ≈ 2.26 T |
+| Cut-off | ≈ 4.35 ms, 412 A, bank left at 87.2 V |
+| Muzzle velocity | 23.1 m/s simulated; 18–21 m/s expected after eddy, friction and back-EMF losses (target 20 m/s) |
+| Efficiency | 2.3 % of energy drawn, 1.2 % of energy stored |
+| Coil heating | ≤ 9.3 °C per shot |
+
+![System diagram](docs/figures/system-diagram.png)
 
 ## Repository layout
 
-- `kicad/` KiCad projects (schematics and PCB layouts)
-- `simulation/` ngspice simulations and results
-- `docs/` design notes, calculations, and write-ups
+- `docs/theoretical-framework.md` all formulas and values, with figures
+- `docs/Formulas_and_Theoretical_Framework.pdf` the original calculation document
+- `docs/design-review.md` open issues and numbers that changed from the earlier design
+- `docs/figures/` system diagram and coil winding diagram
+- `simulation/coilgun_model.py` hand calculations + circuit/projectile simulation (numpy only); see `simulation/README.md`
+- `kicad/` KiCad projects (schematics and PCB layouts), not started
+
+## Next steps
+
+1. Resolve the design-review items: charge voltage (supply tops out at 120 V), a bank bleeder, flyback-path resistor.
+2. Simulate the discharge loop in KiCad / ngspice and compare against `coilgun_model.py`.
+3. Design the low-voltage control board: microcontroller, IGBT gate driver, optical gate input.
+4. Review with the team before ordering parts or boards.
 
 ## Safety
 
-The capacitor bank stores enough energy to cause serious injury. Do not build or charge anything at real voltage without a bleeder resistor, a defined discharge procedure, and an experienced person supervising.
+126 V is above the roughly 50 V DC level where skin stops limiting current to a safe level, and the bank stores about 400 J. Do not charge anything without a bleeder across the bank, a discharge stick, a meter reading under 5 V before hands go near it, and an experienced person supervising.
