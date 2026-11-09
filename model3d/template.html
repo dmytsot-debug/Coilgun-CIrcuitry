@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coilgun Bench 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: 3D stage on the left, instrument panel on the right; stacked on narrow screens. */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --fg: #1b1f24;
+  --muted: #5b636e;
+  --line: #d5dae0;
+  --accent: #c2410c;      /* copper: the coil, current, the fire button */
+  --accent-2: #2563a8;    /* new parts and the speed trace */
+  --ok: #2f7d4f;
+  --warn: #b45309;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151a; --panel: #191d23; --fg: #dde1e6; --muted: #929aa5; --line: #2b313a;
+    --accent: #f08a4b; --accent-2: #74a7e6; --ok: #5cbf86; --warn: #f0a34b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151a; --panel: #191d23; --fg: #dde1e6; --muted: #929aa5; --line: #2b313a;
+  --accent: #f08a4b; --accent-2: #74a7e6; --ok: #5cbf86; --warn: #f0a34b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body); }
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100%; }
+.stage { position: relative; min-height: 360px; overflow: hidden; }
+.stage canvas { display: block; }
+.stage-head { position: absolute; left: 16px; top: 14px; right: 16px; pointer-events: none; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.stage-head h1 { margin: 0; font-size: 17px; font-weight: 600; text-wrap: balance; }
+.stage-head p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; max-width: 60ch; }
+.hint { color: var(--muted); font-size: 12px; align-self: flex-start; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; max-width: 280px; box-shadow: 0 6px 18px rgba(0,0,0,.14); display: none; z-index: 5; }
+.tip b { display: block; font-size: 13px; margin-bottom: 2px; }
+.tip .spec { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent); margin-bottom: 4px; }
+.tip .role { color: var(--muted); }
+.tag { font: 500 11px var(--font-body); color: var(--fg); background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; white-space: nowrap; pointer-events: none; }
+.tag.new { border-color: var(--accent-2); color: var(--accent-2); }
+.labels-off .tag { display: none; }
+
+.panel { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.panel h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.controls { display: flex; flex-direction: column; gap: 10px; }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--fg); font: 500 12.5px var(--font-mono); padding: 7px 0; cursor: pointer; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--panel); }
+.row { display: flex; gap: 8px; }
+.btn { flex: 1; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; padding: 9px 10px; font: 600 13px var(--font-body); cursor: pointer; }
+.btn.fire { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.checks { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.checks label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.state { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.pill { font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: .05em; padding: 3px 8px; border-radius: 999px; background: var(--line); color: var(--fg); }
+.pill[data-s="firing"] { background: var(--accent); color: #fff; }
+.pill[data-s="cutoff"], .pill[data-s="freewheel"] { background: var(--accent-2); color: #fff; }
+.pill[data-s="coast"], .pill[data-s="done"] { background: var(--ok); color: #fff; }
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tile { border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
+.tile .k { font-size: 11.5px; color: var(--muted); }
+.tile .v { font: 500 18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.tile .v small { font-size: 12px; color: var(--muted); margin-left: 2px; }
+canvas.chart { width: 100%; height: 150px; display: block; border: 1px solid var(--line); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+td { padding: 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 8px; }
+.note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.new-key { color: var(--accent-2); font-weight: 600; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <div class="stage-head">
+      <div>
+        <h1>Single-stage coilgun, 126 V series bank</h1>
+        <p>Every part and dimension from the Formulas and Theoretical Framework doc. Firing plays the circuit and projectile simulation in slow motion.</p>
+      </div>
+      <div class="hint">Drag to orbit · scroll to zoom · hover a part</div>
+    </div>
+    <div class="tip" id="tip"></div>
+  </div>
+
+  <aside class="panel">
+    <section class="controls">
+      <h2>Fire</h2>
+      <div class="seg" id="volts" role="group" aria-label="Charge voltage"></div>
+      <div class="row">
+        <button class="btn fire" id="fire" type="button">Fire</button>
+        <button class="btn" id="reset" type="button">Reset</button>
+      </div>
+      <div class="checks">
+        <label for="cut"><input type="checkbox" id="cut"> Cut away coil</label>
+        <label for="lbl"><input type="checkbox" id="lbl" checked> Part labels</label>
+      </div>
+      <div class="state"><span class="pill" id="pill" data-s="idle">Charged</span><span id="statetext">Bank charged, switch open.</span></div>
+    </section>
+
+    <section>
+      <h2>Live</h2>
+      <div class="tiles">
+        <div class="tile"><div class="k">Time</div><div class="v" id="r-t">0.00<small>ms</small></div></div>
+        <div class="tile"><div class="k">Coil current</div><div class="v" id="r-i">0<small>A</small></div></div>
+        <div class="tile"><div class="k">Bank voltage</div><div class="v" id="r-v">126.0<small>V</small></div></div>
+        <div class="tile"><div class="k">Slug speed</div><div class="v" id="r-s">0.0<small>m/s</small></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Current and speed</h2>
+      <canvas class="chart" id="chart" width="656" height="300" aria-label="Coil current and slug speed against time"></canvas>
+      <p class="note">Copper: coil current (A). Blue: slug speed (m/s). Dashed line: optical-gate cut-off.</p>
+    </section>
+
+    <section>
+      <h2>Results at <span id="res-v">126</span> V</h2>
+      <table id="results"></table>
+      <p class="note" id="res-note"></p>
+    </section>
+
+    <section>
+      <h2>Design</h2>
+      <table>
+        <tr><td>Bank</td><td>2 × 0.1 F, 63 V in series</td></tr>
+        <tr><td>Bank capacitance / energy</td><td>0.05 F / 397 J</td></tr>
+        <tr><td>Balancing resistors</td><td>10 kΩ, 1 W each</td></tr>
+        <tr><td class="new-key">Bleeder (across bank)</td><td>1 kΩ, 25 W</td></tr>
+        <tr><td>Coil</td><td>4 × 41 = 164 turns</td></tr>
+        <tr><td>Wire</td><td>1.02 mm Cu (1.10 enamelled)</td></tr>
+        <tr><td>Coil length / ID / OD</td><td>45.6 / 10.5 / 19.3 mm</td></tr>
+        <tr><td>L / R<sub>coil</sub> / R<sub>total</sub></td><td>94 µH / 0.160 / 0.220 Ω</td></tr>
+        <tr><td>Slug</td><td>Ø8.0 × 45.6 mm, 18 g</td></tr>
+        <tr><td>Barrel</td><td>8.4 mm bore, 10.5 mm OD</td></tr>
+        <tr><td>Switch</td><td>IGBT ≥ 200 V, ≥ 600 A</td></tr>
+        <tr><td>Flyback diode</td><td>≥ 200 V, ≥ 450 A pulse</td></tr>
+        <tr><td class="new-key">Flyback resistor</td><td>0.20 Ω, ≥ 25 W</td></tr>
+      </table>
+      <p class="note">Blue parts were added with the bleeder and flyback-resistor revision. Capacitor can size is representative; check your part's datasheet.</p>
+    </section>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+const SIM = /*SIM_DATA*/null;
+const VOLTS = [40, 60, 80, 100, 126];
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ------------------------------------------------------------------ scene
+const stage = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.localClippingEnabled = true;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.style.position = "absolute";
+labelRenderer.domElement.style.inset = "0";
+labelRenderer.domElement.style.pointerEvents = "none";
+stage.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 1, 5000);
+camera.position.set(400, 380, 600);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(20, 30, -70);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.minDistance = 60;
+controls.maxDistance = 1400;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f99, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(220, 420, 260);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -420, right: 420, top: 420, bottom: -420, near: 10, far: 1200 });
+scene.add(sun);
+
+function setSceneTheme() {
+  scene.background = new THREE.Color(css("--bg"));
+}
+
+// ------------------------------------------------------------------ materials
+const M = {
+  plate: new THREE.MeshStandardMaterial({ color: 0xc8ab82, roughness: 0.85 }),
+  alu: new THREE.MeshStandardMaterial({ color: 0xb9bec5, roughness: 0.4, metalness: 0.6 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xc9a54a, roughness: 0.35, metalness: 0.7 }),
+  black: new THREE.MeshStandardMaterial({ color: 0x1d1f22, roughness: 0.55 }),
+  can: new THREE.MeshStandardMaterial({ color: 0x23395d, roughness: 0.45 }),
+  canTop: new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.4, metalness: 0.5 }),
+  stripe: new THREE.MeshStandardMaterial({ color: 0xd9dee5, roughness: 0.5 }),
+  brass: new THREE.MeshStandardMaterial({ color: 0xb08d3c, roughness: 0.3, metalness: 0.8 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x6b7178, roughness: 0.35, metalness: 0.85 }),
+  pcb: new THREE.MeshStandardMaterial({ color: 0x1f5d3a, roughness: 0.6 }),
+  pcbBlue: new THREE.MeshStandardMaterial({ color: 0x1f3a6b, roughness: 0.6 }),
+  chip: new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.5 }),
+  red: new THREE.MeshStandardMaterial({ color: 0xc0392b, roughness: 0.5, emissive: 0x000000 }),
+  blk: new THREE.MeshStandardMaterial({ color: 0x24272b, roughness: 0.5, emissive: 0x000000 }),
+  sig: new THREE.MeshStandardMaterial({ color: 0xd4a017, roughness: 0.5 }),
+  thin: new THREE.MeshStandardMaterial({ color: 0x7a7f87, roughness: 0.5 }),
+  resistor: new THREE.MeshStandardMaterial({ color: 0xd8c39a, roughness: 0.6 }),
+  box: new THREE.MeshStandardMaterial({ color: 0x8b6b45, roughness: 0.9 }),
+  foam: new THREE.MeshStandardMaterial({ color: 0x3b3f46, roughness: 1 }),
+  supply: new THREE.MeshStandardMaterial({ color: 0x2c3036, roughness: 0.5 }),
+};
+const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 40); // keeps z < 40 (back half of the barrel axis)
+const barrelMat = new THREE.MeshStandardMaterial({ color: 0x9cc6e8, roughness: 0.15, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false });
+const copperMats = [0xd27a3c, 0xc96e31, 0xdb8748, 0xc4682c].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.32, metalness: 0.75, emissive: 0xff5a1f, emissiveIntensity: 0 }));
+
+// ------------------------------------------------------------------ parts registry (hover info)
+const pickables = [];
+function part(obj, info, tagPos, isNew = false) {
+  obj.traverse(o => { if (o.isMesh) { o.userData.info = info; o.castShadow = true; o.receiveShadow = true; pickables.push(o); } });
+  scene.add(obj);
+  if (tagPos) {
+    const el = document.createElement("div");
+    el.className = "tag" + (isNew ? " new" : "");
+    el.textContent = info.short || info.name;
+    const t = new CSS2DObject(el);
+    t.position.copy(tagPos);
+    scene.add(t);
+  }
+  return obj;
+}
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+function box(w, h, d, mat, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return m; }
+function cyl(r, h, mat, x, y, z, seg = 32) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), mat); m.position.set(x, y, z); return m; }
+function group(...kids) { const g = new THREE.Group(); kids.forEach(k => g.add(k)); return g; }
+
+// Coordinates: millimetres. x runs breech to muzzle, y up, z toward the viewer.
+const AX = 46;          // barrel axis height above the plate top
+const BZ = 40;          // barrel axis z
+const L = 45.6;         // coil and slug length
+const COIL_X0 = -L / 2; // coil entrance; coil centre at x = 0
+const RI = 5.25, DEPTH = 4.38, LAYERS = 4, TURNS = 41, PITCH_AX = L / TURNS, PITCH_R = DEPTH / LAYERS;
+
+// ------------------------------------------------------------------ base plate
+const plate = box(500, 10, 360, M.plate, 0, -5, -60);
+plate.receiveShadow = true;
+part(plate, { name: "Base plate", spec: "500 × 360 mm, 10 mm plywood", role: "Everything bolts to it. The pulse loop stays on one side, the charger off the plate." });
+
+// ------------------------------------------------------------------ barrel
+{
+  const len = 300, x0 = -150;
+  const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.25, 0), new THREE.Vector2(5.25, len), new THREE.Vector2(4.2, len)];
+  const geo = new THREE.LatheGeometry(prof, 48);
+  const m = new THREE.Mesh(geo, barrelMat);
+  m.rotation.z = -Math.PI / 2;
+  m.position.set(x0, AX, BZ);
+  const sup = (x) => group(box(18, AX - 6, 26, M.black, x, (AX - 6) / 2, BZ), cyl(8, 18, M.black, x, AX, BZ));
+  const s1 = sup(-125), s2 = sup(130);
+  s1.children[1].rotation.z = Math.PI / 2; s2.children[1].rotation.z = Math.PI / 2;
+  part(group(m), { name: "Barrel", short: "Barrel", spec: "8.4 mm bore, 10.5 mm OD, non-magnetic", role: "Guides the slug. Its OD is the coil's ID, so the winding sits straight on it." }, V3(-130, AX + 18, BZ));
+  part(group(s1, s2), { name: "Barrel supports", spec: "Clamp blocks", role: "Hold the barrel on the axis, clear of the coil." });
+  barrelMat.clippingPlanes = [];
+}
+
+// ------------------------------------------------------------------ coil: 4 layers × 41 turns of 1.02 mm wire
+const coilMeshes = [];
+{
+  const g = new THREE.Group();
+  for (let j = 0; j < LAYERS; j++) {
+    const r = RI + (j + 0.5) * PITCH_R;
+    const geo = new THREE.TorusGeometry(r, 0.51, 6, 40);
+    const inst = new THREE.InstancedMesh(geo, copperMats[j], TURNS);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0));
+    for (let k = 0; k < TURNS; k++) {
+      m4.compose(V3(COIL_X0 + (k + 0.5) * PITCH_AX, AX, BZ), q, V3(1, 1, 1));
+      inst.setMatrixAt(k, m4);
+    }
+    coilMeshes.push(inst);
+    g.add(inst);
+  }
+  // both leads leave at the breech end (even number of layers)
+  part(g, { name: "Coil", short: "Coil · 164 turns", spec: "4 layers × 41 turns, 1.02 mm Cu · L = 94 µH · R = 0.160 Ω", role: "Each layer is wound the same rotational way; only the axial direction reverses. Peak 519 A gives ≈ 2.26 T at the centre." }, V3(0, AX + 40, BZ));
+}
+
+// ------------------------------------------------------------------ slug
+const slug = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, L, 32), M.steel);
+slug.rotation.z = Math.PI / 2;
+const SLUG_START = COIL_X0 - L / 2; // nose at coil entrance
+slug.position.set(SLUG_START, AX, BZ);
+part(slug, { name: "Projectile", short: "Slug · 18 g", spec: "Soft iron, Ø8.0 × 45.6 mm, 18 g", role: "Starts with its nose at the coil entrance. Saturates at 0.077 T applied field, far below the coil's 2.26 T." }, null);
+const slugTag = (() => { const el = document.createElement("div"); el.className = "tag"; el.textContent = "Slug · 18 g"; const t = new CSS2DObject(el); t.position.set(0, -20, 0); slug.add(t); return t; })();
+
+// ------------------------------------------------------------------ optical gate at the coil exit
+const GATE_X = L / 2 + 4;
+let beam;
+{
+  const fork = group(
+    box(6, 44, 6, M.black, GATE_X, AX, BZ - 16),
+    box(6, 4, 20, M.black, GATE_X, AX + 20, BZ - 8),
+    box(6, 4, 20, M.black, GATE_X, AX - 20, BZ - 8),
+    cyl(2.5, 5, M.red, GATE_X, AX + 15.5, BZ),
+    box(5, 4, 5, M.chip, GATE_X, AX - 15.5, BZ),
+    box(10, AX - 22, 10, M.black, GATE_X, (AX - 22) / 2, BZ - 16)
+  );
+  beam = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 28, 8), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, opacity: 0.85 }));
+  beam.position.set(GATE_X, AX, BZ);
+  scene.add(beam);
+  part(fork, { name: "Optical gate", short: "Optical gate", spec: "IR LED above, phototransistor below, at the coil exit", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, V3(GATE_X + 4, AX + 34, BZ - 8));
+}
+
+// ------------------------------------------------------------------ capacitors in series
+const CAP_R = 45, CAP_H = 145;
+function capacitor(x, z, label) {
+  const g = group(
+    cyl(CAP_R, CAP_H, M.can, x, CAP_H / 2, z, 48),
+    cyl(CAP_R - 3, 3, M.canTop, x, CAP_H + 1.5, z, 48),
+    box(10, CAP_H - 10, 2, M.stripe, x - 28, CAP_H / 2, z + CAP_R - 12),
+    cyl(5, 10, M.brass, x + 16, CAP_H + 8, z),  // +
+    cyl(5, 10, M.brass, x - 16, CAP_H + 8, z)   // −
+  );
+  g.children[2].lookAt(x - 70, CAP_H / 2, z + 80);
+  return g;
+}
+const C1X = -175, C2X = -75, CZ = -150;
+part(capacitor(C1X, CZ), { name: "C1", short: "C1 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Top half of the series bank. Its − terminal links to C2's +." }, V3(C1X, CAP_H + 30, CZ));
+part(capacitor(C2X, CZ), { name: "C2", short: "C2 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Bottom half of the series bank. Together: 0.05 F at 126 V, 397 J." }, V3(C2X, CAP_H + 30, CZ));
+const T = { // terminal tops
+  c1p: V3(C1X + 16, CAP_H + 13, CZ), c1n: V3(C1X - 16, CAP_H + 13, CZ),
+  c2p: V3(C2X + 16, CAP_H + 13, CZ), c2n: V3(C2X - 16, CAP_H + 13, CZ),
+};
+// balancing resistors: one across each can's terminals
+function axialRes(a, b, mat, r = 2.2, len = 10) {
+  const mid = a.clone().add(b).multiplyScalar(0.5).add(V3(0, 9, 0));
+  const g = new THREE.Group();
+  const body = cyl(r, len, mat, 0, 0, 0, 16);
+  body.position.copy(mid); body.rotation.z = Math.PI / 2;
+  g.add(body);
+  g.add(tube([a, V3(a.x, mid.y, a.z), V3(mid.x - len / 2, mid.y, mid.z)], 0.4, M.thin));
+  g.add(tube([V3(mid.x + len / 2, mid.y, mid.z), V3(b.x, mid.y, b.z), b], 0.4, M.thin));
+  return g;
+}
+part(group(axialRes(T.c1n, T.c1p, M.resistor), axialRes(T.c2n, T.c2p, M.resistor)),
+  { name: "Balancing resistors", short: "10 kΩ balancing", spec: "10 kΩ, 1 W, one across each capacitor · 6.3 mA, 0.40 W", role: "Keep the 126 V split 63 / 63 V so neither can exceeds its rating." }, V3(-125, CAP_H + 46, CZ));
+
+// ------------------------------------------------------------------ helpers for wires
+function tube(points, r, mat) {
+  const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.05);
+  return new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, points.length * 12), r, 10, false), mat);
+}
+const WR = 1.6; // 4 mm² cable incl. insulation
+
+// ------------------------------------------------------------------ bleeder (new): 1 kΩ 25 W on an aluminium plate
+const BLX = 65, BLZ = -170;
+{
+  const g = group(
+    box(100, 3, 100, M.alu, BLX, 1.5, BLZ),
+    box(28, 14, 27, M.gold, BLX, 10, BLZ),
+    box(40, 2, 20, M.gold, BLX, 4, BLZ),
+    cyl(1.2, 8, M.thin, BLX - 17, 12, BLZ), cyl(1.2, 8, M.thin, BLX + 17, 12, BLZ)
+  );
+  for (let i = -2; i <= 2; i++) g.add(box(26, 2.5, 1.6, M.gold, BLX, 17.5, BLZ + i * 5));
+  part(g, { name: "Bank bleeder", short: "Bleeder 1 kΩ 25 W", spec: "1 kΩ, 25 W aluminium-housed · 15.9 W at 126 V · τ = 50 s", role: "Drains the bank from 126 V to under 5 V in about 2.7 min. The balancing pair alone would take 54 min. Bolted to the plate as its heatsink." }, V3(BLX, 40, BLZ), true);
+}
+// bleeder leads to bank + (C1+) and bank − (C2−)
+scene.add(part(tube([V3(BLX - 17, 16, BLZ), V3(BLX - 30, 30, BLZ + 10), V3(-40, CAP_H + 30, CZ + 30), V3(T.c1p.x + 10, CAP_H + 30, CZ + 10), T.c1p], 0.9, M.red),
+  { name: "Bleeder lead (+)", spec: "to bank + (C1 +)", role: "Bleeder sits across the whole series bank." }));
+scene.add(part(tube([V3(BLX + 17, 16, BLZ), V3(BLX + 25, 34, BLZ - 30), V3(-40, CAP_H + 22, CZ - 40), V3(T.c2n.x - 6, CAP_H + 20, CZ - 15), T.c2n], 0.9, M.blk),
+  { name: "Bleeder lead (−)", spec: "to bank − (C2 −)", role: "Bleeder sits across the whole series bank." }));
+
+// ------------------------------------------------------------------ IGBT on heatsink + gate driver
+const IGX = -60, IGZ = -40;
+const igbtPins = { c: V3(IGX, 22, IGZ + 22), e: V3(IGX + 6, 22, IGZ + 22), g: V3(IGX - 6, 22, IGZ + 22) };
+{
+  const hs = new THREE.Group();
+  hs.add(box(50, 4, 40, M.alu, IGX, 2, IGZ));
+  for (let i = -4; i <= 4; i++) hs.add(box(1.8, 26, 40, M.alu, IGX + i * 5.5, 17, IGZ));
+  hs.add(box(52, 3, 42, M.alu, IGX, 31.5, IGZ));
+  const pkg = group(box(16, 21, 5, M.chip, IGX, 43, IGZ + 14));
+  pkg.add(cyl(1.8, 6, M.alu, IGX, 49, IGZ + 14));
+  for (const dx of [-6, 0, 6]) { const leg = box(1.2, 14, 0.8, M.alu, IGX + dx, 28, IGZ + 17); pkg.add(leg); }
+  part(hs, { name: "IGBT heatsink", spec: "Finned aluminium", role: "Spreads the switch's conduction loss." });
+  part(pkg, { name: "IGBT switch", short: "IGBT", spec: "≥ 200 V, ≥ 600 A pulse · sees ≈ 171 V at turn-off", role: "Closes to fire, opens on the optical-gate signal at 4.35 ms. An SCR cannot turn off, so it cannot do the cut-off." }, V3(IGX, 66, IGZ + 14));
+  igbtPins.c.set(IGX, 22, IGZ + 17); igbtPins.e.set(IGX + 6, 22, IGZ + 17); igbtPins.g.set(IGX - 6, 22, IGZ + 17);
+}
+const GDX = 15, GDZ = -60;
+{
+  const g = group(box(50, 1.6, 34, M.pcb, GDX, 12, GDZ), box(9, 4, 6, M.chip, GDX - 12, 15, GDZ - 5), box(12, 5, 8, M.chip, GDX + 8, 15.5, GDZ + 4),
+    box(8, 7, 6, M.supply, GDX + 18, 16, GDZ - 10));
+  for (const [dx, dz] of [[-22, -14], [22, -14], [-22, 14], [22, 14]]) g.add(cyl(1.5, 11, M.alu, GDX + dx, 5.5, GDZ + dz, 8));
+  part(g, { name: "Gate driver", short: "Gate driver", spec: "Isolated driver board", role: "Turns the controller's trigger and cut-off signals into IGBT gate drive." }, V3(GDX, 34, GDZ));
+}
+
+// ------------------------------------------------------------------ coil terminal block (both leads at the breech end)
+const TBX = -42, TBZ = 8;
+const tb = { a: V3(TBX - 6, 14, TBZ), b: V3(TBX + 6, 14, TBZ) };
+part(group(box(28, 10, 14, M.black, TBX, 5, TBZ), cyl(2.5, 4, M.brass, TBX - 6, 12, TBZ), cyl(2.5, 4, M.brass, TBX + 6, 12, TBZ)),
+  { name: "Coil terminal block", spec: "2-way, 30 A", role: "Both coil leads finish at the breech end with 4 layers, so they land here." });
+// coil leads from outer layer at breech end
+part(group(
+  tube([V3(COIL_X0 + 0.6, AX - RI - DEPTH, BZ - 3), V3(COIL_X0 - 4, AX - 20, BZ - 8), V3(TBX - 6, 26, TBZ + 6), tb.a], 0.51, copperMats[3]),
+  tube([V3(COIL_X0 + 0.6, AX - RI - 0.5, BZ + 3), V3(COIL_X0 - 8, AX - 26, BZ - 2), V3(TBX + 6, 24, TBZ + 6), tb.b], 0.51, copperMats[0])),
+  { name: "Coil leads", spec: "1.02 mm magnet wire, enamel scraped at the ends", role: "Start and finish of the 7.67 m winding." });
+
+// ------------------------------------------------------------------ flyback diode + flyback resistor (new)
+const FDX = 75, FDZ = -35, FRX = 135, FRZ = -40;
+{
+  const d = group(box(34, 8, 30, M.black, FDX, 4, FDZ), cyl(9.5, 6, M.steel, FDX, 11, FDZ, 6), cyl(7, 14, M.steel, FDX, 21, FDZ, 24), cyl(1.6, 10, M.thin, FDX, 33, FDZ, 8));
+  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "≥ 200 V, ≥ 450 A pulse, fast recovery · stud = cathode", role: "Gives the coil's 8.0 J a path after cut-off so the switch is not destroyed. Stud on an insulating block: it is live." }, V3(FDX, 50, FDZ));
+  const r = group(box(100, 3, 70, M.alu, FRX + 10, 1.5, FRZ), box(28, 14, 27, M.gold, FRX, 10, FRZ), box(40, 2, 20, M.gold, FRX, 4, FRZ),
+    cyl(1.2, 8, M.thin, FRX - 17, 12, FRZ), cyl(1.2, 8, M.thin, FRX + 17, 12, FRZ));
+  for (let i = -2; i <= 2; i++) r.add(box(26, 2.5, 1.6, M.gold, FRX, 17.5, FRZ + i * 5));
+  part(r, { name: "Flyback resistor", short: "R_fb 0.20 Ω", spec: "0.20 Ω pulse-rated wirewound, ≥ 25 W · absorbs ≈ 4.4 J/shot, 34 kW peak", role: "In series with the diode. Cuts the post-cut-off decay from 0.59 to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s." }, V3(FRX, 40, FRZ + 22), true);
+}
+// diode cathode (stud) to coil lead A (switched +); anode → R_fb → coil lead B
+part(group(
+  tube([V3(FDX - 10, 8, FDZ), V3(FDX - 40, 8, FDZ - 6), V3(TBX - 6, 18, TBZ + 14), tb.a], 1.1, M.thin),
+  tube([V3(FDX, 38, FDZ), V3(FDX + 20, 34, FDZ - 4), V3(FRX - 17, 16, FRZ)], 1.1, M.thin),
+  tube([V3(FRX + 17, 16, FRZ), V3(FRX + 26, 22, FRZ - 30), V3(20, 20, TBZ - 20), V3(TBX + 6, 18, TBZ - 8), tb.b], 1.1, M.thin)),
+  { name: "Flyback loop", spec: "Diode cathode to the switched + end of the coil; anode through R_fb to the − end", role: "Reverse-biased while firing; carries the coil current only after the IGBT opens." });
+
+// ------------------------------------------------------------------ pulse-loop cables (4 mm²)
+const loopRed = [], loopBlk = [];
+loopRed.push(tube([T.c1p, V3(T.c1p.x, CAP_H + 26, T.c1p.z + 20), V3(-120, 70, -70), V3(IGX, 40, IGZ + 30), igbtPins.c], WR, M.red));
+loopRed.push(tube([igbtPins.e, V3(IGX + 10, 18, IGZ + 36), V3(TBX - 6, 18, TBZ - 10), tb.a], WR, M.red));
+loopBlk.push(tube([tb.b, V3(TBX + 10, 10, TBZ - 30), V3(-90, 12, -95), V3(T.c2n.x - 4, 40, CZ + CAP_R + 10), V3(T.c2n.x, CAP_H + 24, T.c2n.z + 12), T.c2n], WR, M.blk));
+const link = tube([T.c1n, V3(T.c1n.x, CAP_H + 22, T.c1n.z - 30), V3((T.c1n.x + T.c2p.x) / 2, CAP_H + 30, CZ - 42), V3(T.c2p.x, CAP_H + 22, T.c2p.z - 30), T.c2p], WR, M.blk);
+part(group(...loopRed), { name: "Pulse loop (+)", spec: "≥ 4 mm², insulation > 126 V", role: "Bank + → IGBT → coil. Keep it short: it counts toward R_ext = 0.060 Ω." });
+part(group(...loopBlk), { name: "Pulse loop (−)", spec: "≥ 4 mm², insulation > 126 V", role: "Coil → bank −." });
+part(link, { name: "Series link", spec: "C1 − to C2 +", role: "Puts the two 63 V cans in series: 126 V, 0.05 F." });
+
+// ------------------------------------------------------------------ controller and signal wiring
+const ESX = 150, ESZ = 110;
+{
+  const g = group(box(52, 1.6, 28, M.pcbBlue, ESX, 9, ESZ), box(18, 3, 16, M.alu, ESX + 8, 11.3, ESZ), box(6, 2, 8, M.chip, ESX - 18, 10.8, ESZ));
+  for (const [dx, dz] of [[-23, -11], [23, -11], [-23, 11], [23, 11]]) g.add(cyl(1.5, 8, M.alu, ESX + dx, 4, ESZ + dz, 8));
+  part(g, { name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Reads the optical gate, commands the gate driver, logs speed and the discharge curve (470 kΩ / 10 kΩ divider on GPIO34)." }, V3(ESX, 28, ESZ));
+}
+part(group(
+  tube([V3(GATE_X, 3, BZ - 16), V3(GATE_X + 40, 4, BZ + 30), V3(ESX - 26, 9, ESZ)], 0.7, M.sig),
+  tube([V3(ESX - 20, 9, ESZ - 14), V3(80, 6, -20), V3(GDX + 25, 12, GDZ + 12)], 0.7, M.sig),
+  tube([V3(GDX - 25, 12, GDZ), V3(IGX + 10, 18, IGZ - 10), igbtPins.g], 0.7, M.sig)),
+  { name: "Signal wiring", spec: "Optical gate → ESP32 → gate driver → IGBT gate", role: "Low-voltage side. Never shares a conductor with the bank." });
+
+// ------------------------------------------------------------------ charger, off the plate
+{
+  const g = group(box(170, 85, 150, M.supply, -150, 42.5, -340));
+  const cv = document.createElement("canvas"); cv.width = 256; cv.height = 96;
+  const c = cv.getContext("2d"); c.fillStyle = "#0b0f0c"; c.fillRect(0, 0, 256, 96); c.fillStyle = "#5dff8a"; c.font = "bold 54px monospace"; c.fillText("126.0V", 14, 66);
+  const disp = new THREE.Mesh(new THREE.PlaneGeometry(64, 24), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) }));
+  disp.position.set(-170, 58, -264.6);
+  g.add(disp);
+  g.add(cyl(4, 6, M.red, -105, 25, -264), cyl(4, 6, M.blk, -90, 25, -264));
+  g.children[2].rotation.x = Math.PI / 2; g.children[3].rotation.x = Math.PI / 2;
+  part(g, { name: "Charger", short: "Charger 126 V", spec: "126 V output, stops automatically at 126 V", role: "Fills the bank, then is switched off the bank before firing." }, V3(-150, 104, -340));
+  part(group(
+    tube([V3(-105, 25, -258), V3(-110, 10, -230), V3(T.c1p.x + 10, 60, CZ - 60), V3(T.c1p.x, CAP_H + 20, T.c1p.z - 10), T.c1p], 0.9, M.red),
+    tube([V3(-90, 25, -258), V3(-80, 8, -230), V3(T.c2n.x, 60, CZ - 70), V3(T.c2n.x, CAP_H + 18, T.c2n.z - 8), T.c2n], 0.9, M.blk)),
+    { name: "Charge leads", spec: "Charger to bank + and −", role: "Charging side only; the pulse never flows here." });
+}
+
+// ------------------------------------------------------------------ catch box
+{
+  const g = new THREE.Group();
+  const W = 90, x = 300, y = 40;
+  g.add(box(W, 2, W, M.box, x, y - W / 2 + 1, BZ), box(2, W, W, M.box, x + W / 2, y, BZ), box(W, W, 2, M.box, x, y, BZ - W / 2), box(W, W, 2, M.box, x, y, BZ + W / 2));
+  const front = new THREE.Mesh(new THREE.BoxGeometry(2, W, W), M.box);
+  front.position.set(x - W / 2, y, BZ); g.add(front);
+  g.add(box(W - 8, W - 20, W - 8, M.foam, x + 2, y - 8, BZ));
+  part(g, { name: "Catch box", short: "Catch box", spec: "Foam-filled", role: "The slug stops here. Nobody stands in front of the muzzle." }, V3(300, 100, BZ));
+}
+
+// ------------------------------------------------------------------ cutaway
+function setCut(on) {
+  const planes = on ? [clipPlane] : [];
+  copperMats.forEach(m => { m.clippingPlanes = planes; m.needsUpdate = true; });
+  barrelMat.clippingPlanes = planes; barrelMat.needsUpdate = true;
+}
+
+// ------------------------------------------------------------------ hover
+const tip = document.getElementById("tip");
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let hoverInfo = null;
+renderer.domElement.addEventListener("pointermove", (e) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  hoverInfo = hit ? hit.object.userData.info : null;
+  if (hoverInfo) {
+    tip.innerHTML = `<b></b><div class="spec"></div><div class="role"></div>`;
+    tip.querySelector("b").textContent = hoverInfo.name;
+    tip.querySelector(".spec").textContent = hoverInfo.spec || "";
+    tip.querySelector(".role").textContent = hoverInfo.role || "";
+    tip.style.display = "block";
+    const x = Math.min(e.clientX - r.left + 14, r.width - 290), y = Math.min(e.clientY - r.top + 14, r.height - 120);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  } else tip.style.display = "none";
+});
+renderer.domElement.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+
+// ------------------------------------------------------------------ simulation playback
+let V = 126, data = SIM["126"];
+let state = "idle", simT = 0, slugX = SLUG_START, slugV = 0, lastNow = 0;
+const SLOW = 1 / 900;          // 1 ms of shot time = 0.9 s on screen
+const voltsEl = document.getElementById("volts");
+VOLTS.forEach(v => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = v + " V"; b.setAttribute("aria-pressed", v === V ? "true" : "false");
+  b.addEventListener("click", () => { V = v; data = SIM[String(v)]; voltsEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); reset(); renderResults(); });
+  voltsEl.appendChild(b);
+});
+
+function interp(arr, t) {
+  const ts = data.t;
+  if (t <= ts[0]) return arr[0];
+  if (t >= ts[ts.length - 1]) return arr[arr.length - 1];
+  let lo = 0, hi = ts.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ts[mid] <= t) lo = mid; else hi = mid; }
+  const f = (t - ts[lo]) / (ts[hi] - ts[lo]);
+  return arr[lo] + (arr[hi] - arr[lo]) * f;
+}
+const tEnd = () => data.t[data.t.length - 1];
+
+function setState(s, text) {
+  state = s;
+  const p = document.getElementById("pill");
+  p.dataset.s = s;
+  p.textContent = { idle: "Charged", firing: "Firing", cutoff: "Cut-off", freewheel: "Freewheel", coast: "Coasting", done: "In the box" }[s];
+  document.getElementById("statetext").textContent = text;
+}
+function reset() {
+  state = "idle"; simT = 0; slugX = SLUG_START; slugV = 0;
+  slug.position.x = slugX; slug.visible = true;
+  setState("idle", `Bank charged to ${V} V, switch open.`);
+  document.getElementById("fire").disabled = false;
+  updateReadouts(0, V, 0);
+  setCurrentGlow(0);
+  beam.material.opacity = 0.85;
+  drawChart();
+}
+document.getElementById("fire").addEventListener("click", () => {
+  if (state !== "idle") return;
+  document.getElementById("fire").disabled = true;
+  setState("firing", "IGBT closed: current rising through the coil.");
+  lastNow = performance.now();
+});
+document.getElementById("reset").addEventListener("click", reset);
+document.getElementById("cut").addEventListener("change", e => setCut(e.target.checked));
+document.getElementById("lbl").addEventListener("change", e => stage.classList.toggle("labels-off", !e.target.checked));
+
+function setCurrentGlow(i) {
+  const k = Math.min(1, Math.abs(i) / 560);
+  copperMats.forEach(m => { m.emissiveIntensity = k * 0.9; });
+  const pulse = state === "firing" ? k : 0;
+  M.red.emissive.setRGB(pulse * 0.5, 0.05 * pulse, 0);
+  M.blk.emissive.setRGB(pulse * 0.25, 0.03 * pulse, 0);
+}
+function updateReadouts(t, vb, i) {
+  document.getElementById("r-t").innerHTML = `${t.toFixed(2)}<small>ms</small>`;
+  document.getElementById("r-i").innerHTML = `${Math.round(i)}<small>A</small>`;
+  document.getElementById("r-v").innerHTML = `${vb.toFixed(1)}<small>V</small>`;
+  document.getElementById("r-s").innerHTML = `${slugV.toFixed(1)}<small>m/s</small>`;
+}
+
+function step(now) {
+  const dtReal = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+  if (state === "firing" || state === "cutoff" || state === "freewheel") {
+    simT += dtReal * 1000 * SLOW * (reduceMotion ? 4 : 1);
+    const t = Math.min(simT, tEnd());
+    const i = interp(data.i, t), vb = interp(data.vc, t);
+    slugV = interp(data.v, t);
+    slugX = interp(data.x, t);
+    if (t >= data.tcut && state === "firing") setState("cutoff", `Gate broken at ${data.tcut.toFixed(2)} ms: IGBT off at ${Math.round(data.icut)} A.`);
+    if (t >= data.tcut && t > data.tcut + 0.05 && state === "cutoff") setState("freewheel", "Coil energy draining through the diode and 0.20 Ω.");
+    beam.material.opacity = (slugX + L / 2 >= GATE_X - 0.5 && slugX - L / 2 <= GATE_X + 0.5) ? 0.08 : 0.85;
+    setCurrentGlow(i);
+    updateReadouts(t, vb, i);
+    if (simT >= tEnd()) { setState("coast", `Slug free at ${data.vexit.toFixed(1)} m/s.`); slugV = data.vexit; }
+  } else if (state === "coast") {
+    // after the pulse, speed up time so the slug reaches the box in about two seconds
+    const dtSim = dtReal * 0.008; // s of real flight per frame
+    slugX += slugV * 1000 * dtSim;
+    setCurrentGlow(0);
+    beam.material.opacity = (slugX - L / 2 <= GATE_X + 0.5) ? 0.08 : 0.85;
+    if (slugX + L / 2 >= 300 - 45 + 30) { setState("done", `Landed. Exit ${data.vexit.toFixed(1)} m/s, ${data.ek.toFixed(2)} J.`); }
+  }
+  slug.position.x = slugX;
+  drawChart();
+}
+
+// ------------------------------------------------------------------ chart
+const chart = document.getElementById("chart");
+function drawChart() {
+  const c = chart.getContext("2d"), W = chart.width, H = chart.height;
+  const fg = css("--fg"), mu = css("--muted"), ln = css("--line"), ac = css("--accent"), ac2 = css("--accent-2");
+  c.clearRect(0, 0, W, H);
+  const padL = 56, padR = 52, padT = 16, padB = 36;
+  const tMax = 10, iMax = 600, vMax = 24;
+  const X = t => padL + (t / tMax) * (W - padL - padR);
+  const Yi = i => H - padB - (i / iMax) * (H - padT - padB);
+  const Yv = v => H - padB - (v / vMax) * (H - padT - padB);
+  c.font = "20px 'IBM Plex Mono', monospace"; c.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) {
+    const y = Yi(k * 150); c.strokeStyle = ln; c.beginPath(); c.moveTo(padL, y); c.lineTo(W - padR, y); c.stroke();
+    c.fillStyle = ac; c.textAlign = "right"; c.fillText(String(k * 150), padL - 8, y + 6);
+    c.fillStyle = ac2; c.textAlign = "left"; c.fillText(String(k * 6), W - padR + 8, y + 6);
+  }
+  c.fillStyle = mu; c.textAlign = "center";
+  for (let t = 0; t <= 10; t += 2) c.fillText(t + " ms", X(t), H - 10);
+  // cut-off marker
+  c.setLineDash([6, 6]); c.strokeStyle = mu; c.beginPath(); c.moveTo(X(data.tcut), padT); c.lineTo(X(data.tcut), H - padB); c.stroke(); c.setLineDash([]);
+  const upto = state === "idle" ? -1 : Math.min(simT, tEnd());
+  const series = (arr, Y, col, full) => {
+    c.strokeStyle = col; c.lineWidth = full ? 2 : 3; c.globalAlpha = full ? 0.25 : 1;
+    c.beginPath();
+    let started = false;
+    for (let k = 0; k < data.t.length; k++) {
+      const t = data.t[k]; if (!full && t > upto) break;
+      const x = X(t), y = Y(arr[k]);
+      if (!started) { c.moveTo(x, y); started = true; } else c.lineTo(x, y);
+    }
+    if (!full && upto > 0) c.lineTo(X(upto), Y(interp(arr, upto)));
+    c.stroke(); c.globalAlpha = 1;
+  };
+  series(data.i, Yi, ac, true); series(data.v, Yv, ac2, true);
+  if (upto > 0) {
+    series(data.i, Yi, ac, false); series(data.v, Yv, ac2, false);
+    c.fillStyle = ac; c.beginPath(); c.arc(X(upto), Yi(interp(data.i, upto)), 6, 0, 7); c.fill();
+    c.fillStyle = ac2; c.beginPath(); c.arc(X(upto), Yv(interp(data.v, upto)), 6, 0, 7); c.fill();
+  }
+}
+
+// ------------------------------------------------------------------ results table
+function renderResults() {
+  document.getElementById("res-v").textContent = V;
+  const d = data, vsw = d.vend + d.icut * 0.2 + 0.9;
+  const rows = [
+    ["Peak current", `${Math.round(d.ipk)} A at ${d.tpk.toFixed(2)} ms`],
+    ["Cut-off (gate)", `${d.tcut.toFixed(2)} ms`],
+    ["Current at cut-off", `${Math.round(d.icut)} A`],
+    ["Bank left at", `${d.vend.toFixed(1)} V`],
+    ["Energy drawn", `${Math.round(d.edrawn)} J`],
+    ["Switch at turn-off", `≈ ${Math.round(vsw)} V`],
+    ["Speed at cut-off", `${d.vcut.toFixed(1)} m/s`],
+    ["Exit speed (sim.)", `${d.vexit.toFixed(1)} m/s`],
+    ["Kinetic energy", `${d.ek.toFixed(2)} J`],
+    ["Efficiency, drawn / stored", `${(100 * d.ek / d.edrawn).toFixed(1)} % / ${(100 * d.ek / (0.5 * 0.05 * V * V)).toFixed(1)} %`],
+  ];
+  const tb = document.getElementById("results"); tb.innerHTML = "";
+  rows.forEach(([k, v]) => { const tr = document.createElement("tr"); tr.innerHTML = "<td></td><td></td>"; tr.children[0].textContent = k; tr.children[1].textContent = v; tb.appendChild(tr); });
+  document.getElementById("res-note").textContent = V === 126
+    ? "Matches the framework doc: 519 A, 4.35 ms, 412 A, 87.2 V, 207 J, 171 V, 22.4 m/s, 1.1 %. Expected real muzzle speed after eddy, friction and back-EMF losses: 19–21 m/s."
+    : "Same model at a lower charge, for the step-up shots in the build plan. The doc's numbers are the 126 V case.";
+}
+
+// ------------------------------------------------------------------ loop
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelRenderer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+new MutationObserver(() => { setSceneTheme(); drawChart(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { setSceneTheme(); drawChart(); });
+setSceneTheme(); resize(); reset(); renderResults();
+lastNow = performance.now();
+renderer.setAnimationLoop((now) => {
+  step(now);
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+});
+window.__ready = true;
+</script>
+</body>
+</html>
