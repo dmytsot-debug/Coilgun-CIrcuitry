@@ -43,7 +43,8 @@ body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body)
 .stage-head h1 { margin: 0; font-size: 17px; font-weight: 600; text-wrap: balance; }
 .stage-head p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; max-width: 60ch; }
 .hint { color: var(--muted); font-size: 12px; align-self: flex-start; }
-.tip { position: absolute; pointer-events: none; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; max-width: 280px; box-shadow: 0 6px 18px rgba(0,0,0,.14); display: none; z-index: 5; }
+.tip { pointer-events: none; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; max-width: 280px; box-shadow: 0 6px 18px rgba(0,0,0,.18); width: 270px; text-align: left; }
+.tip .new-badge { display: inline-block; margin-left: 6px; font: 600 10px var(--font-body); letter-spacing: .05em; text-transform: uppercase; color: var(--accent-2); border: 1px solid var(--accent-2); border-radius: 999px; padding: 0 6px; vertical-align: 1px; }
 .tip b { display: block; font-size: 13px; margin-bottom: 2px; }
 .tip .spec { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent); margin-bottom: 4px; }
 .tip .role { color: var(--muted); }
@@ -101,9 +102,8 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
         <h1>Single-stage coilgun, 126 V series bank</h1>
         <p>Every part and dimension from the Formulas and Theoretical Framework doc. Firing plays the circuit and projectile simulation in slow motion.</p>
       </div>
-      <div class="hint">Drag to orbit · scroll to zoom · hover a part</div>
+      <div class="hint">Drag to orbit · scroll to zoom · click a part for its label</div>
     </div>
-    <div class="tip" id="tip"></div>
   </div>
 
   <aside class="panel">
@@ -116,7 +116,6 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
       </div>
       <div class="checks">
         <label for="cut"><input type="checkbox" id="cut"> Cut away coil</label>
-        <label for="lbl"><input type="checkbox" id="lbl" checked> Part labels</label>
       </div>
       <div class="state"><span class="pill" id="pill" data-s="idle">Charged</span><span id="statetext">Bank charged, switch open.</span></div>
     </section>
@@ -241,16 +240,9 @@ const copperMats = [0xd27a3c, 0xc96e31, 0xdb8748, 0xc4682c].map(c => new THREE.M
 // ------------------------------------------------------------------ parts registry (hover info)
 const pickables = [];
 function part(obj, info, tagPos, isNew = false) {
-  obj.traverse(o => { if (o.isMesh) { o.userData.info = info; o.castShadow = true; o.receiveShadow = true; pickables.push(o); } });
+  info.isNew = isNew;
+  obj.traverse(o => { if (o.isMesh) { o.userData.info = info; o.userData.root = obj; o.castShadow = true; o.receiveShadow = true; pickables.push(o); } });
   scene.add(obj);
-  if (tagPos) {
-    const el = document.createElement("div");
-    el.className = "tag" + (isNew ? " new" : "");
-    el.textContent = info.short || info.name;
-    const t = new CSS2DObject(el);
-    t.position.copy(tagPos);
-    scene.add(t);
-  }
   return obj;
 }
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -312,7 +304,6 @@ slug.rotation.z = Math.PI / 2;
 const SLUG_START = COIL_X0 - L / 2; // nose at coil entrance
 slug.position.set(SLUG_START, AX, BZ);
 part(slug, { name: "Projectile", short: "Slug · 18 g", spec: "Soft iron, Ø8.0 × 45.6 mm, 18 g", role: "Starts with its nose at the coil entrance. Saturates at 0.077 T applied field, far below the coil's 2.26 T." }, null);
-const slugTag = (() => { const el = document.createElement("div"); el.className = "tag"; el.textContent = "Slug · 18 g"; const t = new CSS2DObject(el); t.position.set(0, -20, 0); slug.add(t); return t; })();
 
 // ------------------------------------------------------------------ optical gate at the coil exit
 const GATE_X = L / 2 + 4;
@@ -500,27 +491,74 @@ function setCut(on) {
   barrelMat.clippingPlanes = planes; barrelMat.needsUpdate = true;
 }
 
-// ------------------------------------------------------------------ hover
-const tip = document.getElementById("tip");
+// ------------------------------------------------------------------ click a part: glow, bob, label card
+const card = document.createElement("div");
+card.className = "tip";
+const cardObj = new CSS2DObject(card);
+cardObj.center.set(0.5, 1.12);
+cardObj.visible = false;
+scene.add(cardObj);
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
-let hoverInfo = null;
-renderer.domElement.addEventListener("pointermove", (e) => {
+let sel = null, selClock = 0, selLast = 0;
+const savedMats = new Map();
+
+function pickAt(e) {
   const r = renderer.domElement.getBoundingClientRect();
   mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObjects(pickables, false)[0];
-  hoverInfo = hit ? hit.object.userData.info : null;
-  if (hoverInfo) {
-    tip.innerHTML = `<b></b><div class="spec"></div><div class="role"></div>`;
-    tip.querySelector("b").textContent = hoverInfo.name;
-    tip.querySelector(".spec").textContent = hoverInfo.spec || "";
-    tip.querySelector(".role").textContent = hoverInfo.role || "";
-    tip.style.display = "block";
-    const x = Math.min(e.clientX - r.left + 14, r.width - 290), y = Math.min(e.clientY - r.top + 14, r.height - 120);
-    tip.style.left = x + "px"; tip.style.top = y + "px";
-  } else tip.style.display = "none";
+  return hit ? hit.object : null;
+}
+function deselect() {
+  if (!sel) return;
+  savedMats.forEach((orig, mesh) => { mesh.material.dispose(); mesh.material = orig; });
+  savedMats.clear();
+  sel.root.position.y = sel.baseY;
+  cardObj.visible = false;
+  sel = null;
+}
+function select(mesh) {
+  const root = mesh.userData.root, info = mesh.userData.info;
+  deselect();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const c = o.material.clone();
+    c.emissive = new THREE.Color(info.isNew ? 0x4d8dff : 0xffa63d);
+    c.emissiveIntensity = 0;
+    savedMats.set(o, o.material);
+    o.material = c;
+  });
+  sel = { root, info, baseY: root.position.y, bob: info.name !== "Base plate" };
+  selClock = 0; selLast = performance.now();
+  card.innerHTML = '<b></b><div class="spec"></div><div class="role"></div>';
+  card.querySelector("b").textContent = info.name;
+  if (info.isNew) { const n = document.createElement("span"); n.className = "new-badge"; n.textContent = "new"; card.querySelector("b").appendChild(n); }
+  card.querySelector(".spec").textContent = info.spec || "";
+  card.querySelector(".role").textContent = info.role || "";
+  const box = new THREE.Box3().setFromObject(root), c = box.getCenter(new THREE.Vector3());
+  cardObj.position.set(c.x, box.max.y + 4, c.z);
+  cardObj.visible = true;
+}
+function updateSelection(now) {
+  if (!sel) return;
+  selClock += Math.min(0.05, (now - selLast) / 1000); selLast = now;
+  const pulse = reduceMotion ? 0.5 : 0.45 + 0.4 * Math.sin(selClock * 6);
+  savedMats.forEach((_, mesh) => { mesh.material.emissiveIntensity = pulse; });
+  if (sel.bob && !reduceMotion) sel.root.position.y = sel.baseY + 7 * Math.sin(Math.min(selClock / 0.6, 1) * Math.PI);
+}
+let down = null;
+renderer.domElement.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; });
+renderer.domElement.addEventListener("pointerup", e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+  if (moved > 5) return;               // a drag, not a click
+  const m = pickAt(e);
+  if (m && sel && m.userData.root === sel.root) deselect();
+  else if (m) select(m);
+  else deselect();
 });
-renderer.domElement.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+renderer.domElement.addEventListener("pointermove", e => { if (e.buttons === 0) renderer.domElement.style.cursor = pickAt(e) ? "pointer" : "grab"; });
+window.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); });
 
 // ------------------------------------------------------------------ simulation playback
 let V = 126, data = SIM["126"];
@@ -570,7 +608,6 @@ document.getElementById("fire").addEventListener("click", () => {
 });
 document.getElementById("reset").addEventListener("click", reset);
 document.getElementById("cut").addEventListener("change", e => setCut(e.target.checked));
-document.getElementById("lbl").addEventListener("change", e => stage.classList.toggle("labels-off", !e.target.checked));
 
 function setCurrentGlow(i) {
   const k = Math.min(1, Math.abs(i) / 560);
@@ -690,6 +727,7 @@ setSceneTheme(); resize(); reset(); renderResults();
 lastNow = performance.now();
 renderer.setAnimationLoop((now) => {
   step(now);
+  updateSelection(now);
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
