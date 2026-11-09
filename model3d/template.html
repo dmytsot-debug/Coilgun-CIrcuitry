@@ -403,6 +403,7 @@ function wire(pts, r, mat, bend = 5) {
     out.push(b.clone().addScaledVector(u1, -k), b.clone().addScaledVector(u2, k));
   }
   out.push(P[P.length - 1]);
+  (window.__wires = window.__wires || []).push({ pts: out.map(v => v.clone()), r, n: window.__wires ? window.__wires.length : 0 });
   const g = new THREE.Group();
   for (let i = 0; i < out.length - 1; i++) if (out[i].distanceTo(out[i + 1]) > 1e-4) g.add(segMesh(out[i], out[i + 1], r, mat));
   for (let i = 1; i < out.length - 1; i++) { const j = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat); j.position.copy(out[i]); g.add(j); }
