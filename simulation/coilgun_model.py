@@ -5,7 +5,7 @@ Formulas_and_Theoretical_Framework doc, the source of truth) from the design
 parameters, then runs the circuit + projectile simulation.
 
 Model (matches the framework document):
-  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 94 uH (Wheeler), R = 0.220 ohm,
+  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 155 uH (Wheeler), R = 0.269 ohm,
     with the 1 kohm bank bleeder and the two 10 kohm balancing resistors as a leak.
     Inductance is held constant and the slug's back-EMF is ignored (the document's
     assumption). Pass --back-emf to couple the slug's motional EMF into the circuit.
@@ -38,14 +38,14 @@ P = dict(
     C_each=0.1,          # F, each capacitor
     V_each=63.0,         # V, each capacitor's rating and charge voltage
     n_series=2,
-    m=18.0e-3,           # kg, projectile mass
+    m=34.6e-3,           # kg, projectile mass (7/16 in rod, 45.6 mm long)
     rho_steel=7850.0,    # kg/m^3
-    d_p=8.0e-3,          # m, projectile diameter
+    d_p=11.1e-3,         # m, projectile diameter (7/16 in mild steel rod)
     v_target=20.0,       # m/s
     mu_r=500.0,          # low-carbon steel
     B_sat=1.6,           # T
     l_coil=45.6e-3,      # m, coil length
-    r_inner=5.25e-3,     # m, coil inner radius (barrel OD / 2)
+    r_inner=7.5e-3,      # m, coil inner radius (printed core: 12.0 mm bore + 1.5 mm wall)
     layers=4,
     d_wire=1.02e-3,      # m, bare copper diameter (18 AWG)
     d_wire_enamel=1.10e-3,
