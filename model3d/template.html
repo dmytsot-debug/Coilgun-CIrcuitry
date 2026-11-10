@@ -55,7 +55,7 @@ body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body)
 .panel { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 .panel h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .controls { display: flex; flex-direction: column; gap: 10px; }
-.seg { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg { display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 .seg button { border: 0; background: transparent; color: var(--fg); font: 500 12.5px var(--font-mono); padding: 7px 0; cursor: pointer; border-left: 1px solid var(--line); }
 .seg button:first-child { border-left: 0; }
 .seg button[aria-pressed="true"] { background: var(--fg); color: var(--panel); }
@@ -209,7 +209,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
 
 const SIM = /*SIM_DATA*/null;
-const VOLTS = [40, 60, 80, 100, 126];
+const VOLTS = [40, 60, 80, 100, 120, 126];
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -229,9 +229,9 @@ stage.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(38, 1, 1, 5000);
-camera.position.set(400, 380, 600);
+camera.position.set(470, 430, 690);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(20, 30, -70);
+controls.target.set(50, 30, -70);
 controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 60;
@@ -272,6 +272,10 @@ const M = {
   foam: new THREE.MeshStandardMaterial({ color: 0x3b3f46, roughness: 1 }),
   supply: new THREE.MeshStandardMaterial({ color: 0x2c3036, roughness: 0.5 }),
   print: new THREE.MeshStandardMaterial({ color: 0x2fb5a3, roughness: 0.55 }),   // 3D-printed parts
+  white: new THREE.MeshStandardMaterial({ color: 0xe9e6dc, roughness: 0.6 }),
+  bench: new THREE.MeshStandardMaterial({ color: 0x9aa0a6, roughness: 0.9 }),
+  lug: new THREE.MeshStandardMaterial({ color: 0xc88b4a, roughness: 0.35, metalness: 0.8 }),
+  mmYellow: new THREE.MeshStandardMaterial({ color: 0xf2c230, roughness: 0.6 }),
 };
 const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 40); // keeps z < 40 (back half of the barrel axis)
 const barrelMat = new THREE.MeshStandardMaterial({ color: 0x9cc6e8, roughness: 0.15, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false });
@@ -300,20 +304,23 @@ const RI = 5.25, DEPTH = 4.38, LAYERS = 4, TURNS = 41, PITCH_AX = L / TURNS, PIT
 // ------------------------------------------------------------------ base plate
 const plate = box(500, 10, 360, M.plate, 0, -5, -60);
 plate.receiveShadow = true;
+{ const bench = box(1150, 20, 860, M.bench, 100, -20, -90); bench.receiveShadow = true; scene.add(bench); }
 part(plate, { name: "Base plate", spec: "500 × 360 mm, 10 mm plywood", role: "Everything bolts to it. The pulse loop stays on one side, the charger off the plate." });
 
 // ------------------------------------------------------------------ barrel
 {
-  const len = 300, x0 = -150;
-  const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.25, 0), new THREE.Vector2(5.25, len), new THREE.Vector2(4.2, len)];
-  const geo = new THREE.LatheGeometry(prof, 48);
-  const m = new THREE.Mesh(geo, barrelMat);
-  m.rotation.z = -Math.PI / 2;
-  m.position.set(x0, AX, BZ);
+  // two clear pieces butted against the printed spool's flanges (the spool core is the barrel through the coil)
+  const SPOOL_END = L / 2 + 2.5;
+  const tube = (x0, len) => {
+    const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.25, 0), new THREE.Vector2(5.25, len), new THREE.Vector2(4.2, len)];
+    const t = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), barrelMat);
+    t.rotation.z = -Math.PI / 2; t.position.set(x0, AX, BZ); return t;
+  };
+  const m = group(tube(-150, 150 - SPOOL_END), tube(SPOOL_END, 150 - SPOOL_END));
   const sup = (x) => group(box(18, AX - 6, 26, M.print, x, (AX - 6) / 2, BZ), cyl(8, 18, M.print, x, AX, BZ));
   const s1 = sup(-125), s2 = sup(130);
   s1.children[1].rotation.z = Math.PI / 2; s2.children[1].rotation.z = Math.PI / 2;
-  part(group(m), { name: "Barrel", short: "Barrel", spec: "8.4 mm bore, 10.5 mm OD, non-magnetic", role: "Guides the slug. Its OD is the coil's ID, so the winding sits straight on it." }, V3(-130, AX + 18, BZ));
+  part(m, { name: "Barrel", short: "Barrel", spec: "Clear acrylic, 8.4 mm bore, 10.5 mm OD · two pieces", role: "Guides the slug. The printed spool core is the barrel through the coil; a clear tube butts against each flange, glued and sleeved. Infrared passes the clear tube, so both optical gates see through it." }, V3(-130, AX + 18, BZ));
   part(group(s1, s2), { name: "3D-printed barrel supports", short: "Barrel supports", spec: "PETG or PLA · saddle blocks, bolted to the plate", role: "Hold the barrel on the axis at both ends, clear of the coil. Printed, so the saddle height and bore are set from the CAD." });
   barrelMat.clippingPlanes = [];
 }
@@ -344,7 +351,7 @@ let coilGroup;
 {
   const g = new THREE.Group();
   const FL = 2.5, FR = 12.5;
-  const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.27, 0), new THREE.Vector2(5.27, L + 2 * FL), new THREE.Vector2(4.2, L + 2 * FL)];
+  const prof = [new THREE.Vector2(4.2, 0), new THREE.Vector2(5.25, 0), new THREE.Vector2(5.25, L + 2 * FL), new THREE.Vector2(4.2, L + 2 * FL)];
   const core = new THREE.Mesh(new THREE.LatheGeometry(prof, 56), M.print);
   core.rotation.z = -Math.PI / 2; core.position.set(COIL_X0 - FL, AX, BZ); g.add(core);
   for (const x0 of [COIL_X0 - FL, L / 2]) {
@@ -353,7 +360,7 @@ let coilGroup;
     const fl = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: FL, bevelEnabled: false, curveSegments: 56 }), M.print);
     fl.rotation.y = Math.PI / 2; fl.position.set(x0, AX, BZ); g.add(fl);
   }
-  part(g, { name: "3D-printed coil former", short: "Coil former", spec: "PETG · Ø10.5 mm core, 2 × Ø25 mm flanges × 2.5 mm, 45.6 mm winding window", role: "The spool the 164 turns wind onto, like a fishing-rod reel. Core OD equals the barrel OD, so r_i stays 5.25 mm and L = 94 µH still holds. The core wall is about 1 mm: print fine layers, or print a sleeve and recompute L." }, null);
+  part(g, { name: "3D-printed coil former", short: "Coil former", spec: "PETG · Ø10.5 mm core, 2 × Ø25 mm flanges × 2.5 mm, 45.6 mm winding window", role: "The spool the 164 turns wind onto, like a fishing-rod reel. Its core is the barrel through the coil (8.4 mm bore, 10.5 mm OD), so r_i stays 5.25 mm and L = 94 µH holds. The clear tube butts against each flange. The core wall is about 1 mm: print fine layers." }, null);
 }
 
 // ------------------------------------------------------------------ slug
@@ -363,22 +370,28 @@ const SLUG_START = COIL_X0 - L / 2; // nose at coil entrance
 slug.position.set(SLUG_START, AX, BZ);
 part(slug, { name: "Projectile", short: "Slug · 18 g", spec: "Soft iron, Ø8.0 × 45.6 mm, 18 g", role: "Starts with its nose at the coil entrance. Saturates at 0.077 T applied field, far below the coil's 2.26 T." }, null);
 
-// ------------------------------------------------------------------ optical gate at the coil exit
+// ------------------------------------------------------------------ optical gates: cut-off gate at the coil exit, chronograph gate past the muzzle
 const GATE_X = L / 2 + 6.5;   // just past the coil former's exit flange
-let beam;
-{
+const MUZZLE_X = 150, GATE2_X = MUZZLE_X + 100;
+let beam, beam2;
+function gateFork(x) {
   const fork = group(
-    box(6, 44, 6, M.black, GATE_X, AX, BZ - 16),
-    box(6, 4, 20, M.black, GATE_X, AX + 20, BZ - 8),
-    box(6, 4, 20, M.black, GATE_X, AX - 20, BZ - 8),
-    cyl(2.5, 5, M.red, GATE_X, AX + 15.5, BZ),
-    box(5, 4, 5, M.chip, GATE_X, AX - 15.5, BZ),
-    box(10, AX - 22, 10, M.black, GATE_X, (AX - 22) / 2, BZ - 16)
+    box(6, 44, 6, M.black, x, AX, BZ - 16),
+    box(6, 4, 20, M.black, x, AX + 20, BZ - 8),
+    box(6, 4, 20, M.black, x, AX - 20, BZ - 8),
+    cyl(2.5, 5, M.red, x, AX + 15.5, BZ),
+    box(5, 4, 5, M.chip, x, AX - 15.5, BZ),
+    box(10, AX - 22, 10, M.black, x, (AX - 22) / 2, BZ - 16)
   );
-  beam = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 28, 8), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, opacity: 0.85 }));
-  beam.position.set(GATE_X, AX, BZ);
-  scene.add(beam);
-  part(fork, { name: "Optical gate", short: "Optical gate", spec: "IR LED above, phototransistor below, at the coil exit", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, V3(GATE_X + 4, AX + 34, BZ - 8));
+  const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 28, 8), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, opacity: 0.85 }));
+  b.position.set(x, AX, BZ); scene.add(b);
+  return [fork, b];
+}
+{
+  const [f1, b1] = gateFork(GATE_X); beam = b1;
+  part(f1, { name: "Optical gate 1 (cut-off)", short: "Optical gate", spec: "IR LED above, phototransistor below, at the coil exit", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, null);
+  const [f2, b2] = gateFork(GATE2_X); beam2 = b2;
+  part(f2, { name: "Optical gate 2 (chronograph)", short: "Speed gate", spec: "Same IR LED and phototransistor, 10 cm past the muzzle", role: "The ESP32 times the slug between the two beams (220 mm apart here) to log the exit speed for every shot." }, null);
 }
 
 // ------------------------------------------------------------------ wiring helper: straight runs on the axes, corners cut at 45 degrees
@@ -475,27 +488,61 @@ part(wire([[BLX - 17, 16, BLZ], [BLX - 17, 150, BLZ], [T.c1p.x, 150, BLZ], [T.c1
 part(wire([[BLX + 17, 16, BLZ], [BLX + 17, 165, BLZ], [T.c2n.x, 165, BLZ], [T.c2n.x, 165, CZ], [T.c2n.x, TY, CZ]], 0.9, M.blk),
   { name: "Bleeder lead (−)", spec: "bleeder to bank − (C2 −)", role: "The bleeder sits across the whole series bank." });
 
-// ------------------------------------------------------------------ IGBT on a heatsink
-const IGX = -60, IGZ = -40, PIN_Z = IGZ + 22.5;       // pin tips at z = -17.5, y = 35.5
-const PIN_Y = 35.5, PIN = { g: V3(IGX - 5.45, PIN_Y, PIN_Z), c: V3(IGX, PIN_Y, PIN_Z), e: V3(IGX + 5.45, PIN_Y, PIN_Z) };
+// ------------------------------------------------------------------ two IGBTs in parallel on one heatsink
+const IGX = -60, IGZ = -40, PIN_Y = 35.5, PIN_Z = IGZ + 22.5;    // pin tips at z = -17.5
+const IG = [-80, -40];                                             // the two packages' centre x
+const CBOLT = V3(-60, 46, -14);                                    // collector bolt on a nylon standoff (bank +)
+const EBOLT = V3(-54.55, 24, -2);                                  // emitter bolt on a nylon standoff (to coil A)
+const GBUS_Y = 14, GBUS_Z = -8;                                    // gate wires join after the two 10 ohm resistors
 {
   const hs = new THREE.Group();
-  hs.add(box(50, 4, 40, M.alu, IGX, 2, IGZ));
-  for (let i = -4; i <= 4; i++) hs.add(box(1.8, 26, 40, M.alu, IGX + i * 5.5, 17, IGZ));
-  hs.add(box(52, 3, 42, M.alu, IGX, 31.5, IGZ));
-  const pkg = group(box(16, 5, 21, M.chip, IGX, 35.5, IGZ), cyl(2, 1.5, M.alu, IGX, 38.7, IGZ - 5, 12));
-  for (const dx of [-5.45, 0, 5.45]) pkg.add(box(1.2, 1.2, 12, M.alu, IGX + dx, PIN_Y, IGZ + 16.5));
-  part(hs, { name: "IGBT heatsink", spec: "Finned aluminium", role: "Spreads the switch's conduction loss." });
-  part(pkg, { name: "IGBT switch", short: "IGBT", spec: "≥ 200 V, ≥ 600 A pulse · sees ≈ 171 V at turn-off", role: "Closes to fire, opens on the optical-gate signal at 4.35 ms. An SCR cannot turn off, so it cannot do the cut-off. Pins: gate, collector, emitter, left to right." });
+  hs.add(box(90, 4, 40, M.alu, IGX, 2, IGZ));
+  for (let i = -8; i <= 8; i++) hs.add(box(1.8, 26, 40, M.alu, IGX + i * 5.4, 17, IGZ));
+  hs.add(box(92, 3, 42, M.alu, IGX, 31.5, IGZ));
+  part(hs, { name: "IGBT heatsink", spec: "Finned aluminium, an insulating pad under each IGBT", role: "Both IGBTs share it so they run at the same temperature, which helps them share current." });
+  const pk = new THREE.Group();
+  for (const cx of IG) {
+    pk.add(box(16, 5, 21, M.chip, cx, 35.5, IGZ), cyl(2, 1.5, M.alu, cx, 38.7, IGZ - 5, 12));
+    for (const dx of [-5.45, 0, 5.45]) pk.add(box(1.2, 1.2, 12, M.alu, cx + dx, PIN_Y, IGZ + 16.5));
+  }
+  part(pk, { name: "IGBTs × 2, in parallel", short: "IGBT × 2", spec: "Each ≥ 200 V; together ≥ 600 A pulse (e.g. 2 × IKQ100N60T, 400 A pulsed each) · see ≈ 171 V at turn-off", role: "Close to fire, open on the optical-gate signal at 4.35 ms. Pins: gate, collector, emitter, left to right. Each carries about half the current." });
+  // nylon standoffs with the shared bolts
+  const posts = group(cyl(3, CBOLT.y - 2, M.white, CBOLT.x, (CBOLT.y - 2) / 2, CBOLT.z, 12), cyl(3, EBOLT.y - 2, M.white, EBOLT.x, (EBOLT.y - 2) / 2, EBOLT.z, 12));
+  part(posts, { name: "Collector and emitter bolts", spec: "M5 bolts on nylon standoffs", role: "Both collector pigtails and the bank + wire stack on one bolt; both emitter pigtails and the wire to coil terminal A on the other." });
+  // pigtails: equal-length, soldered to the pins, crimped lugs on the bolts
+  const pig = new THREE.Group();
+  for (const cx of IG) {
+    pig.add(wire([[cx, PIN_Y, PIN_Z], [cx, PIN_Y, CBOLT.z], [cx, CBOLT.y, CBOLT.z], [CBOLT.x, CBOLT.y, CBOLT.z]], 1.3, M.red, 3));            // collector
+    pig.add(wire([[cx + 5.45, PIN_Y, PIN_Z], [cx + 5.45, PIN_Y, EBOLT.z], [cx + 5.45, EBOLT.y, EBOLT.z], [EBOLT.x, EBOLT.y, EBOLT.z]], 1.3, M.blk, 3)); // emitter
+  }
+  part(pig, { name: "IGBT pigtails", spec: "10 AWG, equal length, soldered to the pins", role: "Each pin gets its own pigtail ending in a crimped lug, so the soldered pin joint carries no strain and both IGBTs see the same wiring." });
+  const gres = new THREE.Group();
+  for (const cx of IG) {
+    const gx = cx - 5.45;
+    gres.add(wire([[gx, PIN_Y, PIN_Z], [gx, PIN_Y, GBUS_Z], [gx, 29, GBUS_Z]], 0.5, M.thin, 2));
+    gres.add(cyl(1.6, 8, M.resistor, gx, 25, GBUS_Z, 12));
+    gres.add(wire([[gx, 21, GBUS_Z], [gx, GBUS_Y, GBUS_Z]], 0.5, M.thin, 2));
+  }
+  gres.add(wire([[IG[0] - 5.45, GBUS_Y, GBUS_Z], [IG[1] - 5.45, GBUS_Y, GBUS_Z]], 0.6, M.sig, 2));
+  part(gres, { name: "Gate resistors", spec: "10 Ω, one in each gate lead", role: "Each IGBT gets its own gate resistor, so the two switch together without ringing against each other. They join after the resistors to the gate driver's wire." });
 }
-// ------------------------------------------------------------------ gate driver
+// ------------------------------------------------------------------ gate driver: the one custom PCB
 const GDX = 15, GDZ = -60;
+const GD_GATE = V3(-12, 15.5, -53), GD_EMIT = V3(-12, 15.5, -47), GD_IN = V3(38, 14.5, -42);
 {
-  const g = group(box(50, 1.6, 34, M.pcb, GDX, 12, GDZ), box(9, 4, 6, M.chip, GDX - 12, 15, GDZ - 5), box(12, 5, 8, M.chip, GDX + 8, 15.5, GDZ + 4),
-    box(8, 7, 6, M.supply, GDX + 18, 16, GDZ - 10));
-  for (const [dx, dz] of [[-22, -14], [22, -14], [-22, 14], [22, 14]]) g.add(cyl(1.5, 11, M.alu, GDX + dx, 5.5, GDZ + dz, 8));
-  g.add(pad(-8, 13.4, -52), pad(22, 13.4, -45));    // gate-out pad and trigger-in pad
-  part(g, { name: "Gate driver", short: "Gate driver", spec: "Isolated driver board", role: "Turns the controller's trigger and cut-off signals into IGBT gate drive." }, null);
+  const y = 12, g = new THREE.Group();
+  g.add(box(29, 1.6, 40, M.pcb, GDX - 15.5, y, GDZ), box(29, 1.6, 40, M.pcb, GDX + 15.5, y, GDZ));   // IGBT side | ESP32 side
+  g.add(box(60, 1.6, 8, M.pcb, GDX, y, GDZ + 16));                                                  // 8 mm bridge; the 2 mm slot runs between the halves
+  g.add(box(9.6, 3.6, 6.4, M.chip, GDX, y + 2.6, GDZ - 10));                                        // U1 optocoupler gate driver, DIP-8, across the slot
+  for (const dz of [-1.5, -0.5, 0.5, 1.5]) g.add(box(0.6, 1.5, 0.6, M.alu, GDX - 4, y + 1.2, GDZ - 10 + dz * 2.54), box(0.6, 1.5, 0.6, M.alu, GDX + 4, y + 1.2, GDZ - 10 + dz * 2.54));
+  g.add(box(19, 7, 10, M.supply, GDX, y + 4.3, GDZ + 4));                                           // U2 isolated 5 V -> 15 V DC-DC, across the slot
+  g.add(cyl(2.5, 6, M.can, GDX - 22, y + 3.8, GDZ + 8, 16));                                        // C2 reservoir
+  g.add(box(6, 1.8, 1.8, M.resistor, GDX - 22, y + 1.7, GDZ - 6), box(4, 1.6, 1.6, M.red, GDX - 22, y + 1.6, GDZ - 12));  // R2 gate resistor, D1 zener
+  g.add(box(6, 1.8, 1.8, M.resistor, GDX + 22, y + 1.7, GDZ - 10), box(3, 3, 2, M.chip, GDX + 22, y + 2.3, GDZ - 4));     // R1, C1
+  g.add(box(8, 8, 10, M.can, GD_GATE.x + 2, y + 4.8, (GD_GATE.z + GD_EMIT.z) / 2));               // J2 screw terminal: GATE, EMITTER
+  g.add(box(3, 8, 8, M.black, GD_IN.x, y + 4.8, GD_IN.z));                                          // J1 header: 5 V, GND, TRIG
+  for (const [dx, dz] of [[-26, -16], [26, -16], [-26, 16], [26, 16]]) g.add(cyl(1.5, 11, M.alu, GDX + dx, 5.5, GDZ + dz, 8));
+  part(g, { name: "Gate driver", short: "Gate driver", spec: "Optocoupler gate driver (U1) and isolated 5 V to 15 V DC-DC (U2) across a 2 mm slot", role: "The ESP32 side (right) and the IGBT side (left) share light and nothing else. J1 takes 5 V, GND and TRIG from the ESP32; J2 drives the gates and returns to the emitters." }, null);
 }
 
 // ------------------------------------------------------------------ coil terminal block (both leads finish at the breech end)
@@ -528,9 +575,9 @@ part(group(
 
 // ------------------------------------------------------------------ pulse loop (4 mm²): bank + → IGBT → coil A ... coil B → bank −
 part(group(
-  wire([[T.c1p.x, TY, CZ], [T.c1p.x, 150, CZ], [T.c1p.x, 150, 0], [IGX, 150, 0], [IGX, PIN_Y, 0], [IGX, PIN_Y, PIN_Z]], WR, M.red),
-  wire([[PIN.e.x, PIN_Y, PIN_Z], [PIN.e.x, PIN_Y, TBZ], [TA.x, PIN_Y, TBZ]], WR, M.red)),
-  { name: "Pulse loop (+)", spec: "≥ 4 mm², insulation > 126 V", role: "Bank + → IGBT collector; IGBT emitter → coil terminal A. Keep it short: it counts toward R_ext = 0.060 Ω." });
+  wire([[T.c1p.x, TY, CZ], [T.c1p.x, 150, CZ], [T.c1p.x, 150, CBOLT.z], [CBOLT.x, 150, CBOLT.z], [CBOLT.x, CBOLT.y, CBOLT.z]], WR, M.red),
+  wire([[EBOLT.x, EBOLT.y, EBOLT.z], [EBOLT.x, 26, EBOLT.z], [EBOLT.x, 26, TBZ], [TA.x, 26, TBZ]], WR, M.red)),
+  { name: "Pulse loop (+)", spec: "≥ 4 mm², insulation > 126 V", role: "Bank + → collector bolt; emitter bolt → coil terminal A. Keep it short: it counts toward R_ext = 0.060 Ω." });
 part(wire([[TB_.x, TBY, TBZ], [TB_.x + 6, TBY, TBZ], [TB_.x + 6, 60, TBZ], [TB_.x + 6, 60, -95], [T.c2n.x, 60, -95], [T.c2n.x, 140, -95], [T.c2n.x, 140, CZ], [T.c2n.x, TY, CZ]], WR, M.blk),
   { name: "Pulse loop (−)", spec: "≥ 4 mm², insulation > 126 V", role: "Coil terminal B → bank −." });
 part(wire([[T.c1n.x, TY, CZ], [T.c1n.x, 165, CZ], [T.c2p.x, 165, CZ], [T.c2p.x, TY, CZ]], WR, M.thin),
@@ -544,38 +591,109 @@ const ESX = 30, ESZ = 95;
   g.add(pad(22, 10, 83, 1.3), pad(GATE_X, 10, 83, 1.3));
   part(g, { detail: "esp32", name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Reads the optical gate, commands the gate driver, logs speed and the discharge curve (470 kΩ / 10 kΩ divider on GPIO34)." }, null);
 }
-part(group(
-  wire([[GATE_X, 3, BZ - 11], [GATE_X, 3, 76], [GATE_X, 10, 76], [GATE_X, 10, 83]], 0.7, M.sig, 4),          // optical gate -> ESP32
-  wire([[22, 10, 83], [22, 16, 83], [22, 16, -45], [22, 13.4, -45]], 0.7, M.sig, 4),                          // ESP32 -> gate driver
-  wire([[-8, 13.4, -52], [-8, 14, -52], [-8, 14, -10], [PIN.g.x, 14, -10], [PIN.g.x, PIN_Y, -10], [PIN.g.x, PIN_Y, PIN_Z]], 0.7, M.sig, 4)), // gate driver -> IGBT gate
-  { name: "Signal wiring", spec: "Optical gate → ESP32 → gate driver → IGBT gate", role: "Low-voltage side. Never shares a conductor with the bank." });
-
-// ------------------------------------------------------------------ charger, off the plate
+// bank-voltage divider: 470 kOhm / 10 kOhm / 1 nF on a scrap of perfboard, fed from the bleeder's terminals
+const DV = V3(-12, 4, -100);
 {
-  const g = group(box(170, 85, 150, M.supply, -150, 42.5, -340));
+  const g = group(box(36, 1.6, 16, M.pcbBlue, DV.x, DV.y, DV.z),
+    box(8, 2, 2, M.resistor, DV.x + 8, DV.y + 1.6, DV.z - 4), box(5, 2, 2, M.resistor, DV.x - 2, DV.y + 1.6, DV.z), box(3, 3, 2, M.chip, DV.x - 10, DV.y + 2, DV.z + 4));
+  part(g, { name: "Bank-voltage divider", short: "Divider", spec: "470 kΩ / 10 kΩ with 1 nF · 126 V reads 2.63 V · 34 mW", role: "Lets the ESP32 log the bank's discharge on GPIO34. It ties the ESP32's ground to bank −, so the ESP32 runs from its own battery bank." }, null);
+}
+// 5 V battery bank for the ESP32 (and the gate driver's J1)
+{
+  const g = group(box(30, 14, 50, M.supply, 100, 7, 75), box(6, 4, 8, M.alu, 84, 9, 85));
+  part(g, { name: "5 V battery bank", short: "Battery bank", spec: "USB power bank", role: "Powers the ESP32 and, through J1, the gate driver's ESP32 side. Never a laptop while the bank is connected." }, null);
+}
+part(group(
+  wire([[GATE_X, 3, BZ - 11], [GATE_X, 3, 76], [GATE_X, 10, 76], [GATE_X, 10, 83]], 0.7, M.sig, 4),                                // gate 1 -> ESP32
+  wire([[GATE2_X, 3, BZ - 11], [GATE2_X, 3, 116], [52, 3, 116], [52, 3, 105], [52, 10, 105]], 0.7, M.sig, 4),                       // gate 2 -> ESP32
+  wire([[22, 10, 83], [22, 16, 83], [22, 16, -30], [GD_IN.x, 16, -30], [GD_IN.x, 16, GD_IN.z], [GD_IN.x, GD_IN.y, GD_IN.z]], 0.7, M.sig, 4), // ESP32 -> gate driver J1
+  wire([[GD_GATE.x, GD_GATE.y, GD_GATE.z], [GD_GATE.x, 20, GD_GATE.z], [GD_GATE.x - 6, 20, GD_GATE.z], [GD_GATE.x - 6, 20, GBUS_Z], [IG[1] - 5.45, 20, GBUS_Z], [IG[1] - 5.45, GBUS_Y, GBUS_Z]], 0.7, M.sig, 4), // J2 gate -> gate resistors
+  wire([[GD_EMIT.x, GD_EMIT.y, GD_EMIT.z], [GD_EMIT.x, 30, GD_EMIT.z], [GD_EMIT.x, 30, EBOLT.z], [EBOLT.x + 3, 30, EBOLT.z], [EBOLT.x + 3, EBOLT.y, EBOLT.z]], 0.7, M.thin, 4), // J2 emitter return
+  wire([[85, 7, 85], [56, 7, 85]], 0.9, M.black, 2)),                                                                                   // USB power to the ESP32
+  { name: "Signal wiring", spec: "Optical gates → ESP32 → gate driver → IGBT gates; USB power from the battery bank", role: "Low-voltage side. Never shares a conductor with the bank; the gate driver's slot is the break." });
+part(group(
+  wire([[BLX - 17, 12, BLZ + 3], [BLX - 17, 5, BLZ + 3], [BLX - 17, 5, DV.z - 4], [DV.x + 12, 5, DV.z - 4]], 0.5, M.red, 3),     // bank + (bleeder + terminal)
+  wire([[BLX + 17, 12, BLZ + 3], [BLX + 17, 4, BLZ + 3], [BLX + 17, 4, DV.z + 4], [DV.x + 12, 4, DV.z + 4]], 0.5, M.blk, 3),     // bank − (bleeder − terminal)
+  wire([[-20, 5, DV.z - 4], [-20, 5, 90], [6, 5, 90], [6, 10, 90]], 0.5, M.sig, 3),                                                 // tap -> GPIO34
+  wire([[-24, 5, DV.z + 4], [-24, 5, 96], [6, 5, 96], [6, 10, 96]], 0.5, M.blk, 3)),                                                // ground -> ESP32 GND
+  { name: "Divider wiring", spec: "Bank + and − to the divider; tap and ground to the ESP32", role: "The only bank-side wires that reach the ESP32: microamps through 480 kΩ." });
+
+// ------------------------------------------------------------------ bench supply (off the plate), blocking diode and knife switch in the + lead
+const BDX = -215, BDZ = -222, KSX = -150, KSZ = -222;
+let knifeBlade;
+{
+  const g = group(box(170, 85, 150, M.supply, -150, 42.5, -340)); g.position.y = -10;
   const cv = document.createElement("canvas"); cv.width = 256; cv.height = 96;
-  const c = cv.getContext("2d"); c.fillStyle = "#0b0f0c"; c.fillRect(0, 0, 256, 96); c.fillStyle = "#5dff8a"; c.font = "bold 54px monospace"; c.fillText("126.0V", 14, 66);
+  const c = cv.getContext("2d"); c.fillStyle = "#0b0f0c"; c.fillRect(0, 0, 256, 96); c.fillStyle = "#5dff8a"; c.font = "bold 54px monospace"; c.fillText("120.0V", 14, 66);
   const disp = new THREE.Mesh(new THREE.PlaneGeometry(64, 24), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) }));
   disp.position.set(-170, 58, -264.6);
   g.add(disp);
   const tp = cyl(4, 6, M.red, -105, 25, -264), tn = cyl(4, 6, M.blk, -90, 25, -264);
   tp.rotation.x = Math.PI / 2; tn.rotation.x = Math.PI / 2; g.add(tp, tn);
-  part(g, { name: "Charger", short: "Charger 126 V", spec: "126 V output, stops automatically at 126 V", role: "Fills the bank, then is switched off the bank before firing." }, null);
+  for (const kx of [-200, -185]) { const k = cyl(5, 6, M.black, kx, 30, -264, 16); k.rotation.x = Math.PI / 2; g.add(k); }
+  part(g, { name: "Bench power supply", short: "Bench supply", spec: "Jesverty SPS-12003N: 0 to 120 V, 0 to 3 A · current limit 2 A", role: "Fills the bank in about 3 s at 2 A. It tops out at 120 V, 6 V short of the 126 V design, so 120 V is the top step until a 126 V charger arrives. Switched off the bank before every shot." }, null);
+  // blocking diode: stud (cathode) toward the bank
+  const d = group(box(34, 8, 30, M.black, BDX, 4, BDZ), cyl(9.5, 6, M.steel, BDX, 11, BDZ, 6), cyl(7, 14, M.steel, BDX, 21, BDZ, 24), cyl(1.6, 10, M.thin, BDX, 33, BDZ, 8));
+  part(d, { name: "Blocking diode", short: "Blocking diode", spec: "Vishay VS-70HF20, 200 V, 70 A · stud = cathode, toward the bank", role: "One-way valve in the charger's + lead: current flows supply to bank, never back, so the coil's kick cannot reach the supply." }, null);
+  // knife switch: hinge on the diode side, jaw on the bank side
+  const ks = group(box(56, 6, 24, M.white, KSX, 3, KSZ), box(4, 14, 10, M.brass, KSX - 20, 12, KSZ), box(4, 14, 10, M.brass, KSX + 20, 12, KSZ));
+  knifeBlade = new THREE.Group(); knifeBlade.position.set(KSX - 20, 17, KSZ);
+  knifeBlade.add(box(44, 2, 6, M.brass, 22, 0, 0), box(4, 4, 22, M.black, 44, 0, 0));
+  ks.add(knifeBlade);
+  part(ks, { name: "Knife switch", short: "Knife switch", spec: "Supply disconnect, rated ≥ 150 V DC", role: "Between the blocking diode and the bank. Opened with the bank full and no current flowing, before every shot; the bleeder stays on the bank side. Never used to fire." }, null);
   part(group(
-    wire([[-105, 25, -261], [-105, 25, -250], [-105, 185, -250], [T.c1p.x, 185, -250], [T.c1p.x, 185, CZ], [T.c1p.x, TY, CZ]], 0.9, M.red),
-    wire([[-90, 25, -261], [-90, 25, -250], [-90, 180, -250], [T.c2n.x, 180, -250], [T.c2n.x, 180, CZ], [T.c2n.x, TY, CZ]], 0.9, M.blk)),
-    { name: "Charge leads", spec: "Charger to bank + and −", role: "Charging side only; the pulse never flows here." });
+    wire([[-105, 15, -261], [-105, 15, -250], [BDX, 15, -250], [BDX, 45, -250], [BDX, 45, BDZ], [BDX, 38, BDZ]], 0.9, M.red, 4),     // supply + -> diode anode (top lead)
+    wire([[BDX + 10, 11, BDZ], [KSX - 20, 11, BDZ]], 0.9, M.red, 3),                                                                  // diode cathode (stud) -> knife hinge
+    wire([[KSX + 20, 12, KSZ], [-110, 12, KSZ], [-110, 185, KSZ], [T.c1p.x, 185, KSZ], [T.c1p.x, 185, CZ], [T.c1p.x, TY, CZ]], 0.9, M.red, 4), // knife jaw -> bank + (C1 +)
+    wire([[-90, 15, -261], [-90, 15, -250], [-90, 180, -250], [T.c2n.x, 180, -250], [T.c2n.x, 180, CZ], [T.c2n.x, TY, CZ]], 0.9, M.blk)),     // supply − -> bank − (C2 −)
+    { name: "Charge leads", spec: "18 AWG · supply + → blocking diode → knife switch → C1 +; supply − → C2 −", role: "Charging side only, 2 A; the pulse never flows here." });
 }
 
-// ------------------------------------------------------------------ catch box
+// ------------------------------------------------------------------ catch box and plywood backstop
+const BOXX = 330;
 {
   const g = new THREE.Group();
-  const W = 90, x = 300, y = 40;
+  const W = 90, x = BOXX, y = 35;
   g.add(box(W, 2, W, M.box, x, y - W / 2 + 1, BZ), box(2, W, W, M.box, x + W / 2, y, BZ), box(W, W, 2, M.box, x, y, BZ - W / 2), box(W, W, 2, M.box, x, y, BZ + W / 2));
   const front = new THREE.Mesh(new THREE.BoxGeometry(2, W, W), M.box);
   front.position.set(x - W / 2, y, BZ); g.add(front);
   g.add(box(W - 8, W - 20, W - 8, M.foam, x + 2, y - 8, BZ));
-  part(g, { name: "Catch box", short: "Catch box", spec: "Foam-filled", role: "The slug stops here. Nobody stands in front of the muzzle." }, V3(300, 100, BZ));
+  part(g, { name: "Catch box", short: "Catch box", spec: "Foam-filled, 30 cm past the muzzle region", role: "The slug stops here. Nobody stands in front of the muzzle." }, null);
+  part(box(12, 180, 220, M.plate, BOXX + 70, 80, BZ), { name: "Plywood backstop", spec: "Sheet of plywood behind the catch box", role: "A miss hits wood, not a wall or a window." });
+}
+// ------------------------------------------------------------------ multimeter and discharge stick
+{
+  const g = group(box(42, 14, 80, M.mmYellow, -205, 7, 85), box(30, 2, 18, M.chip, -205, 14.5, 62), cyl(9, 3, M.black, -205, 15, 92, 24));
+  const sc = document.createElement("canvas"); sc.width = 128; sc.height = 64;
+  const c2 = sc.getContext("2d"); c2.fillStyle = "#c9d6b9"; c2.fillRect(0, 0, 128, 64); c2.fillStyle = "#111"; c2.font = "bold 36px monospace"; c2.fillText("0.00", 14, 46);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(26, 14), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc) }));
+  scr.rotation.x = -Math.PI / 2; scr.position.set(-205, 15.7, 62); g.add(scr);
+  g.add(wire([[-215, 14, 118], [-215, 4, 128], [-240, 4, 128]], 0.8, M.red, 3), wire([[-195, 14, 118], [-195, 4, 132], [-240, 4, 132]], 0.8, M.blk, 3));
+  part(g, { name: "Multimeter", short: "Multimeter", spec: "DC volts, resistance, continuity, diode mode", role: "The meter decides when it is safe: under 5 V across the bank before any hand goes near it." }, null);
+  // hook post and the stick hanging on it
+  const hx = 200, hz = -225;
+  const h = group(cyl(4, 150, M.plate, hx, 75, hz, 12), box(4, 4, 18, M.steel, hx, 146, hz + 9), box(4, 10, 4, M.steel, hx, 141, hz + 17));
+  h.add(box(6, 100, 22, M.plate, hx + 6, 90, hz + 17));                                   // the wooden stick
+  h.add(box(10, 28, 18, M.gold, hx + 12, 92, hz + 17));                                    // 10 ohm 50 W resistor taped to it
+  h.add(wire([[hx + 12, 78, hz + 10], [hx + 12, 30, hz + 10], [hx + 30, 30, hz + 10]], 0.9, M.red, 4), wire([[hx + 12, 78, hz + 24], [hx + 12, 36, hz + 24], [hx + 30, 36, hz + 24]], 0.9, M.blk, 4));
+  h.add(box(10, 4, 5, M.red, hx + 36, 30, hz + 10), box(10, 4, 5, M.black, hx + 36, 36, hz + 24));   // alligator clips
+  part(h, { name: "Discharge stick", short: "Discharge stick", spec: "10 Ω, 50 W on a wooden stick, 30 cm leads, alligator clips", role: "Always on the same hook. Black clip on C2 −, red on C1 +, hold ten seconds, meter again. At 126 V it pulls 12.6 A at first." }, null);
+}
+
+// ------------------------------------------------------------------ crimped ring lugs where the heavy wires meet terminals
+{
+  const g = new THREE.Group();
+  const lug = (x, y, z, angle = 0) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(4.2, 1.4, 8, 20), M.lug); ring.rotation.x = Math.PI / 2; ring.position.set(x, y, z); g.add(ring);
+    const barrel = cyl(2.6, 9, M.lug, x + Math.cos(angle) * 8, y + 1.2, z + Math.sin(angle) * 8, 12); barrel.rotation.z = Math.PI / 2; barrel.rotation.y = -angle; g.add(barrel);
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 2.4, 6), M.steel).translateX(x).translateY(y + 2.4).translateZ(z));      // nut
+  };
+  for (const p of [T.c1p, T.c1n, T.c2p, T.c2n]) lug(p.x, p.y - 1, p.z, Math.PI / 2);
+  lug(CBOLT.x, CBOLT.y - 1, CBOLT.z, 0); lug(EBOLT.x, EBOLT.y - 1, EBOLT.z, Math.PI);
+  lug(TA.x, TBY - 1, TBZ, -Math.PI / 2); lug(TB_.x, TBY - 1, TBZ, -Math.PI / 2);
+  lug(FRX - 17, 15, FRZ, Math.PI); lug(FRX + 17, 15, FRZ, 0);
+  lug(FDX - 10, 11, FDZ, Math.PI);
+  part(g, { name: "Crimped ring lugs", spec: "Tubular copper lugs for 10 AWG, M5 hole, crimped twice and heat-shrunk", role: "Every joint in the 519 A loop is a crimped lug bolted to a terminal. Only the IGBT pins are soldered." });
 }
 
 // ------------------------------------------------------------------ cutaway
@@ -802,13 +920,15 @@ function reset() {
   document.getElementById("fire").disabled = false;
   updateReadouts(0, V, 0);
   setCurrentGlow(0);
-  beam.material.opacity = 0.85;
+  beam.material.opacity = 0.85; beam2.material.opacity = 0.85;
+  knifeBlade.rotation.z = 0;
   drawChart();
 }
 document.getElementById("fire").addEventListener("click", () => {
   if (state !== "idle") return;
   document.getElementById("fire").disabled = true;
-  setState("firing", "IGBT closed: current rising through the coil.");
+  knifeBlade.rotation.z = 1.1;     // supply switched off the bank first
+  setState("firing", "Knife switch open, IGBT closed: current rising through the coil.");
   lastNow = performance.now();
 });
 document.getElementById("reset").addEventListener("click", reset);
@@ -853,7 +973,8 @@ function step(now) {
     slugX += slugV * 1000 * dtSim;
     setCurrentGlow(0);
     beam.material.opacity = (slugX - L / 2 <= GATE_X + 0.5) ? 0.08 : 0.85;
-    if (slugX + L / 2 >= 300 - 45 + 30) { setState("done", `Landed. Exit ${data.vexit.toFixed(1)} m/s, ${data.ek.toFixed(2)} J.`); }
+    beam2.material.opacity = (slugX + L / 2 >= GATE2_X - 0.5 && slugX - L / 2 <= GATE2_X + 0.5) ? 0.08 : 0.85;
+    if (slugX + L / 2 >= BOXX - 45 + 30) { setState("done", `Landed. Exit ${data.vexit.toFixed(1)} m/s, ${data.ek.toFixed(2)} J.`); }
   }
   slug.position.x = slugX;
   drawChart();
@@ -921,6 +1042,7 @@ function renderResults() {
   rows.forEach(([k, v]) => { const tr = document.createElement("tr"); tr.innerHTML = "<td></td><td></td>"; tr.children[0].textContent = k; tr.children[1].textContent = v; tb.appendChild(tr); });
   document.getElementById("res-note").textContent = V === 126
     ? "Matches the framework doc: 519 A, 4.35 ms, 412 A, 87.2 V, 207 J, 171 V, 22.4 m/s, 1.1 %. Expected real muzzle speed after eddy, friction and back-EMF losses: 19–21 m/s."
+    : V === 120 ? "120 V is the top the bench supply can reach. Same model; the doc's numbers are the 126 V case."
     : "Same model at a lower charge, for the step-up shots in the build plan. The doc's numbers are the 126 V case.";
 }
 
