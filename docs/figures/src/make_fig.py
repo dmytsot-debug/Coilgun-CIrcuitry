@@ -126,7 +126,7 @@ text(425, TOP + 9, "switch", 6.5, "middle", fill="#555")
 text(425, TOP - 22, "≥ 200 V, ≥ 600 A pulse", 6.5, "middle", fill="#555")
 # current arrow
 a(f'<polygon points="{478},{TOP-4} {478},{TOP+4} {486},{TOP}" fill="#222"/>')
-text(494, TOP - 6, '<tspan font-weight="bold" font-size="9">I</tspan><tspan baseline-shift="sub" font-size="6">peak</tspan> ≈ 422 A', 7.5)
+text(494, TOP - 6, '<tspan font-weight="bold" font-size="9">I</tspan><tspan baseline-shift="sub" font-size="6">peak</tspan> ≈ 405 A', 7.5)
 
 # gate driver
 box(385, 205, 80, 30)
@@ -144,8 +144,8 @@ coil_v(XK, 170, 300)
 line(XK, 300, XK, BOT)
 dot(XK, TOP); dot(XK, BOT)
 text(XK - 18, 214, "Coil", 9, "end", "bold")
-text(XK - 18, 227, "L = 155 µH", 7.5, "end")
-text(XK - 18, 239, 'R<tspan baseline-shift="sub" font-size="5.5">coil</tspan> = 0.209 Ω', 7.5, "end")
+text(XK - 18, 227, "L = 171 µH", 7.5, "end")
+text(XK - 18, 239, 'R<tspan baseline-shift="sub" font-size="5.5">coil</tspan> = 0.220 Ω', 7.5, "end")
 text(XK - 18, 251, "164 turns", 7.5, "end")
 
 # flyback branch: diode in series with R_fb
@@ -165,15 +165,15 @@ KX, KY, KW = 715, 112, 160
 rows = [
     ("Bank voltage", "126 V"),
     ("Stored energy", "397 J"),
-    ("Total resistance", "0.269 Ω"),
-    ("Inductance", "155 µH"),
-    ("Peak current", "≈ 422 A"),
-    ("Field at centre", "≈ 1.76 T"),
-    ("Cut-off time", "≈ 5.05 ms"),
-    ("Switch at turn-off", "≈ 160 V"),
-    ("Exit velocity (sim.)", "19.5 m/s"),
-    ("Muzzle velocity (exp.)", "16–18 m/s"),
-    ("Efficiency", "≈ 1.7 %"),
+    ("Total resistance", "0.280 Ω"),
+    ("Inductance", "171 µH"),
+    ("Peak current", "≈ 405 A"),
+    ("Field at centre", "≈ 1.67 T"),
+    ("Cut-off time", "≈ 5.19 ms"),
+    ("Switch at turn-off", "≈ 158 V"),
+    ("Exit velocity (sim.)", "18.9 m/s"),
+    ("Muzzle velocity (exp.)", "16–17.5 m/s"),
+    ("Efficiency", "≈ 1.6 %"),
     ("Bleed to 5 V", "≈ 2.7 min"),
 ]
 KH = 34 + 16.5 * len(rows)
@@ -195,19 +195,15 @@ X0 = 150            # projectile tail
 LP = 45.6 * S       # projectile / coil length
 XC0 = X0 + LP       # coil entrance = projectile nose
 XC1 = XC0 + LP      # coil exit
-bore, tod, bod = 12.0 * S / 2, 16.0 * S / 2, 15.0 * S / 2   # tube bore, tube OD, printed core OD (= coil ID)
-cod = 23.76 * S / 2
-FLW, FLR = 2.5 * S, 30.0 * S / 2                            # printed discs: 2.5 mm thick, 30 mm across
-# clear tubes outside the coil (12 mm bore, 16 mm OD), sitting 1 mm deep in the disc pockets
-for sgn in (-1, 1):
-    y_in, y_out = AX + sgn * bore, AX + sgn * tod
-    ytop = min(y_in, y_out)
-    for xa, xb in ((95, XC0 - FLW + S), (XC1 + FLW - S, 820)):
-        a(f'<rect x="{xa:.2f}" y="{ytop:.2f}" width="{xb-xa:.2f}" height="{abs(y_out-y_in):.2f}" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>')
-# printed core (12 mm bore, 15 mm OD) and discs
+bore, bod = 12.0 * S / 2, 16.0 * S / 2   # tube bore, tube OD (= coil ID)
+cod = 24.76 * S / 2
+FLW, FLR = 2.5 * S, 30.0 * S / 2          # printed discs: 2.5 mm thick, 30 mm across, glued to the tube
+# one clear tube, 12 mm bore, 16 mm OD, straight through the coil
 for sgn in (-1, 1):
     y_in, y_out = AX + sgn * bore, AX + sgn * bod
-    a(f'<rect x="{XC0 - FLW:.2f}" y="{min(y_in, y_out):.2f}" width="{LP + 2 * FLW:.2f}" height="{abs(y_out-y_in):.2f}" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>')
+    a(f'<rect x="95" y="{min(y_in, y_out):.2f}" width="{820-95}" height="{abs(y_out-y_in):.2f}" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>')
+# printed end discs
+for sgn in (-1, 1):
     for xd in (XC0 - FLW, XC1):
         y1, y2 = AX + sgn * bod, AX + sgn * FLR
         a(f'<rect x="{xd:.2f}" y="{min(y1, y2):.2f}" width="{FLW:.2f}" height="{abs(y2-y1):.2f}" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>')
@@ -240,7 +236,7 @@ text(xcm, AX - cod - 15, "Coil centre", 7, "middle", fill="#666")
 line(XC1 + 60, AX - cod, XC1 + 60, AX + cod, w=0.8)
 line(XC1 + 54, AX - cod, XC1 + 66, AX - cod, w=0.8)
 line(XC1 + 54, AX + cod, XC1 + 66, AX + cod, w=0.8)
-text(XC1 + 70, AX - 2, "Ø 23.8 mm", 7.5)
+text(XC1 + 70, AX - 2, "Ø 24.8 mm", 7.5)
 text(XC1 + 70, AX + 9, "(coil OD)", 7.5)
 # optical gate at coil exit
 xg = XC1 + 6.5 * S   # beam 6.5 mm past the coil end
@@ -258,7 +254,7 @@ line(185, 455, 290, 455, stroke="#1f6fb2", w=1.6)
 a('<polygon points="290,451 290,459 299,455" fill="#1f6fb2"/>')
 text(242, 448, "Direction of travel", 8, "middle", fill="#1f6fb2")
 text(242, 470, "Start: nose at coil entrance", 7, "middle", fill="#555")
-text(100, AX + FLR + 14, "Clear acrylic tube: 12 mm bore, 16 mm OD. Printed core through the coil: 12 mm bore, 15 mm OD (= coil ID)", 7, fill="#4a7aa8")
+text(100, AX + FLR + 14, "Clear acrylic tube: 12 mm bore, 16 mm OD (= coil ID). Coil wound on it between two printed discs", 7, fill="#4a7aa8")
 # length dimensions
 yd = AX + cod + 38
 for x1, x2, lab in ((X0, XC0, "Projectile length"), (XC0, XC1, "Coil length")):

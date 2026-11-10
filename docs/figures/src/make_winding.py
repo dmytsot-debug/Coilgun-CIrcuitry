@@ -6,7 +6,7 @@ Writes coil-winding.svg next to this script; render with
 import math
 import os
 
-RI, CORE_IN, SLUG_R = 7.5, 6.0, 5.55      # mm: coil inner radius (core OD / 2), core bore radius, slug radius
+RI, CORE_IN, SLUG_R = 8.0, 6.0, 5.55      # mm: coil inner radius (tube OD / 2), tube bore radius, slug radius
 DEPTH, LAYERS, NL, PITCH = 4.38, 4, 41, 1.10
 LP = DEPTH / LAYERS
 OHM_M = 0.0209
@@ -52,26 +52,26 @@ text(426, 83, "… continues to 41 turns per layer", 6.5, "end", fill="#444")
 line(378, yt, 378, YB); line(374, yt, 382, yt); line(374, YB, 382, YB)
 text(384, 138, "4.38 mm", 7.5); text(384, 148, "winding depth", 7, fill="#444")
 core_h = (RI - CORE_IN) * S
-a(f'<rect x="{X0 - 15}" y="{YB}" width="{xr - X0 + 30:.1f}" height="{core_h:.1f}" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>')
-text(xr + 22, YB + core_h / 2 + 3, "Printed core wall, 1.5 mm", 7.5, fill="#5b5090")
+a(f'<rect x="{X0 - 15}" y="{YB}" width="{xr - X0 + 30:.1f}" height="{core_h:.1f}" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>')
+text(xr + 22, YB + core_h / 2 + 3, "Acrylic tube wall, 2.0 mm", 7.5, fill="#4a7aa8")
 gap = (CORE_IN - SLUG_R) * S
 a(f'<rect x="{X0 - 15}" y="{YB + core_h + gap:.1f}" width="{xr - X0 + 30:.1f}" height="8" fill="#8f979e"/>')
 text(xr + 22, YB + core_h + gap + 7, "Projectile surface (0.45 mm gap)", 7.5, fill="#444")
-line(X0 + 3.2 * PITCH * S, YB - 0.5 * LP * S + 8, 165, 238, stroke="#7a4313", w=0.6)
-text(167, 241, "1.02 mm copper + enamel ≈ 1.10 mm overall", 7.5, fill="#7a4313")
-text(X0 - 15, 260, f"Coil axis lies {SLUG_R:.2f} mm below the projectile surface (not shown).", 7, fill="#444")
+line(X0 + 3.2 * PITCH * S, YB - 0.5 * LP * S + 8, 165, 249, stroke="#7a4313", w=0.6)
+text(167, 252, "1.02 mm copper + enamel ≈ 1.10 mm overall", 7.5, fill="#7a4313")
+text(X0 - 15, 270, f"Coil axis lies {SLUG_R:.2f} mm below the projectile surface (not shown).", 7, fill="#444")
 
 # ---------------------------------------------------------------- B. end view, 10 px/mm
 E = 10
-CX, CY = 555, 172
+CX, CY = 555, 181
 text(452, 47, "B. End View (20 px = 1 mm)", 10, weight="bold")
 for j in reversed(range(LAYERS)):
     a(f'<circle cx="{CX}" cy="{CY}" r="{(RI + (j + 1) * LP) * E:.1f}" fill="{CU[j % 2]}" stroke="#7a4313" stroke-width="0.6"/>')
-a(f'<circle cx="{CX}" cy="{CY}" r="{RI * E}" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>')
-a(f'<circle cx="{CX}" cy="{CY}" r="{CORE_IN * E}" fill="#fff" stroke="#8a80b0" stroke-width="0.8"/>')
+a(f'<circle cx="{CX}" cy="{CY}" r="{RI * E}" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>')
+a(f'<circle cx="{CX}" cy="{CY}" r="{CORE_IN * E}" fill="#fff" stroke="#7aa7d1" stroke-width="0.8"/>')
 a(f'<circle cx="{CX}" cy="{CY}" r="{SLUG_R * E}" fill="#8f979e" stroke="#555" stroke-width="0.8"/>')
 text(CX, CY + 3, "Projectile", 7.5, "middle", "bold", "#fff")
-text(CX, CY - SLUG_R * E - 2.5, "Core", 5.5, "middle", fill="#5b5090")
+text(CX, CY - SLUG_R * E - 2.5, "Tube", 5.5, "middle", fill="#4a7aa8")
 for j in range(LAYERS):
     rr = (RI + (j + 0.5) * LP) * E
     text(CX, CY - rr + 2.5, str(j + 1), 6.5, "middle", "bold", "#fff")
@@ -80,8 +80,8 @@ OD = 2 * (RI + DEPTH)
 yd = CY + OD / 2 * E + 16
 line(CX - OD / 2 * E, yd, CX + OD / 2 * E, yd); line(CX - OD / 2 * E, yd - 4, CX - OD / 2 * E, yd + 4); line(CX + OD / 2 * E, yd - 4, CX + OD / 2 * E, yd + 4)
 text(CX, yd + 12, f"Coil OD ≈ {OD:.1f} mm", 7.5, "middle")
-text(CX, yd + 22, "Coil ID = printed core OD = 15.0 mm · bore 12.0 mm", 7, "middle", fill="#5b5090")
-text(452, 58, "Ring numbers = layer (see C)", 6.5, fill="#444")
+text(CX, yd + 22, "Coil ID = tube OD = 16.0 mm · bore 12.0 mm", 7, "middle", fill="#5b5090")
+text(712, 58, "Ring numbers = layer (see C)", 6.5, "end", fill="#444")
 
 # ---------------------------------------------------------------- C. table
 text(25, 348, f"C. Layer Radii and Wire Length ({NL} turns per layer)", 10, weight="bold")
@@ -104,7 +104,7 @@ line(25, 449, 694, 449)
 text(25, 462, "Total", 7.5, weight="bold")
 text(cols[3], 462, f"{total:.2f} m → R = {total:.2f} × {OHM_M} = {total * OHM_M:.3f} Ω", 7.5, weight="bold")
 text(25, 482, "Winding note: wind every layer in the same rotational direction (e.g. clockwise viewed from the breech); only the axial direction reverses", 7, fill="#1f5f9e")
-text(25, 493, "at the end of each layer. With an even number of layers, both leads finish at the breech end of the coil. Cut about 10.5 m to leave leads.", 7, fill="#1f5f9e")
+text(25, 493, "at the end of each layer. With an even number of layers, both leads finish at the breech end of the coil. Cut about 11.5 m to leave leads.", 7, fill="#1f5f9e")
 a("</svg>")
 
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "coil-winding.svg"), "w", encoding="utf-8").write("\n".join(out))
