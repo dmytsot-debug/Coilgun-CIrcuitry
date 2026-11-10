@@ -190,8 +190,8 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
         <tr><td class="new-key">Bleeder (across bank)</td><td>1 kΩ, 25 W</td></tr>
         <tr><td>Coil</td><td>4 × 41 = 164 turns</td></tr>
         <tr><td>Wire</td><td>1.02 mm Cu (1.10 enamelled)</td></tr>
-        <tr><td>Coil length / ID / OD</td><td>45.6 / 16.0 / 24.8 mm</td></tr>
-        <tr><td>L / R<sub>coil</sub> / R<sub>total</sub></td><td>171 µH / 0.220 / 0.280 Ω</td></tr>
+        <tr><td>Coil length / ID / OD</td><td>45.6 / 18.3 / 27.1 mm</td></tr>
+        <tr><td>L / R<sub>coil</sub> / R<sub>total</sub></td><td>209 µH / 0.244 / 0.304 Ω</td></tr>
         <tr><td>Slug</td><td>Ø11.1 × 45.6 mm, 34.6 g</td></tr>
         <tr><td>Barrel</td><td>12 mm bore, 16 mm OD</td></tr>
         <tr><td>Switch</td><td>IGBT ≥ 200 V, ≥ 600 A</td></tr>
@@ -299,7 +299,7 @@ const AX = 46;          // barrel axis height above the plate top
 const BZ = 40;          // barrel axis z
 const L = 45.6;         // coil and slug length
 const COIL_X0 = -L / 2; // coil entrance; coil centre at x = 0
-const RI = 8.0, DEPTH = 4.38, LAYERS = 4, TURNS = 41, PITCH_AX = L / TURNS, PITCH_R = DEPTH / LAYERS;
+const RI = 9.15, DEPTH = 4.38, LAYERS = 4, TURNS = 41, PITCH_AX = L / TURNS, PITCH_R = DEPTH / LAYERS;
 
 // ------------------------------------------------------------------ base plate
 const plate = box(500, 10, 360, M.plate, 0, -5, -60);
@@ -320,7 +320,7 @@ part(plate, { name: "Base plate", spec: "500 × 360 mm, 10 mm plywood", role: "E
   const sup = (x) => group(box(18, AX - 6, 26, M.print, x, (AX - 6) / 2, BZ), cyl(10.5, 18, M.print, x, AX, BZ));
   const s1 = sup(-125), s2 = sup(130);
   s1.children[1].rotation.z = Math.PI / 2; s2.children[1].rotation.z = Math.PI / 2;
-  part(m, { name: "Barrel", short: "Barrel", spec: "Clear acrylic, 12 mm bore, 16 mm OD · one piece, 30 cm", role: "Guides the slug. The coil is wound straight onto it between two printed discs, so the tube's 16 mm outside is the coil's inside. Infrared passes the clear tube, so both optical gates see through it." }, V3(-130, AX + 18, BZ));
+  part(m, { name: "Barrel", short: "Barrel", spec: "Clear acrylic, 12 mm bore, 16 mm OD · one piece, 30 cm", role: "Guides the slug. The printed coil holder slides over it and is glued in place. Infrared passes the clear tube, so both optical gates see through it." }, V3(-130, AX + 18, BZ));
   part(group(s1, s2), { name: "3D-printed barrel supports", short: "Barrel supports", spec: "PETG or PLA · saddle blocks, bolted to the plate", role: "Hold the barrel on the axis at both ends, clear of the coil. Printed, so the saddle height and bore are set from the CAD." });
   barrelMat.clippingPlanes = [];
 }
@@ -344,23 +344,23 @@ let coilGroup;
     g.add(inst);
   }
   // both leads leave at the breech end (even number of layers)
-  part(g, { name: "Coil", short: "Coil · 164 turns", spec: "4 layers × 41 turns, 1.02 mm Cu · L = 171 µH · R = 0.220 Ω · 10.5 m", role: "Each layer is wound the same rotational way; only the axial direction reverses. Peak 405 A gives ≈ 1.67 T at the centre." }, V3(0, AX + 40, BZ));
+  part(g, { name: "Coil", short: "Coil · 164 turns", spec: "4 layers × 41 turns, 1.02 mm Cu · L = 209 µH · R = 0.244 Ω · 11.7 m", role: "Each layer is wound the same rotational way; only the axial direction reverses. Peak 372 A gives ≈ 1.50 T at the centre." }, V3(0, AX + 40, BZ));
 }
 
 // ------------------------------------------------------------------ 3D-printed coil former (the spool the winding sits on)
 {
   const g = new THREE.Group();
-  const FL = 2.5, FR = 15;
-  const prof = [new THREE.Vector2(6.0, 0), new THREE.Vector2(7.5, 0), new THREE.Vector2(7.5, L + 2 * FL), new THREE.Vector2(6.0, L + 2 * FL)];
+  const FL = 2.5, FR = 16.5;
+  const prof = [new THREE.Vector2(8.15, 0), new THREE.Vector2(9.15, 0), new THREE.Vector2(9.15, L + 2 * FL), new THREE.Vector2(8.15, L + 2 * FL)];
   const core = new THREE.Mesh(new THREE.LatheGeometry(prof, 56), M.print);
-  core.rotation.z = -Math.PI / 2; core.position.set(COIL_X0 - FL, AX, BZ);   // no printed core: the wire sits on the tube
+  core.rotation.z = -Math.PI / 2; core.position.set(COIL_X0 - FL, AX, BZ); g.add(core);   // 1 mm printed core over the tube
   for (const x0 of [COIL_X0 - FL, L / 2]) {
     const sh = new THREE.Shape(); sh.absarc(0, 0, FR, 0, Math.PI * 2, false);
-    const hole = new THREE.Path(); hole.absarc(0, 0, 8.15, 0, Math.PI * 2, true); sh.holes.push(hole);
+    const hole = new THREE.Path(); hole.absarc(0, 0, 9.15, 0, Math.PI * 2, true); sh.holes.push(hole);
     const fl = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: FL, bevelEnabled: false, curveSegments: 56 }), M.print);
     fl.rotation.y = Math.PI / 2; fl.position.set(x0, AX, BZ); g.add(fl);
   }
-  part(g, { name: "3D-printed coil former", short: "Coil former", spec: "PETG · 2 discs, 30 mm across × 2.5 mm, 16.3 mm hole, glued 45.9 mm apart (inside faces)", role: "The two end discs the 164 turns wind between, glued straight onto the tube. No printed core, so the wire sits on the 16 mm tube: coil ID 16 mm, L = 171 µH." }, null);
+  part(g, { name: "3D-printed coil former", short: "Coil former", spec: "PETG · one piece: 16.3 mm bore, 1 mm wall (core 18.3 mm OD), 2 × Ø33 mm discs × 2.5 mm, 45.9 mm between discs", role: "The spool the 164 turns wind onto, like a fishing-rod reel. It slides over the tube and is glued, so the coil ID is 18.3 mm and L = 209 µH. The tube inside supports the thin wall while winding." }, null);
 }
 
 // ------------------------------------------------------------------ slug
@@ -368,7 +368,7 @@ const slug = new THREE.Mesh(new THREE.CylinderGeometry(5.55, 5.55, L, 32), M.ste
 slug.rotation.z = Math.PI / 2;
 const SLUG_START = COIL_X0 - L / 2; // nose at coil entrance
 slug.position.set(SLUG_START, AX, BZ);
-part(slug, { name: "Projectile", short: "Slug · 34.6 g", spec: "7/16 in (11.1 mm) mild steel rod, 45.6 mm long, 34.6 g", role: "Starts with its nose at the coil entrance. 0.45 mm gap per side in the 12 mm bore. Saturates at 0.12 T applied field, far below the coil's 1.67 T." }, null);
+part(slug, { name: "Projectile", short: "Slug · 34.6 g", spec: "7/16 in (11.1 mm) mild steel rod, 45.6 mm long, 34.6 g", role: "Starts with its nose at the coil entrance. 0.45 mm gap per side in the 12 mm bore. Saturates at 0.12 T applied field, far below the coil's 1.50 T." }, null);
 
 // ------------------------------------------------------------------ optical gates: cut-off gate at the coil exit, chronograph gate past the muzzle
 const GATE_X = L / 2 + 6.5;   // just past the coil former's exit flange
@@ -389,7 +389,7 @@ function gateFork(x) {
 }
 {
   const [f1, b1] = gateFork(GATE_X); beam = b1;
-  part(f1, { detail: "gate", name: "Optical gate 1 (cut-off)", short: "Optical gate", spec: "IR LED and phototransistor across the barrel, 6.5 mm past the coil end", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 5.19 ms at 126 V)." }, null);
+  part(f1, { detail: "gate", name: "Optical gate 1 (cut-off)", short: "Optical gate", spec: "IR LED and phototransistor across the barrel, 6.5 mm past the coil end", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 5.52 ms at 126 V)." }, null);
   const [f2, b2] = gateFork(GATE2_X); beam2 = b2;
   part(f2, { name: "Optical gate 2 (chronograph)", short: "Speed gate", spec: "Same IR LED and phototransistor, 10 cm past the muzzle", role: "The ESP32 times the slug between the two beams (220 mm apart here) to log the exit speed for every shot." }, null);
 }
@@ -505,7 +505,7 @@ const GBUS_Y = 14, GBUS_Z = -8;                                    // gate wires
     pk.add(box(16, 5, 21, M.chip, cx, 35.5, IGZ), cyl(2, 1.5, M.alu, cx, 38.7, IGZ - 5, 12));
     for (const dx of [-5.45, 0, 5.45]) pk.add(box(1.2, 1.2, 12, M.alu, cx + dx, PIN_Y, IGZ + 16.5));
   }
-  part(pk, { name: "IGBTs × 2, in parallel", short: "IGBT × 2", spec: "Each ≥ 200 V; together ≥ 600 A pulse (e.g. 2 × IKQ100N60T, 400 A pulsed each) · see ≈ 158 V at turn-off", role: "Close to fire, open on the optical-gate signal at 5.19 ms. Pins: gate, collector, emitter, left to right. Each carries about half the current." });
+  part(pk, { name: "IGBTs × 2, in parallel", short: "IGBT × 2", spec: "Each ≥ 200 V; together ≥ 600 A pulse (e.g. 2 × IKQ100N60T, 400 A pulsed each) · see ≈ 154 V at turn-off", role: "Close to fire, open on the optical-gate signal at 5.52 ms. Pins: gate, collector, emitter, left to right. Each carries about half the current." });
   // nylon standoffs with the shared bolts
   const posts = group(cyl(3, CBOLT.y - 2, M.white, CBOLT.x, (CBOLT.y - 2) / 2, CBOLT.z, 12), cyl(3, EBOLT.y - 2, M.white, EBOLT.x, (EBOLT.y - 2) / 2, EBOLT.z, 12));
   part(posts, { name: "Collector and emitter bolts", spec: "M5 bolts on nylon standoffs", role: "Both collector pigtails and the bank + wire stack on one bolt; both emitter pigtails and the wire to coil terminal A on the other." });
@@ -552,19 +552,19 @@ part(group(box(28, 10, 14, M.black, TBX, 5, TBZ), cyl(2.5, 4, M.brass, TA.x, 12,
   { name: "Coil terminal block", spec: "2-way, 30 A · A = switched end, B = return", role: "Both coil leads finish at the breech end with 4 layers, so they land here." });
 // coil leads: layer 4 (finish) to B, layer 1 (start) to A, leaving through the breech flange
 part(group(
-  wire([[COIL_X0 + 0.5, AX - 11.83, BZ], [TB_.x, AX - 11.83, BZ], [TB_.x, AX - 11.83, TBZ], [TB_.x, TBY, TBZ]], 0.51, copperMats[3], 4),
-  wire([[COIL_X0 + 0.5, AX - 8.55, BZ], [TA.x, AX - 8.55, BZ], [TA.x, AX - 8.55, TBZ], [TA.x, TBY, TBZ]], 0.51, copperMats[0], 4)),
-  { name: "Coil leads", spec: "1.02 mm magnet wire, enamel scraped at the ends", role: "Start and finish of the 10.5 m winding." });
+  wire([[COIL_X0 + 0.5, AX - 12.98, BZ], [TB_.x, AX - 12.98, BZ], [TB_.x, AX - 12.98, TBZ], [TB_.x, TBY, TBZ]], 0.51, copperMats[3], 4),
+  wire([[COIL_X0 + 0.5, AX - 9.70, BZ], [TA.x, AX - 9.70, BZ], [TA.x, AX - 9.70, TBZ], [TA.x, TBY, TBZ]], 0.51, copperMats[0], 4)),
+  { name: "Coil leads", spec: "1.02 mm magnet wire, enamel scraped at the ends", role: "Start and finish of the 11.7 m winding." });
 
 // ------------------------------------------------------------------ flyback diode + flyback resistor (new)
 const FDX = -130, FDZ = 75, FRX = -45, FRZ = 75;
 {
   const d = group(box(34, 8, 30, M.black, FDX, 4, FDZ), cyl(9.5, 6, M.steel, FDX, 11, FDZ, 6), cyl(7, 14, M.steel, FDX, 21, FDZ, 24), cyl(1.6, 10, M.thin, FDX, 33, FDZ, 8));
-  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "SMC MBR60200W, 200 V 60 A Schottky, 600 A surge · tab = cathode", role: "Gives the coil's 9.6 J a path after cut-off so the switch is not destroyed. Tab on an insulating block: it is live." }, null);
+  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "SMC MBR60200W, 200 V 60 A Schottky, 600 A surge · tab = cathode", role: "Gives the coil's 10.2 J a path after cut-off so the switch is not destroyed. Tab on an insulating block: it is live." }, null);
   const r = group(box(70, 3, 46, M.alu, FRX, 1.5, FRZ), box(28, 14, 27, M.gold, FRX, 10, FRZ), box(40, 2, 20, M.gold, FRX, 4, FRZ),
     cyl(1.2, 8, M.thin, FRX - 17, 12, FRZ), cyl(1.2, 8, M.thin, FRX + 17, 12, FRZ));
   for (let i = -2; i <= 2; i++) r.add(box(26, 2.5, 1.6, M.gold, FRX, 17.5, FRZ + i * 5));
-  part(r, { detail: "flyback", name: "Flyback resistor", short: "R_fb 0.20 Ω", spec: "0.20 Ω pulse-rated wirewound, ≥ 25 W · absorbs ≈ 4.5 J/shot, 23 kW peak", role: "In series with the diode. Cuts the post-cut-off decay from 0.78 to 0.41 ms, so exit speed rises from 17.7 to 18.9 m/s." }, null, true);
+  part(r, { detail: "flyback", name: "Flyback resistor", short: "R_fb 0.20 Ω", spec: "0.20 Ω pulse-rated wirewound, ≥ 25 W · absorbs ≈ 4.5 J/shot, 20 kW peak", role: "In series with the diode. Cuts the post-cut-off decay from 0.85 to 0.47 ms, so exit speed rises from 16.7 to 17.8 m/s." }, null, true);
 }
 // cathode (stud) to A; anode through R_fb to B
 part(group(
@@ -693,7 +693,7 @@ const BOXX = 330;
   lug(TA.x, TBY - 1, TBZ, -Math.PI / 2); lug(TB_.x, TBY - 1, TBZ, -Math.PI / 2);
   lug(FRX - 17, 15, FRZ, Math.PI); lug(FRX + 17, 15, FRZ, 0);
   lug(FDX - 10, 11, FDZ, Math.PI);
-  part(g, { name: "Crimped ring lugs", spec: "Tubular copper lugs for 10 AWG, M5 hole, crimped twice and heat-shrunk", role: "Every joint in the 405 A loop is a crimped lug bolted to a terminal. Only the IGBT pins are soldered." });
+  part(g, { name: "Crimped ring lugs", spec: "Tubular copper lugs for 10 AWG, M5 hole, crimped twice and heat-shrunk", role: "Every joint in the 372 A loop is a crimped lug bolted to a terminal. Only the IGBT pins are soldered." });
 }
 
 // ------------------------------------------------------------------ cutaway
@@ -771,7 +771,7 @@ const DETAILS = {
       T_(262, 244, "Aluminium-housed wirewound, rated") + T_(262, 258, "25 W only when bolted to metal.") +
       T_(262, 282, "Two bolts clamp it flat to the offcut,", "tm") + T_(262, 296, "which is the heatsink.", "tm") +
       T_(262, 320, "Keep the offcut clear of the + and −", "tm") + T_(262, 334, "buses: it runs hot.", "tm"), 356),
-    notes: ["Placed across the whole series bank, so it drains both capacitors together.", "Draws 0.126 A from the charger the whole time it is connected; negligible against the 405 A pulse."],
+    notes: ["Placed across the whole series bank, so it drains both capacitors together.", "Draws 0.126 A from the charger the whole time it is connected; negligible against the 372 A pulse."],
   },
   flyback: {
     title: "Flyback path: diode + 0.20 Ω",
@@ -784,7 +784,7 @@ const DETAILS = {
       T_(30, 36, "bank +", "tm") + T_(30, 162, "bank −", "tm") +
       T_(176, 66, "MBR60200W, 200 V, 600 A surge", "t") + T_(176, 80, "cathode up, to the IGBT side", "tm") +
       T_(176, 124, "R", "tb") + T_(185, 127, "fb", "tb") + T_(200, 124, "0.20 Ω pulse-rated", "tb") +
-      T_(344, 96, "Coil", "t") + T_(344, 110, "171 µH", "tm") +
+      T_(344, 96, "Coil", "t") + T_(344, 110, "209 µH", "tm") +
       T_(12, 194, "On the bench (top view)", "sec") +
       `<rect class="blk" x="22" y="238" width="76" height="56" rx="3"/><circle class="part" cx="46" cy="262" r="8"/><circle class="part" cx="76" cy="262" r="8"/>` +
       T_(46, 266, "A", "t", "middle") + T_(76, 266, "B", "t", "middle") + `<text class="tm" style="fill:#fff" x="60" y="286" text-anchor="middle">terminal block</text>` +
@@ -795,7 +795,7 @@ const DETAILS = {
       L_([[206, 261], [296, 261], [306, 266]]) +
       L_([[424, 266], [460, 266], [460, 338], [76, 338], [76, 270]]),
       352),
-    notes: ["Terminal A is the coil end the IGBT feeds; B returns to bank −. The diode's tab (cathode) goes to A. The tab is live: mount it on plywood or with an insulating pad.", "Time constant falls from 0.78 ms (diode alone) to 0.41 ms, so exit speed rises from 17.7 to 18.9 m/s.", "Absorbs about 4.5 J per shot, 23 kW peak for about 1 ms: pulse-rated wirewound only. The switch sees 158 V at turn-off."],
+    notes: ["Terminal A is the coil end the IGBT feeds; B returns to bank −. The diode's tab (cathode) goes to A. The tab is live: mount it on plywood or with an insulating pad.", "Time constant falls from 0.85 ms (diode alone) to 0.47 ms, so exit speed rises from 16.7 to 17.8 m/s.", "Absorbs about 4.5 J per shot, 20 kW peak for about 1 ms: pulse-rated wirewound only. The switch sees 154 V at turn-off."],
   },
   esp32: {
     title: "ESP32 controller",
@@ -809,7 +809,7 @@ const DETAILS = {
       T_(342, 167, "5V · out", "pin", "end") + L_([[350, 163], [390, 163]]) + `<rect class="box" x="390" y="142" width="120" height="42" rx="4"/>` + T_(450, 159, "IR LED", "t", "middle") + T_(450, 172, "+ series resistor", "tm", "middle") + T_(450, 198, "150 Ω, ≈ 24 mA", "tm", "middle") +
       T_(342, 249, "GND", "pin", "end") + L_([[350, 245], [390, 245]]) + `<rect class="box" x="390" y="228" width="120" height="34" rx="4"/>` + T_(450, 243, "Common ground", "t", "middle") + T_(450, 256, "see note below", "tm", "middle") +
       T_(260, 300, "chronograph · capture · trigger", "tm", "middle"), 340),
-    notes: ["GPIO numbers are suggestions; the build plan has only fixed GPIO34 so far.", "The divider ties the ESP32's ground to bank −. Power it from a battery bank, never from a laptop while the bank is connected.", "Optical gate: its beam break is the cut-off event, at 5.19 ms into the shot at 126 V."],
+    notes: ["GPIO numbers are suggestions; the build plan has only fixed GPIO34 so far.", "The divider ties the ESP32's ground to bank −. Power it from a battery bank, never from a laptop while the bank is connected.", "Optical gate: its beam break is the cut-off event, at 5.52 ms into the shot at 126 V."],
   },
   gate: {
     title: "Optical gate 1 (cut-off)",
@@ -822,7 +822,7 @@ const DETAILS = {
       D_(220, 96) + L_([[220, 96], [300, 96]], "hl") + T_(306, 100, "GPIO27 → interrupt", "pin") +
       photoT(220, 96, 156) + T_(246, 134, "phototransistor", "t") + T_(246, 148, "daylight filter", "tm") + L_([[220, 156], [220, 186]]) +
       L_([[40, 186], [300, 186]]) + D_(80, 186) + D_(220, 186) + T_(306, 190, "GND", "pin") +
-      T_(344, 124, "beam clear: ≈ 0.2 V", "tm") + T_(344, 138, "slug blocks: 3.3 V, rising edge", "tm") + T_(344, 152, "= IGBT off (≈ 5.19 ms at 126 V)", "tm") +
+      T_(344, 124, "beam clear: ≈ 0.2 V", "tm") + T_(344, 138, "slug blocks: 3.3 V, rising edge", "tm") + T_(344, 152, "= IGBT off (≈ 5.52 ms at 126 V)", "tm") +
       T_(12, 214, "Housing, looking down the barrel", "sec") +
       `<rect class="plate" x="55" y="336" width="150" height="13"/><rect class="blk" x="68" y="338" width="14" height="9" rx="2"/><rect class="blk" x="178" y="338" width="14" height="9" rx="2"/>` +
       `<rect class="box" x="85" y="258" width="90" height="80"/>` +
@@ -845,7 +845,7 @@ const DETAILS = {
       L_([[340, 236], [340, 248]], "w", 'style="stroke-width:1"') + L_([[355.5, 236], [355.5, 248]], "w", 'style="stroke-width:1"') + L_([[340, 242], [355.5, 242]], "w", 'style="stroke-width:1"') +
       T_(400, 238, "beam 6.5 mm past the coil end", "tm") + T_(400, 252, "= 3 mm inside the housing face", "tm") +
       T_(400, 280, "flange 2.5 mm, 0.5 mm gap", "tm") + T_(400, 330, "slides on from the muzzle end", "tm") + T_(400, 344, "18 mm long", "tm") + `</g>`, 548),
-    notes: ["Only the LED and phototransistor live in the housing; both resistors sit at the ESP32 end, on the divider perfboard. 4-core cable between them, crossing the pulse wires at 90°.", "Pull the phototransistor up to 3.3 V, never 5 V: ESP32 pins are not 5 V tolerant.", "Arm the interrupt only after Fire, and add a 5 ms timeout that cuts the IGBT if the beam never breaks.", "IR passes the clear acrylic wall, so the tube is not drilled. Keep it clean where the beam crosses."],
+    notes: ["Only the LED and phototransistor live in the housing; both resistors sit at the ESP32 end, on the divider perfboard. 4-core cable between them, crossing the pulse wires at 90°.", "Pull the phototransistor up to 3.3 V, never 5 V: ESP32 pins are not 5 V tolerant.", "Arm the interrupt only after Fire, and add a 15 ms timeout that cuts the IGBT if the beam never breaks (the 40 V shot cuts at 12.8 ms).", "IR passes the clear acrylic wall, so the tube is not drilled. Keep it clean where the beam crosses."],
   },
 };
 const detail = document.getElementById("detail");
@@ -1092,7 +1092,7 @@ function renderResults() {
   const tb = document.getElementById("results"); tb.innerHTML = "";
   rows.forEach(([k, v]) => { const tr = document.createElement("tr"); tr.innerHTML = "<td></td><td></td>"; tr.children[0].textContent = k; tr.children[1].textContent = v; tb.appendChild(tr); });
   document.getElementById("res-note").textContent = V === 126
-    ? "Matches the framework: 405 A, 5.19 ms, 336 A, 89.7 V, 196 J, 158 V, 18.9 m/s, 6.2 J, 1.6 %. Expected real muzzle speed after eddy, friction and back-EMF losses: 16–17.5 m/s."
+    ? "Matches the framework: 372 A, 5.52 ms, 312 A, 90.6 V, 192 J, 154 V, 17.8 m/s, 5.5 J, 1.4 %. Expected real muzzle speed after eddy, friction and back-EMF losses: 15–16.5 m/s."
     : V === 120 ? "120 V is the top the bench supply can reach. Same model; the doc's numbers are the 126 V case."
     : "Same model at a lower charge, for the step-up shots in the build plan. The doc's numbers are the 126 V case.";
 }

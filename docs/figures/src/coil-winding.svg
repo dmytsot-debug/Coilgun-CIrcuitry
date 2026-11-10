@@ -66,36 +66,39 @@
 <line x1="374.0" y1="180.0" x2="382.0" y2="180.0" stroke="#222" stroke-width="0.8"/>
 <text x="384.0" y="138.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">4.38 mm</text>
 <text x="384.0" y="148.0" font-size="7" text-anchor="start" font-weight="normal" fill="#444">winding depth</text>
-<rect x="62" y="180" width="272.0" height="40.0" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>
-<text x="341.0" y="203.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#4a7aa8">Acrylic tube wall, 2.0 mm</text>
-<rect x="62" y="229.0" width="272.0" height="8" fill="#8f979e"/>
-<text x="341.0" y="236.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#444">Projectile surface (0.45 mm gap)</text>
-<line x1="147.4" y1="177.1" x2="165.0" y2="249.0" stroke="#7a4313" stroke-width="0.6"/>
-<text x="167.0" y="252.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#7a4313">1.02 mm copper + enamel ≈ 1.10 mm overall</text>
-<text x="62.0" y="270.0" font-size="7" text-anchor="start" font-weight="normal" fill="#444">Coil axis lies 5.55 mm below the projectile surface (not shown).</text>
-<text x="452.0" y="47.0" font-size="10" text-anchor="start" font-weight="bold" fill="#222">B. End View (20 px = 1 mm)</text>
-<circle cx="555" cy="181" r="123.8" fill="#d98a3d" stroke="#7a4313" stroke-width="0.6"/>
-<circle cx="555" cy="181" r="112.8" fill="#e8a05c" stroke="#7a4313" stroke-width="0.6"/>
-<circle cx="555" cy="181" r="101.9" fill="#d98a3d" stroke="#7a4313" stroke-width="0.6"/>
-<circle cx="555" cy="181" r="91.0" fill="#e8a05c" stroke="#7a4313" stroke-width="0.6"/>
-<circle cx="555" cy="181" r="80.0" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>
-<circle cx="555" cy="181" r="60.0" fill="#fff" stroke="#7aa7d1" stroke-width="0.8"/>
-<circle cx="555" cy="181" r="55.5" fill="#8f979e" stroke="#555" stroke-width="0.8"/>
-<text x="555.0" y="184.0" font-size="7.5" text-anchor="middle" font-weight="bold" fill="#fff">Projectile</text>
-<text x="555.0" y="123.0" font-size="5.5" text-anchor="middle" font-weight="normal" fill="#4a7aa8">Tube</text>
-<text x="555.0" y="98.0" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">1</text>
-<text x="555.0" y="269.0" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">1</text>
-<text x="555.0" y="87.1" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">2</text>
-<text x="555.0" y="279.9" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">2</text>
-<text x="555.0" y="76.1" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">3</text>
-<text x="555.0" y="290.9" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">3</text>
-<text x="555.0" y="65.2" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">4</text>
-<text x="555.0" y="301.8" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">4</text>
-<line x1="431.2" y1="320.8" x2="678.8" y2="320.8" stroke="#222" stroke-width="0.8"/>
-<line x1="431.2" y1="316.8" x2="431.2" y2="324.8" stroke="#222" stroke-width="0.8"/>
-<line x1="678.8" y1="316.8" x2="678.8" y2="324.8" stroke="#222" stroke-width="0.8"/>
-<text x="555.0" y="332.8" font-size="7.5" text-anchor="middle" font-weight="normal" fill="#222">Coil OD ≈ 24.8 mm</text>
-<text x="555.0" y="342.8" font-size="7" text-anchor="middle" font-weight="normal" fill="#5b5090">Coil ID = tube OD = 16.0 mm · bore 12.0 mm</text>
+<rect x="62" y="180" width="272.0" height="20.0" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>
+<text x="341.0" y="193.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#5b5090">Printed holder wall, 1.0 mm</text>
+<rect x="62" y="203.0" width="272.0" height="40.0" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>
+<text x="341.0" y="226.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#4a7aa8">Acrylic tube wall, 2.0 mm</text>
+<rect x="62" y="252.0" width="272.0" height="8" fill="#8f979e"/>
+<text x="341.0" y="259.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#444">Projectile surface (0.45 mm gap)</text>
+<line x1="147.4" y1="177.1" x2="165.0" y2="279.0" stroke="#7a4313" stroke-width="0.6"/>
+<text x="167.0" y="282.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#7a4313">1.02 mm copper + enamel ≈ 1.10 mm overall</text>
+<text x="62.0" y="300.0" font-size="7" text-anchor="start" font-weight="normal" fill="#444">Coil axis lies 5.55 mm below the projectile surface (not shown).</text>
+<text x="452.0" y="47.0" font-size="10" text-anchor="start" font-weight="bold" fill="#222">B. End View (17 px = 1 mm)</text>
+<circle cx="555" cy="178" r="115.0" fill="#d98a3d" stroke="#7a4313" stroke-width="0.6"/>
+<circle cx="555" cy="178" r="105.7" fill="#e8a05c" stroke="#7a4313" stroke-width="0.6"/>
+<circle cx="555" cy="178" r="96.4" fill="#d98a3d" stroke="#7a4313" stroke-width="0.6"/>
+<circle cx="555" cy="178" r="87.1" fill="#e8a05c" stroke="#7a4313" stroke-width="0.6"/>
+<circle cx="555" cy="178" r="77.775" fill="#d9d4ea" stroke="#8a80b0" stroke-width="0.8"/>
+<circle cx="555" cy="178" r="68.0" fill="#cfe2f3" stroke="#7aa7d1" stroke-width="0.8"/>
+<circle cx="555" cy="178" r="51.0" fill="#fff" stroke="#7aa7d1" stroke-width="0.8"/>
+<circle cx="555" cy="178" r="47.175" fill="#8f979e" stroke="#555" stroke-width="0.8"/>
+<text x="555.0" y="181.0" font-size="7.5" text-anchor="middle" font-weight="bold" fill="#fff">Projectile</text>
+<text x="555.0" y="128.3" font-size="5.5" text-anchor="middle" font-weight="normal" fill="#4a7aa8">Tube</text>
+<text x="555.0" y="98.1" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">1</text>
+<text x="555.0" y="262.9" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">1</text>
+<text x="555.0" y="88.8" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">2</text>
+<text x="555.0" y="272.2" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">2</text>
+<text x="555.0" y="79.5" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">3</text>
+<text x="555.0" y="281.5" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">3</text>
+<text x="555.0" y="70.1" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">4</text>
+<text x="555.0" y="290.9" font-size="6.5" text-anchor="middle" font-weight="bold" fill="#fff">4</text>
+<line x1="440.0" y1="309.0" x2="670.0" y2="309.0" stroke="#222" stroke-width="0.8"/>
+<line x1="440.0" y1="305.0" x2="440.0" y2="313.0" stroke="#222" stroke-width="0.8"/>
+<line x1="670.0" y1="305.0" x2="670.0" y2="313.0" stroke="#222" stroke-width="0.8"/>
+<text x="555.0" y="321.0" font-size="7.5" text-anchor="middle" font-weight="normal" fill="#222">Coil OD ≈ 27.1 mm</text>
+<text x="555.0" y="331.0" font-size="7" text-anchor="middle" font-weight="normal" fill="#5b5090">Coil ID = holder core OD = 18.3 mm · tube 16 / 12 mm</text>
 <text x="712.0" y="58.0" font-size="6.5" text-anchor="end" font-weight="normal" fill="#444">Ring numbers = layer (see C)</text>
 <text x="25.0" y="348.0" font-size="10" text-anchor="start" font-weight="bold" fill="#222">C. Layer Radii and Wire Length (41 turns per layer)</text>
 <text x="25.0" y="370.0" font-size="7.5" text-anchor="start" font-weight="bold" fill="#222">Layer</text>
@@ -105,28 +108,28 @@
 <text x="514.0" y="370.0" font-size="7.5" text-anchor="start" font-weight="bold" fill="#222">Axial winding direction</text>
 <line x1="25.0" y1="376.0" x2="694.0" y2="376.0" stroke="#222" stroke-width="0.8"/>
 <text x="25.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">1</text>
-<text x="128.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">8.55 mm</text>
-<text x="257.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">53.7 mm</text>
-<text x="390.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2.20 m</text>
+<text x="128.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">9.70 mm</text>
+<text x="257.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">60.9 mm</text>
+<text x="390.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2.50 m</text>
 <text x="514.0" y="392.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">Breech → muzzle</text>
 <text x="25.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2</text>
-<text x="128.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">9.64 mm</text>
-<text x="257.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">60.6 mm</text>
-<text x="390.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2.48 m</text>
+<text x="128.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">10.79 mm</text>
+<text x="257.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">67.8 mm</text>
+<text x="390.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2.78 m</text>
 <text x="514.0" y="408.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">Muzzle → breech</text>
 <text x="25.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">3</text>
-<text x="128.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">10.74 mm</text>
-<text x="257.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">67.5 mm</text>
-<text x="390.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">2.77 m</text>
+<text x="128.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">11.89 mm</text>
+<text x="257.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">74.7 mm</text>
+<text x="390.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">3.06 m</text>
 <text x="514.0" y="425.0" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">Breech → muzzle</text>
 <text x="25.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">4</text>
-<text x="128.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">11.83 mm</text>
-<text x="257.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">74.3 mm</text>
-<text x="390.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">3.05 m</text>
+<text x="128.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">12.98 mm</text>
+<text x="257.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">81.6 mm</text>
+<text x="390.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">3.34 m</text>
 <text x="514.0" y="441.5" font-size="7.5" text-anchor="start" font-weight="normal" fill="#222">Muzzle → breech</text>
 <line x1="25.0" y1="449.0" x2="694.0" y2="449.0" stroke="#222" stroke-width="0.8"/>
 <text x="25.0" y="462.0" font-size="7.5" text-anchor="start" font-weight="bold" fill="#222">Total</text>
-<text x="390.0" y="462.0" font-size="7.5" text-anchor="start" font-weight="bold" fill="#222">10.50 m → R = 10.50 × 0.0209 = 0.219 Ω</text>
+<text x="390.0" y="462.0" font-size="7.5" text-anchor="start" font-weight="bold" fill="#222">11.69 m → R = 11.69 × 0.0209 = 0.244 Ω</text>
 <text x="25.0" y="482.0" font-size="7" text-anchor="start" font-weight="normal" fill="#1f5f9e">Winding note: wind every layer in the same rotational direction (e.g. clockwise viewed from the breech); only the axial direction reverses</text>
-<text x="25.0" y="493.0" font-size="7" text-anchor="start" font-weight="normal" fill="#1f5f9e">at the end of each layer. With an even number of layers, both leads finish at the breech end of the coil. Cut about 11.5 m to leave leads.</text>
+<text x="25.0" y="493.0" font-size="7" text-anchor="start" font-weight="normal" fill="#1f5f9e">at the end of each layer. With an even number of layers, both leads finish at the breech end of the coil. Cut about 12.5 m to leave leads.</text>
 </svg>
