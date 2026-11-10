@@ -24,7 +24,7 @@ The beam breaks when the slug's nose arrives, but the cut must happen when the s
 
 ## Wiring
 
-See `schematic.png` (all wires on the left side of the ESP32).
+Schematic: `schematic.png`. Hole-by-hole breadboard layout: `breadboard_layout.png` (regenerate with `python3 make_breadboard_diagram.py breadboard_layout.svg`, which also checks the layout against the schematic for shorts).
 
 ```
 Gate A:  3.3V ── LDR ──┬── GPIO 15 (D15)       Gate B: same, to GPIO 4 (D4)
@@ -37,7 +37,7 @@ Coil LED:  GPIO 18 (D18) ── 220Ω ── LED(+) ── LED(-) ── GND
 OLED:  VCC → 3.3V,  GND → GND,  SDA → GPIO 21,  SCL → GPIO 22
 ```
 
-Bend each gate LED so it points straight at its LDR across a gap of 1 to 2 cm. That gap is the "barrel". Put the two LDRs 50 mm apart, centre to centre. If yours differ, edit `GATE_SPACING_MM` and `SLUG_LENGTH_MM` at the top of the sketch.
+Bend each gate LED so it points straight at its LDR across a gap of 1 to 2 cm. That gap is the "barrel". The two gates sit 20 breadboard rows (50.8 mm) apart. If yours differ, edit `GATE_SPACING_MM` and `SLUG_LENGTH_MM` at the top of the sketch.
 
 ## Run it
 

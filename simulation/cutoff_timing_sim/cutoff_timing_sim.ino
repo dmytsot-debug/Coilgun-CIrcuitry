@@ -28,7 +28,7 @@ const int PIN_COIL   = 18;  // D18, "coil" LED (stands in for the IGBT gate).
 // OLED on the default I2C pins: SDA = GPIO 21, SCL = GPIO 22.
 
 // ---- Geometry: measure yours and edit ---------------------------------------
-const float GATE_SPACING_MM = 50.0;  // centre of LDR A to centre of LDR B
+const float GATE_SPACING_MM = 50.8;  // 20 breadboard rows between the two light LEDs
 const float SLUG_LENGTH_MM  = 30.0;  // length of the card strip you pass through
 
 // ---- Behaviour --------------------------------------------------------------
