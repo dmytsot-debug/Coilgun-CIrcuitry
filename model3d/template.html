@@ -389,7 +389,7 @@ function gateFork(x) {
 }
 {
   const [f1, b1] = gateFork(GATE_X); beam = b1;
-  part(f1, { name: "Optical gate 1 (cut-off)", short: "Optical gate", spec: "IR LED above, phototransistor below, at the coil exit", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, null);
+  part(f1, { detail: "gate", name: "Optical gate 1 (cut-off)", short: "Optical gate", spec: "IR LED and phototransistor across the barrel, 6.5 mm past the coil end", role: "When the slug's nose reaches the coil exit its centre is at the coil centre: the beam breaks and the IGBT turns off (≈ 4.35 ms at 126 V)." }, null);
   const [f2, b2] = gateFork(GATE2_X); beam2 = b2;
   part(f2, { name: "Optical gate 2 (chronograph)", short: "Speed gate", spec: "Same IR LED and phototransistor, 10 cm past the muzzle", role: "The ESP32 times the slug between the two beams (220 mm apart here) to log the exit speed for every shot." }, null);
 }
@@ -560,7 +560,7 @@ part(group(
 const FDX = -130, FDZ = 75, FRX = -45, FRZ = 75;
 {
   const d = group(box(34, 8, 30, M.black, FDX, 4, FDZ), cyl(9.5, 6, M.steel, FDX, 11, FDZ, 6), cyl(7, 14, M.steel, FDX, 21, FDZ, 24), cyl(1.6, 10, M.thin, FDX, 33, FDZ, 8));
-  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "≥ 200 V, ≥ 450 A pulse, fast recovery · stud = cathode", role: "Gives the coil's 8.0 J a path after cut-off so the switch is not destroyed. Stud on an insulating block: it is live." }, null);
+  part(d, { name: "Flyback diode", short: "Flyback diode", spec: "SMC MBR60200W, 200 V 60 A Schottky, 600 A surge · tab = cathode", role: "Gives the coil's 8.0 J a path after cut-off so the switch is not destroyed. Tab on an insulating block: it is live." }, null);
   const r = group(box(70, 3, 46, M.alu, FRX, 1.5, FRZ), box(28, 14, 27, M.gold, FRX, 10, FRZ), box(40, 2, 20, M.gold, FRX, 4, FRZ),
     cyl(1.2, 8, M.thin, FRX - 17, 12, FRZ), cyl(1.2, 8, M.thin, FRX + 17, 12, FRZ));
   for (let i = -2; i <= 2; i++) r.add(box(26, 2.5, 1.6, M.gold, FRX, 17.5, FRZ + i * 5));
@@ -634,7 +634,7 @@ let knifeBlade;
   part(g, { name: "Bench power supply", short: "Bench supply", spec: "Jesverty SPS-12003N: 0 to 120 V, 0 to 3 A · current limit 2 A", role: "Fills the bank in about 3 s at 2 A. It tops out at 120 V, 6 V short of the 126 V design, so 120 V is the top step until a 126 V charger arrives. Switched off the bank before every shot." }, null);
   // blocking diode: stud (cathode) toward the bank
   const d = group(box(34, 8, 30, M.black, BDX, 4, BDZ), cyl(9.5, 6, M.steel, BDX, 11, BDZ, 6), cyl(7, 14, M.steel, BDX, 21, BDZ, 24), cyl(1.6, 10, M.thin, BDX, 33, BDZ, 8));
-  part(d, { name: "Blocking diode", short: "Blocking diode", spec: "Vishay VS-70HF20, 200 V, 70 A · stud = cathode, toward the bank", role: "One-way valve in the charger's + lead: current flows supply to bank, never back, so the coil's kick cannot reach the supply." }, null);
+  part(d, { name: "Blocking diode", short: "Blocking diode", spec: "SMC MBR60200W, 200 V, 60 A Schottky · tab = cathode, toward the bank", role: "One-way valve in the charger's + lead: current flows supply to bank, never back, so the coil's kick cannot reach the supply." }, null);
   // knife switch: hinge on the diode side, jaw on the bank side
   const ks = group(box(56, 6, 24, M.white, KSX, 3, KSZ), box(4, 14, 10, M.brass, KSX - 20, 12, KSZ), box(4, 14, 10, M.brass, KSX + 20, 12, KSZ));
   knifeBlade = new THREE.Group(); knifeBlade.position.set(KSX - 20, 17, KSZ);
@@ -726,6 +726,21 @@ function diodeUp(x, y1, y2) {   // cathode toward y1
   const m = (y1 + y2) / 2;
   return L_([[x, y1], [x, m - 9]]) + L_([[x, m + 9], [x, y2]]) + `<polygon class="w" points="${x - 10},${m + 9} ${x + 10},${m + 9} ${x},${m - 9}"/>` + L_([[x - 10, m - 9], [x + 10, m - 9]], "w", 'style="stroke-width:2.4"');
 }
+function ledDown(x, y1, y2) {  // anode y1, cathode y2, light out to the right
+  const m = (y1 + y2) / 2;
+  return L_([[x, y1], [x, m - 9]]) + L_([[x, m + 9], [x, y2]]) + `<polygon class="part" points="${x - 10},${m - 9} ${x + 10},${m - 9} ${x},${m + 9}"/>` + L_([[x - 10, m + 9], [x + 10, m + 9]], "w", 'style="stroke-width:2.4"') +
+    L_([[x + 12, m - 2], [x + 26, m - 10]], "w", 'style="stroke:#e0322f"') + L_([[x + 12, m + 6], [x + 26, m - 2]], "w", 'style="stroke:#e0322f"') +
+    `<polygon points="${x + 26},${m - 10} ${x + 19},${m - 10} ${x + 23},${m - 5}" style="fill:#e0322f"/><polygon points="${x + 26},${m - 2} ${x + 19},${m - 2} ${x + 23},${m + 3}" style="fill:#e0322f"/>`;
+}
+function photoT(x, y1, y2) {   // collector at y1, emitter at y2, column at x; light enters from the left
+  const m = (y1 + y2) / 2, bx = x - 8;
+  return `<circle class="box" cx="${x - 4}" cy="${m}" r="17"/>` + L_([[bx, m - 10], [bx, m + 10]], "w", 'style="stroke-width:2.6"') +
+    L_([[x, y1], [x, m - 12], [bx, m - 4]]) + L_([[bx, m + 4], [x, m + 12], [x, y2]]) +
+    `<polygon class="dot" points="${x},${m + 12} ${x - 8},${m + 11} ${x - 3},${m + 5}"/>` +
+    L_([[x - 44, m - 14], [x - 26, m - 6]], "w", 'style="stroke:#e0322f"') + L_([[x - 44, m - 4], [x - 26, m + 4]], "w", 'style="stroke:#e0322f"') +
+    `<polygon points="${x - 26},${m - 6} ${x - 33},${m - 10} ${x - 32},${m - 3}" style="fill:#e0322f"/><polygon points="${x - 26},${m + 4} ${x - 33},${m} ${x - 32},${m + 7}" style="fill:#e0322f"/>`;
+}
+const BEAM_ = 'style="stroke:#e0322f;stroke-width:1.6;stroke-dasharray:4 3;fill:none"';
 const SVG_ = (inner, h) => `<svg class="sch" viewBox="0 0 520 ${h}" role="img">${inner}</svg>`;
 
 const DETAILS = {
@@ -767,34 +782,70 @@ const DETAILS = {
       D_(160, 44) + D_(160, 144) + diodeUp(160, 44, 96) + zig(160, 96, 144, "hl") +
       L_([[330, 44], [330, 62]]) + coilSym(330, 62, 126) + L_([[330, 126], [330, 144]]) + D_(330, 44) + D_(330, 144) +
       T_(30, 36, "bank +", "tm") + T_(30, 162, "bank −", "tm") +
-      T_(176, 66, "Diode, ≥ 200 V, ≥ 450 A", "t") + T_(176, 80, "cathode up, to the IGBT side", "tm") +
+      T_(176, 66, "MBR60200W, 200 V, 600 A surge", "t") + T_(176, 80, "cathode up, to the IGBT side", "tm") +
       T_(176, 124, "R", "tb") + T_(185, 127, "fb", "tb") + T_(200, 124, "0.20 Ω pulse-rated", "tb") +
       T_(344, 96, "Coil", "t") + T_(344, 110, "94 µH", "tm") +
       T_(12, 194, "On the bench (top view)", "sec") +
       `<rect class="blk" x="22" y="238" width="76" height="56" rx="3"/><circle class="part" cx="46" cy="262" r="8"/><circle class="part" cx="76" cy="262" r="8"/>` +
       T_(46, 266, "A", "t", "middle") + T_(76, 266, "B", "t", "middle") + `<text class="tm" style="fill:#fff" x="60" y="286" text-anchor="middle">terminal block</text>` +
       `<rect class="plate" x="150" y="276" width="76" height="12" rx="2"/>` + T_(188, 304, "insulating block", "tm", "middle") +
-      `<polygon class="part" points="170,254 188,244 206,254 206,268 188,278 170,268"/><circle class="blk" cx="188" cy="261" r="5"/>` + T_(188, 236, "diode · stud = cathode", "t", "middle") +
+      `<polygon class="part" points="170,254 188,244 206,254 206,268 188,278 170,268"/><circle class="blk" cx="188" cy="261" r="5"/>` + T_(188, 236, "diode · tab = cathode", "t", "middle") +
       `<rect class="plate" x="290" y="226" width="150" height="80" rx="3"/><rect class="part" x="306" y="248" width="118" height="36" rx="4"/>` + [326, 338, 350, 362, 374, 386, 398].map(x => L_([[x, 252], [x, 280]], "w", 'style="stroke-width:1"')).join("") + T_(365, 322, "R_fb on its own aluminium plate", "tm", "middle") +
       L_([[170, 261], [120, 261], [120, 216], [46, 216], [46, 254]]) +
       L_([[206, 261], [296, 261], [306, 266]]) +
       L_([[424, 266], [460, 266], [460, 338], [76, 338], [76, 270]]),
       352),
-    notes: ["Terminal A is the coil end the IGBT feeds; B returns to bank −. The diode's stud (cathode) goes to A. The stud is live: mount it on plywood or an insulating washer kit.", "Time constant falls from 0.59 ms (diode alone) to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s.", "Absorbs about 4.4 J per shot, 34 kW peak for about 1 ms: pulse-rated wirewound only. The switch sees 171 V at turn-off."],
+    notes: ["Terminal A is the coil end the IGBT feeds; B returns to bank −. The diode's tab (cathode) goes to A. The tab is live: mount it on plywood or with an insulating pad.", "Time constant falls from 0.59 ms (diode alone) to 0.26 ms, so exit speed rises from 20.9 to 22.4 m/s.", "Absorbs about 4.4 J per shot, 34 kW peak for about 1 ms: pulse-rated wirewound only. The switch sees 171 V at turn-off."],
   },
   esp32: {
     title: "ESP32 controller",
     sub: "Schematic preview: what connects to which pin",
     svg: SVG_(
       `<rect class="box" x="170" y="24" width="180" height="300" rx="6"/>` + T_(260, 46, "ESP32", "t", "middle") +
-      `<rect class="box" x="12" y="62" width="118" height="34" rx="4"/>` + T_(71, 77, "Optical gate", "t", "middle") + T_(71, 90, "phototransistor", "tm", "middle") + L_([[130, 79], [170, 79]]) + T_(178, 83, "GPIO27 · in", "pin") + T_(12, 110, "interrupt on beam break", "tm") +
+      `<rect class="box" x="12" y="62" width="118" height="34" rx="4"/>` + T_(71, 77, "Optical gate", "t", "middle") + T_(71, 90, "10 kΩ pull-up to 3V3", "tm", "middle") + L_([[130, 79], [170, 79]]) + T_(178, 83, "GPIO27 · in", "pin") + T_(12, 110, "interrupt on beam break", "tm") +
       `<rect class="box" x="12" y="140" width="118" height="46" rx="4"/>` + T_(71, 157, "470 kΩ / 10 kΩ", "t", "middle") + T_(71, 170, "divider + 1 nF", "t", "middle") + T_(71, 182, "to bank +", "tm", "middle") + L_([[130, 163], [170, 163]]) + T_(178, 167, "GPIO34 · ADC", "pin") + T_(12, 200, "126 V reads 2.63 V at the pin", "tm") +
       `<rect class="box" x="12" y="228" width="118" height="34" rx="4"/>` + T_(71, 243, "5 V battery bank", "t", "middle") + T_(71, 256, "USB power", "tm", "middle") + L_([[130, 245], [170, 245]]) + T_(178, 249, "5V / USB", "pin") +
       T_(342, 83, "GPIO26 · out", "pin", "end") + L_([[350, 79], [390, 79]]) + `<rect class="box" x="390" y="58" width="120" height="42" rx="4"/>` + T_(450, 75, "Gate driver", "t", "middle") + T_(450, 88, "trigger / cut-off", "tm", "middle") + T_(450, 114, "→ IGBT gate", "tm", "middle") +
-      T_(342, 167, "3V3 · out", "pin", "end") + L_([[350, 163], [390, 163]]) + `<rect class="box" x="390" y="142" width="120" height="42" rx="4"/>` + T_(450, 159, "IR LED", "t", "middle") + T_(450, 172, "+ series resistor", "tm", "middle") + T_(450, 198, "value to be chosen", "tm", "middle") +
+      T_(342, 167, "5V · out", "pin", "end") + L_([[350, 163], [390, 163]]) + `<rect class="box" x="390" y="142" width="120" height="42" rx="4"/>` + T_(450, 159, "IR LED", "t", "middle") + T_(450, 172, "+ series resistor", "tm", "middle") + T_(450, 198, "150 Ω, ≈ 24 mA", "tm", "middle") +
       T_(342, 249, "GND", "pin", "end") + L_([[350, 245], [390, 245]]) + `<rect class="box" x="390" y="228" width="120" height="34" rx="4"/>` + T_(450, 243, "Common ground", "t", "middle") + T_(450, 256, "see note below", "tm", "middle") +
       T_(260, 300, "chronograph · capture · trigger", "tm", "middle"), 340),
     notes: ["GPIO numbers are suggestions; the build plan has only fixed GPIO34 so far.", "The divider ties the ESP32's ground to bank −. Power it from a battery bank, never from a laptop while the bank is connected.", "Optical gate: its beam break is the cut-off event, at 4.35 ms into the shot at 126 V."],
+  },
+  gate: {
+    title: "Optical gate 1 (cut-off)",
+    sub: "Schematic preview: the two-part circuit and the printed housing",
+    svg: SVG_(
+      T_(12, 16, "In the circuit", "sec") +
+      L_([[40, 40], [110, 40]]) + T_(40, 34, "ESP32 5V", "pin") + zig(80, 40, 96) + T_(94, 66, "150 Ω", "t") + T_(94, 80, "≈ 24 mA", "tm") +
+      ledDown(80, 96, 150) + T_(62, 120, "IR LED", "t", "end") + T_(62, 134, "940 nm", "tm", "end") + L_([[80, 150], [80, 186]]) +
+      L_([[190, 40], [250, 40]]) + T_(190, 34, "ESP32 3V3", "pin") + zig(220, 40, 96) + T_(234, 66, "10 kΩ", "t") + T_(234, 80, "pull-up", "tm") +
+      D_(220, 96) + L_([[220, 96], [300, 96]], "hl") + T_(306, 100, "GPIO27 → interrupt", "pin") +
+      photoT(220, 96, 156) + T_(246, 134, "phototransistor", "t") + T_(246, 148, "daylight filter", "tm") + L_([[220, 156], [220, 186]]) +
+      L_([[40, 186], [300, 186]]) + D_(80, 186) + D_(220, 186) + T_(306, 190, "GND", "pin") +
+      T_(344, 124, "beam clear: ≈ 0.2 V", "tm") + T_(344, 138, "slug blocks: 3.3 V, rising edge", "tm") + T_(344, 152, "= IGBT off (≈ 4.35 ms at 126 V)", "tm") +
+      T_(12, 214, "Housing, looking down the barrel", "sec") +
+      `<rect class="plate" x="55" y="336" width="150" height="13"/><rect class="blk" x="68" y="338" width="14" height="9" rx="2"/><rect class="blk" x="178" y="338" width="14" height="9" rx="2"/>` +
+      `<rect class="box" x="85" y="258" width="90" height="80"/>` +
+      `<circle class="plate" cx="130" cy="300" r="13.5"/><circle class="blk" cx="130" cy="300" r="10"/>` +
+      `<rect class="box" x="85" y="293" width="25" height="14"/><rect class="part" x="87" y="295" width="20" height="10" rx="4"/>` +
+      `<rect class="box" x="150" y="293" width="25" height="14"/><rect class="part" x="153" y="295" width="20" height="10" rx="4"/>` +
+      `<rect class="box" x="110" y="296" width="7" height="8"/><rect class="box" x="143" y="296" width="7" height="8"/>` +
+      L_([[107, 300], [153, 300]], "", BEAM_) +
+      `<rect class="blk" x="126" y="252" width="8" height="34"/><rect class="plate" x="122" y="266" width="16" height="6"/>` +
+      L_([[96, 293], [96, 240], [60, 240]], "w", 'style="stroke-width:1"') + T_(56, 244, "IR LED", "tm", "end") +
+      L_([[164, 293], [164, 240], [200, 240]], "w", 'style="stroke-width:1"') + T_(204, 244, "receiver", "tm") +
+      T_(130, 365, "M5 slots into the plywood", "tm", "middle") +
+      T_(214, 270, "black PETG body, 36 wide", "tm") + T_(214, 284, "bore Ø10.8 (tube 10.5 + 0.3)", "tm") + T_(214, 298, "pockets Ø5.1 × 10 deep", "tm") + T_(214, 312, "slits 1.0 × 4 mm sharpen the beam", "tm") + T_(214, 326, "M3 screw + nut trap locks it", "tm") +
+      T_(12, 396, "Top view at the coil exit", "sec") + `<g transform="translate(-250,185)">` +
+      `<rect class="part" x="330" y="282" width="10" height="36"/>` + T_(324, 304, "coil", "tm", "end") +
+      `<rect class="plate" x="340" y="269" width="6" height="62"/>` +
+      L_([[346, 291], [512, 291]]) + L_([[346, 309], [512, 309]]) +
+      `<rect class="box" x="348" y="255" width="45" height="90"/>` +
+      L_([[355.5, 250], [355.5, 350]], "", BEAM_) +
+      L_([[340, 236], [340, 248]], "w", 'style="stroke-width:1"') + L_([[355.5, 236], [355.5, 248]], "w", 'style="stroke-width:1"') + L_([[340, 242], [355.5, 242]], "w", 'style="stroke-width:1"') +
+      T_(400, 238, "beam 6.5 mm past the coil end", "tm") + T_(400, 252, "= 3 mm inside the housing face", "tm") +
+      T_(400, 280, "flange 2.5 mm, 0.5 mm gap", "tm") + T_(400, 330, "slides on from the muzzle end", "tm") + T_(400, 344, "18 mm long", "tm") + `</g>`, 548),
+    notes: ["Only the LED and phototransistor live in the housing; both resistors sit at the ESP32 end, on the divider perfboard. 4-core cable between them, crossing the pulse wires at 90°.", "Pull the phototransistor up to 3.3 V, never 5 V: ESP32 pins are not 5 V tolerant.", "Arm the interrupt only after Fire, and add a 5 ms timeout that cuts the IGBT if the beam never breaks.", "IR passes the clear acrylic wall, so the tube is not drilled. Keep it clean where the beam crosses."],
   },
 };
 const detail = document.getElementById("detail");
