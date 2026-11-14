@@ -189,7 +189,9 @@ td:last-child { text-align: right; font-family: var(--font-mono); font-variant-n
         <tr><td>Balancing resistors</td><td>10 kΩ, 1 W each</td></tr>
         <tr><td class="new-key">Bleeder (across bank)</td><td>1 kΩ, 25 W</td></tr>
         <tr><td>Coil</td><td>4 × 41 = 164 turns</td></tr>
-        <tr><td>Wire</td><td>1.02 mm Cu (1.10 enamelled)</td></tr>
+        <tr><td>Coil wire</td><td>18 AWG magnet wire: 1.02 mm Cu (1.10 enamelled)</td></tr>
+        <tr><td class="new-key">Hook-up wire, thick</td><td>10 AWG: pulse loop, series link, IGBT pigtails, flyback loop</td></tr>
+        <tr><td class="new-key">Hook-up wire, thin</td><td>18 AWG: everything else (charge, bleeder, divider, gate, signal)</td></tr>
         <tr><td>Coil length / ID / OD</td><td>45.6 / 18.3 / 27.1 mm</td></tr>
         <tr><td>L / R<sub>coil</sub> / R<sub>total</sub></td><td>209 µH / 0.244 / 0.304 Ω</td></tr>
         <tr><td>Slug</td><td>Ø11.1 × 45.6 mm, 34.6 g</td></tr>
@@ -395,7 +397,10 @@ function gateFork(x) {
 }
 
 // ------------------------------------------------------------------ wiring helper: straight runs on the axes, corners cut at 45 degrees
-const WR = 1.6; // 4 mm² cable incl. insulation
+// Only two hook-up wire sizes exist on this bench. Radii are drawn at the real outside diameter.
+const W10 = 2.1;   // 10 AWG silicone: 2.59 mm copper (5.26 mm²), about 4.2 mm OD. Pulse loop, series link, IGBT pigtails, flyback loop.
+const W18 = 1.0;   // 18 AWG silicone: 1.02 mm copper (0.82 mm²), about 2.0 mm OD. Everything else.
+const WR = W10;
 function segMesh(a, b, r, mat) {
   const d = b.clone().sub(a), len = d.length();
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
@@ -438,8 +443,8 @@ function capacitor(x, z) {
   return g;
 }
 const C1X = -175, C2X = -75, CZ = -150, TY = CAP_H + 13;   // TY = top of the terminals
-part(capacitor(C1X, CZ), { name: "C1", short: "C1 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Top half of the series bank. Its + terminal is the bank +; its − links to C2's +." });
-part(capacitor(C2X, CZ), { name: "C2", short: "C2 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Bottom half of the series bank. Its − terminal is the bank −. Together: 0.05 F at 126 V, 397 J." });
+part(capacitor(C1X, CZ), { detail: "divider", name: "C1", short: "C1 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Top half of the series bank. Its + terminal is the bank +; its − links to C2's +." });
+part(capacitor(C2X, CZ), { detail: "divider", name: "C2", short: "C2 · 0.1 F 63 V", spec: "0.1 F, 63 V electrolytic, charged to 63 V · 198.5 J", role: "Bottom half of the series bank. Its − terminal is the bank −. Together: 0.05 F at 126 V, 397 J." });
 // terminals (C1 is mounted with + on the left and C2 with + on the left too, so the series link between them is short)
 const T = { c1p: V3(C1X - 16, TY, CZ), c1n: V3(C1X + 16, TY, CZ), c2p: V3(C2X - 16, TY, CZ), c2n: V3(C2X + 16, TY, CZ) };
 
@@ -547,9 +552,9 @@ function ahResistor(cx, cz, plateW, plateD) {   // aluminium-housed wirewound wi
 }
 part(ahResistor(BLX, BLZ, 100, 100), { detail: "bleeder", name: "Bank bleeder", short: "Bleeder 1 kΩ 25 W", spec: "1 kΩ, 25 W aluminium-housed · 15.9 W at 126 V · τ = 50 s", role: "Drains the bank from 126 V to under 5 V in about 2.7 min. Its two solder tabs each take two wires: the 18 AWG lead to the bank and the thin divider wire, soldered together and covered in heat shrink." }, null, true);
 joint([BLX - 16, 7.5, BLZ], [BLX - 23, 7.5, BLZ]); joint([BLX + 16, 7.5, BLZ], [BLX + 23, 7.5, BLZ]);
-part(wire([[BLX - 20, 7.5, BLZ], [BLX - 27, 7.5, BLZ], [BLX - 27, 150, BLZ], [BLX - 27, 150, -178], [T.c1p.x, 150, -178], [T.c1p.x, capLug.c1p.lugs[2].y, -178], P(capLug.c1p.lugs[2].end)], 0.9, M.red),
+part(wire([[BLX - 20, 7.5, BLZ], [BLX - 27, 7.5, BLZ], [BLX - 27, 150, BLZ], [BLX - 27, 150, -178], [T.c1p.x, 150, -178], [T.c1p.x, capLug.c1p.lugs[2].y, -178], P(capLug.c1p.lugs[2].end)], W18, M.red),
   { name: "Bleeder lead (+)", spec: "18 AWG · bleeder tab to C1 + (bank +)", role: "Soldered to the bleeder's tab; crimped into the small blue lug on C1 + together with the balancing resistor's leg." });
-part(wire([[BLX + 20, 7.5, BLZ], [BLX + 27, 7.5, BLZ], [BLX + 27, 165, BLZ], [BLX + 27, 165, -183], [T.c2n.x, 165, -183], [T.c2n.x, capLug.c2n.lugs[1].y, -183], P(capLug.c2n.lugs[1].end)], 0.9, M.blk),
+part(wire([[BLX + 20, 7.5, BLZ], [BLX + 27, 7.5, BLZ], [BLX + 27, 165, BLZ], [BLX + 27, 165, -183], [T.c2n.x, 165, -183], [T.c2n.x, capLug.c2n.lugs[1].y, -183], P(capLug.c2n.lugs[1].end)], W18, M.blk),
   { name: "Bleeder lead (−)", spec: "18 AWG · bleeder tab to C2 − (bank −)", role: "Soldered to the bleeder's tab; crimped into the small blue lug on C2 − together with the balancing resistor's leg." });
 // series link: a short 10 AWG jumper with a lug at each end
 part(wire([P(capLug.c1n.lugs[0].end), P(capLug.c2p.lugs[0].end)], WR, M.thin),
@@ -604,10 +609,10 @@ for (const [x, s] of [[TA, lugA_back], [TB, lugB_back], [TA, lugA_front], [TB, l
 {
   const pig = new THREE.Group();
   const [l1, l2] = CP.lugs, [e1, e2] = lugA_back.lugs;
-  pig.add(wire([[IG[0], PIN_Y, PIN_Z], [IG[0], PIN_Y, CP.z], [IG[0], l1.y, CP.z], P(l1.end)], 1.3, M.red, 2.5));                              // collector 1 → post
-  pig.add(wire([[IG[1], PIN_Y, PIN_Z], [IG[1], PIN_Y, CP.z], [IG[1], l2.y, CP.z], P(l2.end)], 1.3, M.red, 2.5));                              // collector 2 → post
-  pig.add(wire([[IG[0] + 5.45, PIN_Y, PIN_Z], [IG[0] + 5.45, PIN_Y, -13], [IG[0] + 5.45, e1.y, -13], [-45, e1.y, -13], P(e1.at(7)), P(e1.end)], 1.3, M.blk, 2));   // emitter 1 → A
-  pig.add(wire([[IG[1] + 5.45, PIN_Y, PIN_Z], [IG[1] + 5.45, PIN_Y, -13], [IG[1] + 5.45, e2.y, -13], [-26, e2.y, -13], P(e2.at(7)), P(e2.end)], 1.3, M.blk, 2));  // emitter 2 → A
+  pig.add(wire([[IG[0], PIN_Y, PIN_Z], [IG[0], PIN_Y, CP.z], [IG[0], l1.y, CP.z], P(l1.end)], W10, M.red, 2.5));                              // collector 1 → post
+  pig.add(wire([[IG[1], PIN_Y, PIN_Z], [IG[1], PIN_Y, CP.z], [IG[1], l2.y, CP.z], P(l2.end)], W10, M.red, 2.5));                              // collector 2 → post
+  pig.add(wire([[IG[0] + 5.45, PIN_Y, PIN_Z], [IG[0] + 5.45, PIN_Y, -13], [IG[0] + 5.45, e1.y, -13], [-45, e1.y, -13], P(e1.at(7)), P(e1.end)], W10, M.blk, 2));   // emitter 1 → A
+  pig.add(wire([[IG[1] + 5.45, PIN_Y, PIN_Z], [IG[1] + 5.45, PIN_Y, -13], [IG[1] + 5.45, e2.y, -13], [-26, e2.y, -13], P(e2.at(7)), P(e2.end)], W10, M.blk, 2));  // emitter 2 → A
   part(pig, { name: "IGBT pigtails", spec: "10 AWG, soldered to the leg tips, heat-shrunk, a ring lug crimped on the other end", role: "Both collectors bolt to the collector post with the bank + wire. Both emitters go straight to coil terminal A, so there is no emitter post. Keep all four pigtails the same length so the IGBTs share the current." });
   for (const cx of IG) {
     joint([cx, PIN_Y, PIN_Z - 3], [cx, PIN_Y, PIN_Z + 4], 2.0, M.shrinkR);
@@ -646,15 +651,15 @@ const J2 = { x: -9, z: -50 }, J1 = V3(38, 12.8, -42);
   for (const dz of [-2.54, 0, 2.54]) g.add(box(0.64, 8, 0.64, M.gold, J1.x, y + 5, J1.z + dz));
   g.add(box(2.6, 2.5, 7.8, M.black, J1.x, y + 2, J1.z), box(2.6, 12, 7.8, M.dupont, J1.x, y + 9.5, J1.z));
   for (const [dx, dz] of [[-26, -16], [26, -16], [-26, 16], [26, 16]]) g.add(cyl(1.5, 11, M.alu, GDX + dx, 5.5, GDZ + dz, 8));
-  part(g, { name: "Gate driver", short: "Gate driver", spec: "Optocoupler gate driver (U1) and isolated 5 V to 15 V DC-DC (U2) across a 2 mm slot", role: "J1 (right) is a 3-pin header: the ESP32's 5 V, GND and TRIG arrive on one 3-way Dupont plug. J2 (left) is a 2-way screw terminal: strip 6 mm of the gate and emitter wires, push them into the side holes, tighten the screws on top." }, null);
+  part(g, { name: "Gate driver", short: "Gate driver", spec: "Optocoupler gate driver (U1) and isolated 5 V to 15 V DC-DC (U2) across a 2 mm slot", role: "J1 (right) is a 3-pin header: the ESP32's 5 V, GND and TRIG arrive as three 18 AWG wires, each soldered to a female header socket. J2 (left) is a 2-way screw terminal: strip 6 mm of the gate and emitter wires, push them into the side holes, tighten the screws on top." }, null);
 }
 // gate wire: J2 GATE → along the top of the IGBTs → both gate resistors. Emitter sense: J2 EMIT → soldered onto IGBT 2's emitter leg
 {
   const g = new THREE.Group();
-  g.add(wire([[IG[0] - 5.45, GBUS.y, GBUS.z], [J2.x - 2.54, GBUS.y, GBUS.z], [J2.x - 2.54, 15.6, GBUS.z], [J2.x - 2.54, 15.6, J2.z + 4]], 0.7, M.sig, 3));
-  g.add(wire([[IG[1] + 5.45, PIN_Y, -23], [IG[1] + 5.45, 44, -23], [J2.x + 2.54, 44, -23], [J2.x + 2.54, 15.6, -23], [J2.x + 2.54, 15.6, J2.z + 4]], 0.7, M.thin, 3));
+  g.add(wire([[IG[0] - 5.45, GBUS.y, GBUS.z], [J2.x - 2.54, GBUS.y, GBUS.z], [J2.x - 2.54, 15.6, GBUS.z], [J2.x - 2.54, 15.6, J2.z + 4]], W18, M.sig, 3));
+  g.add(wire([[IG[1] + 5.45, PIN_Y, -23], [IG[1] + 5.45, 44, -23], [J2.x + 2.54, 44, -23], [J2.x + 2.54, 15.6, -23], [J2.x + 2.54, 15.6, J2.z + 4]], W18, M.thin, 3));
   g.add(new THREE.Mesh(new THREE.SphereGeometry(1.1, 10, 8), M.alu).translateX(IG[1] + 5.45).translateY(PIN_Y + 0.4).translateZ(-23));   // solder blob on the leg
-  part(g, { name: "Gate and emitter-sense wires", spec: "22 AWG twisted pair from J2", role: "Gate wire to the two gate resistors. The emitter-sense wire is soldered onto the emitter LEG of IGBT 2, not to the heavy emitter lug, so the 372 A does not push on the gate." });
+  part(g, { name: "Gate and emitter-sense wires", spec: "18 AWG pair, twisted, from J2", role: "Gate wire to the two gate resistors. The emitter-sense wire is soldered onto the emitter LEG of IGBT 2, not to the heavy emitter lug, so the 372 A does not push on the gate." });
   joint([IG[0] - 5.45, GBUS.y, GBUS.z - 3], [IG[0] - 5.45, GBUS.y, GBUS.z + 3], 1.2); joint([IG[1] - 8.45, GBUS.y, GBUS.z], [IG[1] - 2.45, GBUS.y, GBUS.z], 1.2);
 }
 
@@ -681,9 +686,9 @@ part(ahResistor(FRX, FRZ, 70, 46), { detail: "flyback", name: "Flyback resistor"
 {
   const fa = lugA_front.lugs[0], fb = lugB_front.lugs[0];
   part(group(
-    wire([FD[0], [-68, fa.y, FD[0][2]], [-68, fa.y, 48], [-53, fa.y, 48], P(fa.at(8)), P(fa.end)], 1.3, M.red, 3),             // cathode → A
-    wire([FD[1], [FRX - 20, 7.5, FRZ]], 1.3, M.thin, 2),                                                                          // anode → resistor
-    wire([[FRX + 20, 7.5, FRZ], [-10, fb.y, FRZ], [-10, fb.y, 52], [15, fb.y, 52], P(fb.at(8)), P(fb.end)], 1.3, M.blk, 3)),        // resistor → B
+    wire([FD[0], [-68, fa.y, FD[0][2]], [-68, fa.y, 48], [-53, fa.y, 48], P(fa.at(8)), P(fa.end)], W10, M.red, 3),             // cathode → A
+    wire([FD[1], [FRX - 20, 7.5, FRZ]], W10, M.thin, 2),                                                                          // anode → resistor
+    wire([[FRX + 20, 7.5, FRZ], [-10, fb.y, FRZ], [-10, fb.y, 52], [15, fb.y, 52], P(fb.at(8)), P(fb.end)], W10, M.blk, 3)),        // resistor → B
     { name: "Flyback loop", spec: "10 AWG · diode cathode to terminal A; anode through R_fb to terminal B", role: "Soldered at the diode legs and resistor tabs (heat-shrunk), crimped lugs on the terminal strip's front row." });
   for (const t of FD) joint([t[0] - 4, t[1], t[2]], [t[0] + 4, t[1], t[2]]);
   joint([FRX - 16, 7.5, FRZ], [FRX - 23, 7.5, FRZ]); joint([FRX + 16, 7.5, FRZ], [FRX + 23, 7.5, FRZ]);
@@ -698,7 +703,7 @@ part(ahResistor(FRX, FRZ, 70, 46), { detail: "flyback", name: "Flyback resistor"
     { name: "Pulse loop (−)", spec: "10 AWG, lug at each end · coil terminal B to C2 −", role: "Back row of terminal B to C2 −, where it sits flat against the terminal under the thinner lugs." });
 }
 
-// ------------------------------------------------------------------ controller: ESP32 dev board with male headers; every wire ends in a female Dupont plug
+// ------------------------------------------------------------------ controller: ESP32 dev board with male headers; every 18 AWG wire is soldered to a female header socket
 const ESX = 30, ESZ = 95, HDR_Z = 83, DUP_TOP = 25;
 const ESP_PIN = { gnd: 10, tap: 12.54, trig: 20, g1: GATE_X, g2: 50.6 };
 {
@@ -706,8 +711,8 @@ const ESP_PIN = { gnd: 10, tap: 12.54, trig: 20, g1: GATE_X, g2: 50.6 };
   for (const [dx, dz] of [[-23, -11], [23, -11], [-23, 11], [23, 11]]) g.add(cyl(1.5, 8, M.alu, ESX + dx, 4, ESZ + dz, 8));
   g.add(box(48, 2.5, 2.5, M.black, ESX, 11.05, HDR_Z), box(48, 2.5, 2.5, M.black, ESX, 11.05, ESZ + 12));   // header rows
   for (let i = 0; i < 18; i++) g.add(box(0.64, 6, 0.64, M.gold, ESX - 21.6 + i * 2.54, 14, HDR_Z), box(0.64, 6, 0.64, M.gold, ESX - 21.6 + i * 2.54, 14, ESZ + 12));
-  for (const x of Object.values(ESP_PIN)) g.add(box(2.5, 12, 2.5, M.dupont, x, 19, HDR_Z));      // female Dupont plugs pushed onto the pins
-  part(g, { detail: "esp32", name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Every low-voltage wire ends in a female Dupont plug that pushes onto a header pin: GND, GPIO34 (divider), GPIO26 (TRIG to J1), GPIO27 (gate 1), GPIO25 (gate 2). Power arrives on the USB cable." }, null);
+  for (const x of Object.values(ESP_PIN)) g.add(box(2.5, 12, 2.5, M.dupont, x, 19, HDR_Z));      // female header sockets (18 AWG soldered on) pushed onto the pins
+  part(g, { detail: "esp32", name: "ESP32 controller", short: "ESP32", spec: "Trigger, cut-off logic, chronograph, bank-voltage capture", role: "Every low-voltage wire is 18 AWG, soldered to a single female header socket (heat-shrunk) that pushes onto a header pin. 18 AWG is too thick for Dupont crimp housings, so no crimping here: GND, GPIO34 (divider), GPIO26 (TRIG to J1), GPIO27 (gate 1), GPIO25 (gate 2). Power arrives on the USB cable." }, null);
 }
 // bank-voltage divider: 470 kΩ / 10 kΩ / 1 nF soldered on a scrap of perfboard, with two 2-way screw terminals
 const DV = V3(-12, 4, -100);
@@ -722,7 +727,7 @@ const DVout = [[6.2, 7.5, -97.46], [6.2, 7.5, -102.54]];        // TAP, GND (ent
   g.add(box(10.2, 10, 7.6, M.term, -12, DV.y + 5.8, -104), box(7.6, 10, 10.2, M.term, 2.2, DV.y + 5.8, -100));
   for (const e of DVin) g.add(box(3.2, 3.2, 0.4, M.black, e[0], e[1], e[2] + 0.2), cyl(1.5, 0.6, M.alu, e[0], DV.y + 10.9, -104, 12));
   for (const e of DVout) g.add(box(0.4, 3.2, 3.2, M.black, e[0] - 0.2, e[1], e[2]), cyl(1.5, 0.6, M.alu, 2.2, DV.y + 10.9, e[2], 12));
-  part(g, { name: "Bank-voltage divider", short: "Divider", spec: "470 kΩ / 10 kΩ with 1 nF on perfboard · two 2-way 5.08 mm screw terminals · 126 V reads 2.63 V", role: "Back terminal: bank + and bank − from the bleeder's tabs. Side terminal: TAP and GND out to the ESP32. Strip 6 mm, push the wire into the side hole, tighten the screw on top. The parts are soldered on the underside." }, null);
+  part(g, { detail: "divider", name: "Bank-voltage divider", short: "Divider", spec: "470 kΩ / 10 kΩ with 1 nF on perfboard · two 2-way 5.08 mm screw terminals · 126 V reads 2.63 V", role: "Back terminal: bank + and bank − from the bleeder's tabs. Side terminal: TAP and GND out to the ESP32. Strip 6 mm, push the wire into the side hole, tighten the screw on top. The parts are soldered on the underside." }, null);
 }
 // 5 V battery bank for the ESP32 (and the gate driver's J1)
 {
@@ -730,17 +735,17 @@ const DVout = [[6.2, 7.5, -97.46], [6.2, 7.5, -102.54]];        // TAP, GND (ent
   part(g, { name: "5 V battery bank", short: "Battery bank", spec: "USB power bank", role: "Powers the ESP32 and, through J1, the gate driver's ESP32 side. Never a laptop while the bank is connected." }, null);
 }
 part(group(
-  wire([[GATE_X, 3, BZ - 11], [GATE_X, 3, 66], [GATE_X, 30, 66], [GATE_X, 30, HDR_Z], [GATE_X, DUP_TOP, HDR_Z]], 0.7, M.sig, 4),                                          // gate 1 → ESP32
-  wire([[GATE2_X, 3, BZ - 11], [GATE2_X, 3, 62], [ESP_PIN.g2, 3, 62], [ESP_PIN.g2, 30, 62], [ESP_PIN.g2, 30, HDR_Z], [ESP_PIN.g2, DUP_TOP, HDR_Z]], 0.7, M.sig, 4),       // gate 2 → ESP32
-  wire([[ESP_PIN.trig, DUP_TOP, HDR_Z], [ESP_PIN.trig, 30, HDR_Z], [ESP_PIN.trig, 30, -30], [J1.x, 30, -30], [J1.x, 30, J1.z], [J1.x, J1.y + 15.3, J1.z]], 0.9, M.sig, 4),  // ESP32 → gate driver J1 (3 wires)
-  wire([[85, 7, 85], [56, 7, 85]], 0.9, M.black, 2)),                                                                                                                       // USB power to the ESP32
-  { name: "Signal wiring", spec: "Optical gates → ESP32 → gate driver J1; USB power from the battery bank", role: "Low-voltage side, all Dupont jumper wires. Never shares a conductor with the bank; the gate driver's slot is the break." });
+  wire([[GATE_X, 3, BZ - 11], [GATE_X, 3, 66], [GATE_X, 30, 66], [GATE_X, 30, HDR_Z], [GATE_X, DUP_TOP, HDR_Z]], W18, M.sig, 4),                                          // gate 1 → ESP32
+  wire([[GATE2_X, 3, BZ - 11], [GATE2_X, 3, 62], [ESP_PIN.g2, 3, 62], [ESP_PIN.g2, 30, 62], [ESP_PIN.g2, 30, HDR_Z], [ESP_PIN.g2, DUP_TOP, HDR_Z]], W18, M.sig, 4),       // gate 2 → ESP32
+  wire([[ESP_PIN.trig, DUP_TOP, HDR_Z], [ESP_PIN.trig, 30, HDR_Z], [ESP_PIN.trig, 30, -30], [J1.x, 30, -30], [J1.x, 30, J1.z], [J1.x, J1.y + 15.3, J1.z]], W18, M.sig, 4),  // ESP32 → gate driver J1 (3 wires)
+  wire([[85, 7, 85], [56, 7, 85]], W18, M.black, 2)),                                                                                                                       // USB power to the ESP32
+  { name: "Signal wiring", spec: "18 AWG · optical gates → ESP32 → gate driver J1; USB cable from the battery bank", role: "Low-voltage side, all 18 AWG with soldered header sockets (the USB lead is the power bank's own cable, drawn at the same size). Never shares a conductor with the bank; the gate driver's slot is the break." });
 part(group(
-  wire([[BLX - 20, 7.5, BLZ], [BLX - 20, 7.5, -125], [DVin[0][0], 7.5, -125], DVin[0]], 0.5, M.red, 3),                                                    // bleeder + tab → divider
-  wire([[BLX + 20, 7.5, BLZ], [BLX + 20, 10, BLZ + 4], [BLX + 20, 10, -121], [DVin[1][0], 10, -121], [DVin[1][0], 7.5, -114], DVin[1]], 0.5, M.blk, 3),   // bleeder − tab → divider
-  wire([DVout[0], [46, 7.5, DVout[0][2]], [46, 7.5, 74], [ESP_PIN.tap, 7.5, 74], [ESP_PIN.tap, 30, 74], [ESP_PIN.tap, 30, HDR_Z], [ESP_PIN.tap, DUP_TOP, HDR_Z]], 0.5, M.sig, 3),   // TAP → GPIO34
-  wire([DVout[1], [48, 7.5, DVout[1][2]], [48, 7.5, 76], [ESP_PIN.gnd, 7.5, 76], [ESP_PIN.gnd, 30, 76], [ESP_PIN.gnd, 30, HDR_Z], [ESP_PIN.gnd, DUP_TOP, HDR_Z]], 0.5, M.blk, 3)),   // GND → ESP32 GND
-  { name: "Divider wiring", spec: "Bleeder tabs to the divider's back terminal; TAP and GND to the ESP32", role: "The thin bank wires are soldered to the bleeder's tabs alongside its 18 AWG leads. The only bank-side wires that reach the ESP32: microamps through 480 kΩ." });
+  wire([[BLX - 20, 7.5, BLZ], [BLX - 20, 7.5, -125], [DVin[0][0], 7.5, -125], DVin[0]], W18, M.red, 3),                                                    // bleeder + tab → divider
+  wire([[BLX + 20, 7.5, BLZ], [BLX + 20, 10, BLZ + 4], [BLX + 20, 10, -121], [DVin[1][0], 10, -121], [DVin[1][0], 7.5, -114], DVin[1]], W18, M.blk, 3),   // bleeder − tab → divider
+  wire([DVout[0], [46, 7.5, DVout[0][2]], [46, 7.5, 74], [ESP_PIN.tap, 7.5, 74], [ESP_PIN.tap, 30, 74], [ESP_PIN.tap, 30, HDR_Z], [ESP_PIN.tap, DUP_TOP, HDR_Z]], W18, M.sig, 3),   // TAP → GPIO34
+  wire([DVout[1], [48, 7.5, DVout[1][2]], [48, 7.5, 76], [ESP_PIN.gnd, 7.5, 76], [ESP_PIN.gnd, 30, 76], [ESP_PIN.gnd, 30, HDR_Z], [ESP_PIN.gnd, DUP_TOP, HDR_Z]], W18, M.blk, 3)),   // GND → ESP32 GND
+  { name: "Divider wiring", detail: "divider", spec: "18 AWG · bleeder tabs to the divider's back terminal; TAP and GND to the ESP32", role: "The bank wires are 18 AWG, soldered to the bleeder's tabs alongside its 18 AWG leads. The only bank-side wires that reach the ESP32: microamps through 480 kΩ." });
 
 // ------------------------------------------------------------------ bench supply (off the plate), blocking diode and knife switch in the + lead
 const BDX = -222, BDZ = -222, KSX = -150, KSZ = -222;
@@ -775,15 +780,15 @@ for (const t of BD) joint([t[0] - 4, t[1], t[2]], [t[0] + 4, t[1], t[2]], 1.5);
 {
   const h = ksH.lugs[0], j = ksJ.lugs[0], c2 = capLug.c1p.lugs[1], sn = capLug.c2n.lugs[2];
   part(group(
-    wire([[-105, 15, -249], [-105, 15, -240], [-105, BD[0][1], -240], [-192, BD[0][1], -240], [-192, BD[0][1], BD[0][2]], BD[0]], 0.9, M.red, 4),                                                     // supply + → diode anode
-    wire([BD[1], [-186, BD[1][1], BD[1][2]], [-186, BD[1][1], h.at(10).z], [h.end.x, h.y, h.at(10).z], P(h.end)], 0.9, M.red, 3),                                             // diode cathode → knife hinge
-    wire([P(j.end), [j.end.x, j.y, -190], [-110, j.y, -190], [-110, 185, -190], [-222, 185, -190], [-222, 185, T.c1p.z], [-222, c2.y, T.c1p.z], P(c2.end)], 0.9, M.red, 4),  // knife jaw → C1 +
-    wire([[-90, 15, -249], [-90, 15, -244], [-90, 180, -244], [-30, 180, -244], [-30, 180, T.c2n.z], [-30, sn.y, T.c2n.z], P(sn.end)], 0.9, M.blk)),                        // supply − → C2 −
+    wire([[-105, 15, -249], [-105, 15, -240], [-105, BD[0][1], -240], [-192, BD[0][1], -240], [-192, BD[0][1], BD[0][2]], BD[0]], W18, M.red, 4),                                                     // supply + → diode anode
+    wire([BD[1], [-186, BD[1][1], BD[1][2]], [-186, BD[1][1], h.at(10).z], [h.end.x, h.y, h.at(10).z], P(h.end)], W18, M.red, 3),                                             // diode cathode → knife hinge
+    wire([P(j.end), [j.end.x, j.y, -190], [-110, j.y, -190], [-110, 185, -190], [-222, 185, -190], [-222, 185, T.c1p.z], [-222, c2.y, T.c1p.z], P(c2.end)], W18, M.red, 4),  // knife jaw → C1 +
+    wire([[-90, 15, -249], [-90, 15, -244], [-90, 180, -244], [-30, 180, -244], [-30, 180, T.c2n.z], [-30, sn.y, T.c2n.z], P(sn.end)], W18, M.blk)),                        // supply − → C2 −
     { name: "Charge leads", spec: "18 AWG · supply + → blocking diode → knife switch → C1 +; supply − → C2 −", role: "Charging side only, 2 A; the pulse never flows here. Banana plugs at the supply, solder at the diode legs, blue ring lugs everywhere else." });
 }
 
 // ------------------------------------------------------------------ the hardware itself, clickable
-part(lugParts, { name: "Crimped ring lugs", spec: "Yellow: 10 AWG, M5 hole (posts, capacitors) or M4 hole (barrier strip). Blue: 16-14 AWG for the 18 AWG and thin wires", role: "Every lug lies FLAT on its terminal with the screw through its ring; the crimp barrel points sideways and the wire goes straight in. Several lugs on one screw are stacked and fanned out, the heavy pulse lug at the bottom against the metal, at most three per screw." });
+part(lugParts, { name: "Crimped ring lugs", spec: "Yellow: 10 AWG, M5 hole (posts, capacitors) or M4 hole (barrier strip). Blue: 16-14 AWG for every 18 AWG wire and the balancing-resistor legs", role: "Every lug lies FLAT on its terminal with the screw through its ring; the crimp barrel points sideways and the wire goes straight in. Several lugs on one screw are stacked and fanned out, the heavy pulse lug at the bottom against the metal, at most three per screw." });
 part(hwParts, { name: "Screws, washers, nuts and the collector post", spec: "Capacitors and strip: washer, spring washer, screw head on top of the lug stack. Collector post: M5 bolt up through a nylon hex standoff, lugs, washer, nut", role: "The collector post is the only bolt the build adds: an M5 bolt from under the plywood, through a nylon standoff, with both collector pigtails and the bank + wire stacked on top." });
 part(jointParts, { name: "Soldered joints (heat-shrunk)", spec: "Where a wire meets a leg or a tab: tin both, solder, slide heat shrink over and shrink it", role: "Used only where a part has no screw: the IGBT legs, the diode legs, the gate resistors, the bleeder and flyback-resistor tabs, and the gate-wire splices." });
 
@@ -806,16 +811,16 @@ const BOXX = 330;
   const c2 = sc.getContext("2d"); c2.fillStyle = "#c9d6b9"; c2.fillRect(0, 0, 128, 64); c2.fillStyle = "#111"; c2.font = "bold 36px monospace"; c2.fillText("0.00", 14, 46);
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(26, 14), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc) }));
   scr.rotation.x = -Math.PI / 2; scr.position.set(-205, 15.7, 62); g.add(scr);
-  g.add(wire([[-215, 14, 118], [-215, 4, 128], [-240, 4, 128]], 0.8, M.red, 3), wire([[-195, 14, 118], [-195, 4, 132], [-240, 4, 132]], 0.8, M.blk, 3));
+  g.add(wire([[-215, 14, 118], [-215, 4, 128], [-240, 4, 128]], W18, M.red, 3), wire([[-195, 14, 118], [-195, 4, 132], [-240, 4, 132]], W18, M.blk, 3));
   part(g, { name: "Multimeter", short: "Multimeter", spec: "DC volts, resistance, continuity, diode mode", role: "The meter decides when it is safe: under 5 V across the bank before any hand goes near it." }, null);
   // hook post and the stick hanging on it
   const hx = 200, hz = -225;
   const h = group(cyl(4, 150, M.plate, hx, 75, hz, 12), box(4, 4, 18, M.steel, hx, 146, hz + 9), box(4, 10, 4, M.steel, hx, 141, hz + 17));
   h.add(box(6, 100, 22, M.plate, hx + 6, 90, hz + 17));                                   // the wooden stick
   h.add(box(10, 28, 18, M.gold, hx + 12, 92, hz + 17));                                    // 10 ohm 50 W resistor taped to it
-  h.add(wire([[hx + 12, 78, hz + 10], [hx + 12, 30, hz + 10], [hx + 30, 30, hz + 10]], 0.9, M.red, 4), wire([[hx + 12, 78, hz + 24], [hx + 12, 36, hz + 24], [hx + 30, 36, hz + 24]], 0.9, M.blk, 4));
+  h.add(wire([[hx + 12, 78, hz + 10], [hx + 12, 30, hz + 10], [hx + 30, 30, hz + 10]], W18, M.red, 4), wire([[hx + 12, 78, hz + 24], [hx + 12, 36, hz + 24], [hx + 30, 36, hz + 24]], W18, M.blk, 4));
   h.add(box(10, 4, 5, M.red, hx + 36, 30, hz + 10), box(10, 4, 5, M.black, hx + 36, 36, hz + 24));   // alligator clips
-  part(h, { name: "Discharge stick", short: "Discharge stick", spec: "10 Ω, 50 W on a wooden stick, 30 cm leads, alligator clips", role: "Always on the same hook. Black clip on C2 −, red on C1 +, hold ten seconds, meter again. At 126 V it pulls 12.6 A at first." }, null);
+  part(h, { name: "Discharge stick", short: "Discharge stick", spec: "10 Ω, 50 W on a wooden stick, 30 cm 18 AWG leads, alligator clips", role: "Always on the same hook. Black clip on C2 −, red on C1 +, hold ten seconds, meter again. At 126 V it pulls 12.6 A at first." }, null);
 }
 
 // ------------------------------------------------------------------ cutaway
@@ -866,6 +871,39 @@ const BEAM_ = 'style="stroke:#e0322f;stroke-width:1.6;stroke-dasharray:4 3;fill:
 const SVG_ = (inner, h) => `<svg class="sch" viewBox="0 0 520 ${h}" role="img">${inner}</svg>`;
 
 const DETAILS = {
+  divider: {
+    title: "Bank and voltage divider",
+    sub: "Schematic preview: the series bank, its bleeder, and the 470 kΩ / 10 kΩ tap into GPIO34",
+    svg: SVG_(
+      T_(12, 16, "In the circuit", "sec") +
+      L_([[30, 42], [330, 42]]) + L_([[30, 200], [430, 200]]) +
+      cap(70, 42, 121) + cap(70, 121, 200) + D_(70, 42) + D_(70, 121) + D_(70, 200) +
+      T_(88, 76, "C1", "t") + T_(88, 90, "0.1 F 63 V", "tm") + T_(88, 156, "C2", "t") + T_(88, 170, "0.1 F 63 V", "tm") +
+      L_([[70, 121], [150, 121]]) + zig(150, 42, 121) + zig(150, 121, 200) + D_(150, 42) + D_(150, 121) + D_(150, 200) +
+      T_(162, 96, "10 kΩ", "tm") + T_(162, 176, "10 kΩ", "tm") +
+      zig(215, 42, 200) + D_(215, 42) + D_(215, 200) + T_(227, 112, "bleeder", "tm") + T_(227, 126, "1 kΩ 25 W", "tm") +
+      zig(300, 42, 121, "hl") + zig(300, 121, 200, "hl") + D_(300, 42) + D_(300, 200) + D_(300, 121) +
+      T_(312, 80, "470 kΩ", "tb") + T_(312, 168, "10 kΩ", "tb") +
+      L_([[300, 121], [430, 121]], "hl") + D_(370, 121) + D_(370, 200) + cap(370, 121, 200) + T_(384, 168, "1 nF", "tm") +
+      `<rect class="box" x="430" y="106" width="82" height="110" rx="4"/>` + T_(471, 100, "ESP32", "t", "middle") +
+      T_(436, 125, "GPIO34", "pin") + T_(436, 204, "GND", "pin") + T_(318, 116, "TAP", "tm") +
+      T_(30, 36, "bank +  (C1 +)", "tm") + T_(30, 216, "bank −  (C2 −) = ESP32 GND", "tm") +
+      T_(12, 246, "The numbers", "sec") +
+      T_(20, 268, "V_TAP = V_bank × 10 / (470 + 10) = V_bank / 48") +
+      T_(20, 286, "126 V → 2.63 V · 120 V (supply max) → 2.50 V · 63 V → 1.31 V", "tm") +
+      T_(20, 306, "Divider current: 126 V / 480 kΩ = 0.26 mA. The 470 kΩ drops 123 V and burns 32 mW:", "tm") +
+      T_(20, 320, "use a ≥ 250 V rated part (standard ¼ W metal film is 250 V).", "tm") +
+      T_(20, 340, "Source impedance 470 kΩ ∥ 10 kΩ = 9.8 kΩ; with 1 nF, τ = 9.8 µs.", "tm") +
+      T_(20, 360, "Bank time constant through the divider alone: 480 kΩ × 0.05 F = 6.7 h (it is not a bleeder).", "tm") +
+      T_(12, 390, "Wiring (all 18 AWG)", "sec") +
+      T_(20, 410, "Bleeder + tab → divider back terminal (+) · bleeder − tab → back terminal (−)", "tm") +
+      T_(20, 426, "Side terminal TAP → GPIO34 · side terminal GND → ESP32 GND", "tm"), 440),
+    notes: [
+      "Check before trusting the reading: the original ESP32's ADC at 11 dB attenuation is only linear to about 2.45 V. 126 V puts 2.63 V on the pin, so full charge reads low. Either calibrate against the multimeter at 100, 110, 120 V, or change the bottom resistor to 8.2 kΩ (126 V → 2.16 V).",
+      "The divider ties the ESP32's ground to bank −. Power the ESP32 from the battery bank, never a laptop, while the bank is connected.",
+      "The 1 nF sits across the 10 kΩ, on the perfboard, right at the TAP terminal.",
+    ],
+  },
   bleeder: {
     title: "Bank bleeder, 1 kΩ 25 W",
     sub: "Schematic preview: where it sits in the circuit and how it mounts",
@@ -967,7 +1005,7 @@ const DETAILS = {
       L_([[340, 236], [340, 248]], "w", 'style="stroke-width:1"') + L_([[355.5, 236], [355.5, 248]], "w", 'style="stroke-width:1"') + L_([[340, 242], [355.5, 242]], "w", 'style="stroke-width:1"') +
       T_(400, 238, "beam 6.5 mm past the coil end", "tm") + T_(400, 252, "= 3 mm inside the housing face", "tm") +
       T_(400, 280, "flange 2.5 mm, 0.5 mm gap", "tm") + T_(400, 330, "slides on from the muzzle end", "tm") + T_(400, 344, "18 mm long", "tm") + `</g>`, 548),
-    notes: ["Only the LED and phototransistor live in the housing; both resistors sit at the ESP32 end, on the divider perfboard. 4-core cable between them, crossing the pulse wires at 90°.", "Pull the phototransistor up to 3.3 V, never 5 V: ESP32 pins are not 5 V tolerant.", "Arm the interrupt only after Fire, and add a 15 ms timeout that cuts the IGBT if the beam never breaks (the 40 V shot cuts at 12.8 ms).", "IR passes the clear acrylic wall, so the tube is not drilled. Keep it clean where the beam crosses."],
+    notes: ["Only the LED and phototransistor live in the housing; both resistors sit at the ESP32 end, on the divider perfboard. Four 18 AWG wires between them, twisted together, crossing the pulse wires at 90°.", "Pull the phototransistor up to 3.3 V, never 5 V: ESP32 pins are not 5 V tolerant.", "Arm the interrupt only after Fire, and add a 15 ms timeout that cuts the IGBT if the beam never breaks (the 40 V shot cuts at 12.8 ms).", "IR passes the clear acrylic wall, so the tube is not drilled. Keep it clean where the beam crosses."],
   },
 };
 const detail = document.getElementById("detail");
