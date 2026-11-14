@@ -12,18 +12,18 @@ Calculations for the single-stage design are final (updated 2026-11-10 for the o
 |---|---|
 | Bank | 2 × 0.1 F, 63 V electrolytics in series: 0.05 F at 126 V, 397 J, 10 kΩ 1 W balancing resistor across each |
 | Bleeder | 1 kΩ 25 W aluminium-housed across the bank: 15.9 W, 126 V to under 5 V in 2.7 min |
-| Coil | 4 layers × 41 turns = 164 turns of 1.02 mm (18 AWG) enamelled copper, 45.6 mm long, 18.3 mm ID, 27.1 mm OD, 11.7 m of wire, on a printed PETG holder (1 mm wall) that slides over the tube |
-| Coil electrical | L = 209 µH (Wheeler), R_coil = 0.244 Ω, R_total = 0.304 Ω (overdamped) |
+| Coil | 6 layers × 27 turns = 162 turns of 1.6 mm enamelled copper, 45.6 mm long, 18.3 mm ID, 38.5 mm OD, 14.4 m of wire, on a printed PETG holder (1 mm wall, Ø44 mm discs) that slides over the tube. Re-run in `simulation/` for the wire on hand; the framework doc still derives the earlier 1.02 mm coil |
+| Coil electrical | L = 279 µH (Wheeler), R_coil = 0.124 Ω, R_total = 0.184 Ω (overdamped) |
 | Projectile | 7/16 in (11.1 mm) mild steel rod, 45.6 mm long, 34.6 g |
 | Barrel | clear acrylic, 12 mm bore, 16 mm OD, one piece; the coil holder slides over it |
 | Switch | IGBT / MOSFET, ≥ 200 V, ≥ 600 A pulse, turned off by an optical gate at the coil exit |
-| Flyback path | SMC MBR60200W Schottky (200 V, 600 A surge) in series with 0.20 Ω pulse-rated wirewound, across the coil; switch sees 154 V at turn-off |
-| Peak current | ≈ 372 A at 2.27 ms |
-| Field at coil centre | ≈ 1.50 T |
-| Cut-off | ≈ 5.52 ms, 312 A, bank left at 90.6 V |
-| Muzzle velocity | 18.7 m/s at cut-off, 17.8 m/s (5.5 J) at coil exit simulated; 15–16.5 m/s expected after eddy, friction and back-EMF losses. The team chose the heavier slug for more energy over the 20 m/s target |
-| Efficiency | 2.8 % of energy drawn, 1.4 % of energy stored (at exit) |
-| Coil heating | ≤ 5.5 °C per shot |
+| Flyback path | SMC MBR60200W Schottky (200 V, 600 A surge) in series with 0.20 Ω pulse-rated wirewound, across the coil; switch sees 182 V at turn-off |
+| Peak current | ≈ 538 A at 3.48 ms |
+| Field at coil centre | ≈ 2.04 T |
+| Cut-off | ≈ 5.12 ms, 501 A, bank left at 81.4 V |
+| Muzzle velocity | 21.8 m/s at cut-off, 18.6 m/s (6.0 J) at coil exit simulated; eddy currents, friction and back-EMF will lower the real figure. The team chose the heavier slug for more energy over the 20 m/s target |
+| Efficiency | 2.6 % of energy drawn, 1.5 % of energy stored (at exit) |
+| Coil heating | ≤ 2.2 °C per shot |
 
 ![System diagram](docs/figures/system-diagram.png)
 

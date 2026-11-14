@@ -1,5 +1,7 @@
 # Theoretical framework: inductive coil launcher
 
+> **Revision note.** The coil is now wound from 1.6 mm wire (6 × 27 = 162 turns) and the bank-voltage divider is 470 kΩ / 8.2 kΩ. The derivations below still use the earlier 1.02 mm, 4 × 41 coil. Current numbers are in [simulation/README.md](../simulation/README.md).
+
 Single-stage design, final calculations. Source of truth: the team's **Formulas_and_Theoretical_Framework** doc on the shared drive; this file mirrors it. Updated 2026-11-10 for the ordered barrel tube (12 mm ID, 16 mm OD), a 7/16 in (11.1 mm) slug, and a one-piece printed coil holder (1 mm wall) that slides over the tube; the shared doc needs the same update. Every number below is reproduced by [`simulation/coilgun_model.py`](../simulation/coilgun_model.py).
 
 ## Design parameters
