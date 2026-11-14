@@ -1,16 +1,15 @@
 """Single-stage coilgun model: hand calculations + time-domain simulation.
 
-Recomputes the hand calculations of docs/theoretical-framework.md from the design
-parameters, then runs the circuit + projectile simulation. The coil here is the
-1.6 mm re-baseline (6 x 27 turns); the framework document's body still derives the
-earlier 1.02 mm, 4 x 41 coil.
+Reproduces every number in docs/theoretical-framework.md (mirror of the team's
+Formulas_and_Theoretical_Framework doc, the source of truth) from the design
+parameters, then runs the circuit + projectile simulation.
 
 Model (matches the framework document):
-  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 279 uH (Wheeler), R = 0.184 ohm,
+  * Circuit: series RLC, C_T = 0.05 F at 126 V, L = 209 uH (Wheeler), R = 0.304 ohm,
     with the 1 kohm bank bleeder and the two 10 kohm balancing resistors as a leak.
     Inductance is held constant and the slug's back-EMF is ignored (the document's
     assumption). Pass --back-emf to couple the slug's motional EMF into the circuit.
-  * Field: Biot-Savart sum over all 162 loops (6 layers x 27 turns of 1.6 mm wire), off-axis via
+  * Field: Biot-Savart sum over all 164 loops (4 layers x 41 turns), off-axis via
     elliptic integrals, averaged over the slug cross-section.
   * Force: slug uniformly magnetised along the axis at M = min(M_s, mu_eff*B/mu0),
     F = M * integral over the end faces of [B_z(front) - B_z(back)] dA.
@@ -23,8 +22,6 @@ Usage:
   python3 simulation/coilgun_model.py --back-emf  # adds slug back-EMF
   python3 simulation/coilgun_model.py --no-cutoff # switch never opens
   python3 simulation/coilgun_model.py --flyback-r 0     # diode only, no flyback resistor
-  python3 simulation/coilgun_model.py --volts 100       # charge the bank to 100 V
-  python3 simulation/coilgun_model.py --sim-json model3d/sim.json   # traces for the 3D bench
 
 Only needs numpy.
 """
@@ -49,11 +46,11 @@ P = dict(
     B_sat=1.6,           # T
     l_coil=45.6e-3,      # m, coil length
     r_inner=9.15e-3,     # m, coil inner radius (printed holder: 16.3 mm bore over the tube + 1 mm wall)
-    layers=6,
-    d_wire=1.60e-3,      # m, bare copper diameter (the wire on hand)
-    d_wire_enamel=1.68e-3,
-    c_wind=10.08e-3,     # m, winding depth (6 layers x 1.68 mm)
-    ohm_per_m=0.00855,   # 1.60 mm copper: 1.72e-8 / area
+    layers=4,
+    d_wire=1.02e-3,      # m, bare copper diameter (18 AWG)
+    d_wire_enamel=1.10e-3,
+    c_wind=4.38e-3,      # m, winding depth (4 layers)
+    ohm_per_m=0.0209,    # 1.02 mm copper
     R_ext=0.060,         # ohm, ESR + switch + leads (estimate)
     R_bal=10e3,          # ohm, balancing resistor per capacitor
     rho_cu=8960.0,
@@ -252,40 +249,14 @@ def simulate(p, r, fld, back_emf=False, cutoff=True, dt=1e-7, t_end=15e-3):
     return out
 
 
-def write_sim_json(path):
-    """Traces for the 3D bench: t ms, i A, vc V, x mm (slug centre), v m/s, one set per charge voltage."""
-    import json
-    out = {}
-    for V in (40, 60, 80, 100, 120, 126):
-        p = dict(P, V_each=V / P["n_series"])
-        r = hand_calcs(p)
-        s = simulate(p, r, Field(p, r), t_end=40e-3)
-        h = s["hist"]
-        out[str(V)] = dict(
-            t=[round(a[0] * 1e3, 4) for a in h], i=[round(a[1], 1) for a in h], vc=[round(a[2], 2) for a in h],
-            x=[round(a[3] * 1e3, 3) for a in h], v=[round(a[4], 3) for a in h],
-            tcut=round(s["t_cut"] * 1e3, 3), icut=round(s["I_cut"], 1), vend=round(s["V_end"], 1),
-            vcut=round(s["v_cut"], 2), vexit=round(s["v_final"], 2), ipk=round(s["I_peak"], 1),
-            tpk=round(s["t_peak"] * 1e3, 3), ek=round(0.5 * p["m"] * s["v_final"] ** 2, 2),
-            edrawn=round(0.5 * r["C_T"] * (r["V"] ** 2 - s["V_end"] ** 2), 1))
-    json.dump(out, open(path, "w"), separators=(",", ":"))
-    print("wrote", path)
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--back-emf", action="store_true")
     ap.add_argument("--no-cutoff", action="store_true")
     ap.add_argument("--flyback-r", type=float, default=P["R_flyback"],
                     help="ohm in series with the flyback diode (faster decay, higher switch voltage)")
-    ap.add_argument("--volts", type=float, default=P["V_each"] * P["n_series"], help="bank charge voltage")
-    ap.add_argument("--sim-json", help="write traces at 40-126 V for model3d (then run model3d/build.py)")
     args = ap.parse_args()
     P["R_flyback"] = args.flyback_r
-    if args.sim_json:
-        write_sim_json(args.sim_json)
-        return
-    P["V_each"] = args.volts / P["n_series"]
 
     r = hand_calcs(P)
     fld = Field(P, r)
