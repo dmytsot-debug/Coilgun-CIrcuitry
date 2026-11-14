@@ -453,7 +453,7 @@ const T = { c1p: V3(C1X - 16, TY, CZ), c1n: V3(C1X + 16, TY, CZ), c2p: V3(C2X - 
 // sideways; the wire goes straight into the barrel. Lugs on one screw are stacked and fanned out, then a
 // washer, a spring washer and the screw head (or nut) clamp the stack.
 M.insYel = new THREE.MeshStandardMaterial({ color: 0xe8c32a, roughness: 0.55 });   // 12-10 AWG lug insulation
-M.insBlu = new THREE.MeshStandardMaterial({ color: 0x2f6fd1, roughness: 0.55 });   // 16-14 AWG lug insulation
+M.insRed = new THREE.MeshStandardMaterial({ color: 0xc9302c, roughness: 0.55 });   // 22-16 AWG lug insulation
 M.shrink = new THREE.MeshStandardMaterial({ color: 0x141518, roughness: 0.7 });    // heat shrink over solder joints
 M.shrinkR = new THREE.MeshStandardMaterial({ color: 0x8e1f1f, roughness: 0.7 });
 M.term = new THREE.MeshStandardMaterial({ color: 0x2f8f5a, roughness: 0.55 });     // PCB screw terminal blocks
@@ -462,7 +462,7 @@ M.cap1n = new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.5 });
 
 const LUG_M5 = { ring: 4.6, hole: 2.7, t: 0.9, tongue: 3.5, barrel: 7.0, br: 2.6, ins: M.insYel };   // 10 AWG, M5 (posts, capacitors)
 const LUG_M4 = { ring: 4.0, hole: 2.2, t: 0.9, tongue: 3.5, barrel: 7.0, br: 2.6, ins: M.insYel };   // 10 AWG, M4 (barrier strip)
-const LUG_SM = { ring: 3.4, hole: 2.2, t: 0.7, tongue: 3.0, barrel: 5.8, br: 1.6, ins: M.insBlu };   // 18 AWG
+const LUG_SM = { ring: 3.4, hole: 2.2, t: 0.7, tongue: 3.0, barrel: 5.8, br: 1.6, ins: M.insRed };   // 18 AWG (red, 22-16 AWG)
 const lugParts = new THREE.Group(), hwParts = new THREE.Group(), jointParts = new THREE.Group();
 function annulus(ro, ri, t, mat) {
   const sh = new THREE.Shape(); sh.absarc(0, 0, ro, 0, Math.PI * 2, false);
@@ -521,7 +521,7 @@ function balRes(la, lb) {
   return g;
 }
 part(group(balRes(capLug.c1p.lugs[2], capLug.c1n.lugs[1]), balRes(capLug.c2p.lugs[1], capLug.c2n.lugs[1])),
-  { name: "Balancing resistors", short: "10 kΩ balancing", spec: "10 kΩ, 1 W, one across each capacitor · 6.3 mA, 0.40 W", role: "Keep the 126 V split 63 / 63 V. Each leg is crimped into a small blue ring lug that sits under the capacitor's terminal screw, on top of the heavy lug." });
+  { name: "Balancing resistors", short: "10 kΩ balancing", spec: "10 kΩ, 1 W, one across each capacitor · 6.3 mA, 0.40 W", role: "Keep the 126 V split 63 / 63 V. Each leg is crimped into a small red ring lug that sits under the capacitor's terminal screw, on top of the heavy lug." });
 
 // ------------------------------------------------------------------ 3D-printed capacitor bank holder
 {
@@ -553,9 +553,9 @@ function ahResistor(cx, cz, plateW, plateD) {   // aluminium-housed wirewound wi
 part(ahResistor(BLX, BLZ, 100, 100), { detail: "bleeder", name: "Bank bleeder", short: "Bleeder 1 kΩ 25 W", spec: "1 kΩ, 25 W aluminium-housed · 15.9 W at 126 V · τ = 50 s", role: "Drains the bank from 126 V to under 5 V in about 2.7 min. Its two solder tabs each take two wires: the 18 AWG lead to the bank and the thin divider wire, soldered together and covered in heat shrink." }, null, true);
 joint([BLX - 16, 7.5, BLZ], [BLX - 23, 7.5, BLZ]); joint([BLX + 16, 7.5, BLZ], [BLX + 23, 7.5, BLZ]);
 part(wire([[BLX - 20, 7.5, BLZ], [BLX - 27, 7.5, BLZ], [BLX - 27, 150, BLZ], [BLX - 27, 150, -178], [T.c1p.x, 150, -178], [T.c1p.x, capLug.c1p.lugs[2].y, -178], P(capLug.c1p.lugs[2].end)], W18, M.red),
-  { name: "Bleeder lead (+)", spec: "18 AWG · bleeder tab to C1 + (bank +)", role: "Soldered to the bleeder's tab; crimped into the small blue lug on C1 + together with the balancing resistor's leg." });
+  { name: "Bleeder lead (+)", spec: "18 AWG · bleeder tab to C1 + (bank +)", role: "Soldered to the bleeder's tab; crimped into the small red lug on C1 + together with the balancing resistor's leg." });
 part(wire([[BLX + 20, 7.5, BLZ], [BLX + 27, 7.5, BLZ], [BLX + 27, 165, BLZ], [BLX + 27, 165, -183], [T.c2n.x, 165, -183], [T.c2n.x, capLug.c2n.lugs[1].y, -183], P(capLug.c2n.lugs[1].end)], W18, M.blk),
-  { name: "Bleeder lead (−)", spec: "18 AWG · bleeder tab to C2 − (bank −)", role: "Soldered to the bleeder's tab; crimped into the small blue lug on C2 − together with the balancing resistor's leg." });
+  { name: "Bleeder lead (−)", spec: "18 AWG · bleeder tab to C2 − (bank −)", role: "Soldered to the bleeder's tab; crimped into the small red lug on C2 − together with the balancing resistor's leg." });
 // series link: a short 10 AWG jumper with a lug at each end
 part(wire([P(capLug.c1n.lugs[0].end), P(capLug.c2p.lugs[0].end)], WR, M.thin),
   { name: "Series link", spec: "10 AWG jumper, a ring lug crimped on each end · C1 − to C2 +", role: "Puts the two 63 V cans in series: 126 V, 0.05 F." });
@@ -667,7 +667,7 @@ const J2 = { x: -9, z: -50 }, J1 = V3(38, 12.8, -42);
 part(group(
   wire([[COIL_X0 - 2.5, AX - 10.2, BZ], [TA, AX - 10.2, BZ], [TA, AX - 10.2, lugA_front.lugs[1].at(8).z], P(lugA_front.lugs[1].at(8)), P(lugA_front.lugs[1].end)], 0.51, copperMats[0], 1.5),
   wire([[COIL_X0 - 2.5, AX, BZ - 13], [COIL_X0 - 6.5, AX, BZ - 13], [COIL_X0 - 6.5, 22, BZ - 13], [COIL_X0 - 6.5, 22, 47], [TB, 22, 47], [TB, 22, lugB_front.lugs[1].at(8).z], P(lugB_front.lugs[1].at(8)), P(lugB_front.lugs[1].end)], 0.51, copperMats[3], 2)),
-  { name: "Coil leads", spec: "1.02 mm magnet wire, 30 cm tails, enamel sanded off the last 12 mm, tinned, crimped into blue lugs", role: "Layer 1's start leaves through the breech disc's lower hole to terminal A; layer 4's finish leaves through the side hole to terminal B." });
+  { name: "Coil leads", spec: "1.02 mm magnet wire, 30 cm tails, enamel sanded off the last 12 mm, tinned, crimped into red lugs", role: "Layer 1's start leaves through the breech disc's lower hole to terminal A; layer 4's finish leaves through the side hole to terminal B." });
 
 // ------------------------------------------------------------------ flyback diode (TO-247) + flyback resistor
 // a TO-247 lying flat on a printed block, legs pointing +x; returns the two leg tips [cathode side, anode side]
@@ -772,7 +772,7 @@ const BD = to247Flat(BDX, BDZ, 6, { name: "Blocking diode", short: "Blocking dio
   knifeBlade = new THREE.Group(); knifeBlade.position.set(KSX - 20, 17, KSZ);
   knifeBlade.add(box(44, 2, 6, M.brass, 22, 0, 0), box(4, 4, 22, M.black, 44, 0, 0));
   ks.add(knifeBlade);
-  part(ks, { name: "Knife switch", short: "Knife switch", spec: "Supply disconnect, rated ≥ 150 V DC", role: "Its two terminal screws are on the base, in front of the hinge and the jaw; each takes one blue lug. Opened with the bank full and no current flowing, before every shot. Never used to fire." }, null);
+  part(ks, { name: "Knife switch", short: "Knife switch", spec: "Supply disconnect, rated ≥ 150 V DC", role: "Its two terminal screws are on the base, in front of the hinge and the jaw; each takes one red lug. Opened with the bank full and no current flowing, before every shot. Never used to fire." }, null);
 }
 const ksH = lugStack(KSX - 20, 6, KSZ + 9, [[Math.PI / 2, LUG_SM]]), ksJ = lugStack(KSX + 20, 6, KSZ + 9, [[Math.PI / 2, LUG_SM]]);
 screwHead(KSX - 20, ksH.top, KSZ + 9, 3); screwHead(KSX + 20, ksJ.top, KSZ + 9, 3);
@@ -788,7 +788,7 @@ for (const t of BD) joint([t[0] - 4, t[1], t[2]], [t[0] + 4, t[1], t[2]], 1.5);
 }
 
 // ------------------------------------------------------------------ the hardware itself, clickable
-part(lugParts, { name: "Crimped ring lugs", spec: "Yellow: 10 AWG, M5 hole (posts, capacitors) or M4 hole (barrier strip). Blue: 16-14 AWG for every 18 AWG wire and the balancing-resistor legs", role: "Every lug lies FLAT on its terminal with the screw through its ring; the crimp barrel points sideways and the wire goes straight in. Several lugs on one screw are stacked and fanned out, the heavy pulse lug at the bottom against the metal, at most three per screw." });
+part(lugParts, { name: "Crimped ring lugs", spec: "Yellow: 10 AWG, M5 hole (posts, capacitors) or M4 hole (barrier strip). Red: 22-16 AWG for every 18 AWG wire, the coil leads and the balancing-resistor legs", role: "Every lug lies FLAT on its terminal with the screw through its ring; the crimp barrel points sideways and the wire goes straight in. Several lugs on one screw are stacked and fanned out, the heavy pulse lug at the bottom against the metal, at most three per screw." });
 part(hwParts, { name: "Screws, washers, nuts and the collector post", spec: "Capacitors and strip: washer, spring washer, screw head on top of the lug stack. Collector post: M5 bolt up through a nylon hex standoff, lugs, washer, nut", role: "The collector post is the only bolt the build adds: an M5 bolt from under the plywood, through a nylon standoff, with both collector pigtails and the bank + wire stacked on top." });
 part(jointParts, { name: "Soldered joints (heat-shrunk)", spec: "Where a wire meets a leg or a tab: tin both, solder, slide heat shrink over and shrink it", role: "Used only where a part has no screw: the IGBT legs, the diode legs, the gate resistors, the bleeder and flyback-resistor tabs, and the gate-wire splices." });
 
